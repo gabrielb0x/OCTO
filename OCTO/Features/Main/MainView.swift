@@ -1,10 +1,153 @@
+import OCTOCore
 import SwiftUI
+import UIKit
 
-// Placeholder replaced by the real chat layout.
+/// ChatGPT-style layout: the chat slides aside to reveal the sidebar underneath.
 struct MainView: View {
-    init(app: AppModel) {}
+    @Environment(AppModel.self) private var app
+    @State private var session: ChatSession
+    @State private var isSidebarOpen = false
+    @State private var isDragging = false
+    @State private var dragTranslation: CGFloat = 0
+    @State private var showSettings = false
+
+    init(app: AppModel) {
+        _session = State(initialValue: app.makeSession())
+    }
 
     var body: some View {
-        Text("OCTO")
+        GeometryReader { proxy in
+            let sidebarWidth = min(proxy.size.width * 0.84, 360)
+            let progress = openProgress(sidebarWidth: sidebarWidth)
+
+            ZStack(alignment: .leading) {
+                SidebarView(
+                    selectedID: session.isTemporary ? nil : session.id,
+                    onSelect: open,
+                    onNewChat: { startNewChat(temporary: false) },
+                    onDelete: delete,
+                    onOpenSettings: { showSettings = true }
+                )
+                .frame(width: sidebarWidth)
+                .offset(x: -sidebarWidth * 0.3 * (1 - progress))
+                .opacity(0.35 + 0.65 * progress)
+                .simultaneousGesture(drawerGesture(sidebarWidth: sidebarWidth), including: isSidebarOpen ? .all : .subviews)
+
+                ChatView(
+                    session: session,
+                    onOpenSidebar: { setSidebar(open: true) },
+                    onNewChat: { startNewChat(temporary: false) },
+                    onToggleTemporary: { startNewChat(temporary: !session.isTemporary) }
+                )
+                .frame(width: proxy.size.width)
+                .clipShape(RoundedRectangle(cornerRadius: 34 * min(progress * 3, 1), style: .continuous))
+                .overlay {
+                    if progress > 0.001 {
+                        Color.black
+                            .opacity(0.4 * progress)
+                            .clipShape(RoundedRectangle(cornerRadius: 34, style: .continuous))
+                            .contentShape(Rectangle())
+                            .onTapGesture { setSidebar(open: false) }
+                            .gesture(drawerGesture(sidebarWidth: sidebarWidth))
+                    }
+                }
+                .overlay(alignment: .leading) {
+                    if !isSidebarOpen {
+                        Color.clear
+                            .frame(width: 20)
+                            .contentShape(Rectangle())
+                            .gesture(drawerGesture(sidebarWidth: sidebarWidth))
+                            .padding(.top, 60)
+                    }
+                }
+                .shadow(color: .black.opacity(0.55 * progress), radius: 30)
+                .offset(x: sidebarWidth * progress)
+            }
+        }
+        .background(Theme.sidebarBackground.ignoresSafeArea())
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
+        .task {
+            await app.refreshModels()
+        }
+        .sensoryFeedback(.selection, trigger: isSidebarOpen) { _, _ in
+            app.settings.hapticsEnabled
+        }
+    }
+
+    // MARK: Navigation
+
+    private func open(_ id: UUID) {
+        if id != session.id {
+            leaveCurrentSession()
+            session = app.makeSession(conversationID: id)
+        }
+        setSidebar(open: false)
+    }
+
+    private func startNewChat(temporary: Bool) {
+        if session.messages.isEmpty, session.isTemporary == temporary {
+            setSidebar(open: false)
+            return
+        }
+        leaveCurrentSession()
+        session = app.makeSession(temporary: temporary)
+        setSidebar(open: false)
+    }
+
+    private func delete(_ id: UUID) {
+        if session.id == id {
+            session.stop()
+            session = app.makeSession()
+        }
+        app.store.delete(id: id)
+    }
+
+    private func leaveCurrentSession() {
+        app.speech.stop()
+        session.discardIfTemporary()
+    }
+
+    private func setSidebar(open: Bool) {
+        if open {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
+        withAnimation(.snappy(duration: 0.34)) {
+            isSidebarOpen = open
+            dragTranslation = 0
+        }
+    }
+
+    // MARK: Drawer gesture
+
+    private func openProgress(sidebarWidth: CGFloat) -> CGFloat {
+        let base: CGFloat = isSidebarOpen ? sidebarWidth : 0
+        let offset = isDragging ? dragTranslation : 0
+        return min(max((base + offset) / sidebarWidth, 0), 1)
+    }
+
+    private func drawerGesture(sidebarWidth: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 12, coordinateSpace: .global)
+            .onChanged { value in
+                let dx = value.translation.width
+                let dy = value.translation.height
+                if !isDragging {
+                    guard abs(dx) > abs(dy) * 1.6, isSidebarOpen ? dx < 0 : dx > 0 else { return }
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    isDragging = true
+                }
+                dragTranslation = dx
+            }
+            .onEnded { value in
+                guard isDragging else { return }
+                let projected = value.predictedEndTranslation.width
+                let shouldOpen = isSidebarOpen ? projected > -sidebarWidth / 2 : projected > sidebarWidth / 2
+                withAnimation(.snappy(duration: 0.34)) {
+                    isDragging = false
+                    dragTranslation = 0
+                    isSidebarOpen = shouldOpen
+                }
+            }
     }
 }

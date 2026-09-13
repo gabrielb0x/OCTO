@@ -142,6 +142,10 @@ final class DictationController {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
+    func clearError() {
+        errorMessage = nil
+    }
+
     private func fail(_ message: String) {
         errorMessage = message
         state = .idle
