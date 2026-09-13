@@ -20,7 +20,13 @@ final class LoopbackCallbackServer: @unchecked Sendable {
         listener?.cancel()
     }
 
-    func start(port: UInt16, path: String, onCallback: @escaping @Sendable (String?) -> Void) throws {
+    /// `onFailure` fires if the port cannot be bound (for example when it is already in use).
+    func start(
+        port: UInt16,
+        path: String,
+        onCallback: @escaping @Sendable (String?) -> Void,
+        onFailure: @escaping @Sendable () -> Void
+    ) throws {
         guard let endpointPort = NWEndpoint.Port(rawValue: port) else {
             throw URLError(.badURL)
         }
@@ -40,6 +46,7 @@ final class LoopbackCallbackServer: @unchecked Sendable {
         listener.stateUpdateHandler = { [weak self] state in
             if case .failed = state {
                 self?.stop()
+                onFailure()
             }
         }
         listener.start(queue: queue)

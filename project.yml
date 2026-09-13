@@ -61,6 +61,7 @@ targets:
         NSCameraUsageDescription: OCTO uses the camera so you can send photos in a chat.
         NSMicrophoneUsageDescription: OCTO uses the microphone to dictate your messages.
         NSSpeechRecognitionUsageDescription: OCTO transcribes your voice on your device to write your message.
+        NSLocalNetworkUsageDescription: OCTO briefly listens on this device (localhost) to receive the ChatGPT sign-in response.
         CFBundleURLTypes:
           - CFBundleURLName: com.gabrielb0x.octo.auth
             CFBundleURLSchemes: [octo]

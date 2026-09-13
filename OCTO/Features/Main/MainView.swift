@@ -40,12 +40,11 @@ struct MainView: View {
                     onToggleTemporary: { startNewChat(temporary: !session.isTemporary) }
                 )
                 .frame(width: proxy.size.width)
-                .clipShape(RoundedRectangle(cornerRadius: 34 * min(progress * 3, 1), style: .continuous))
                 .overlay {
                     if progress > 0.001 {
                         Color.black
                             .opacity(0.4 * progress)
-                            .clipShape(RoundedRectangle(cornerRadius: 34, style: .continuous))
+                            .ignoresSafeArea()
                             .contentShape(Rectangle())
                             .onTapGesture { setSidebar(open: false) }
                             .gesture(drawerGesture(sidebarWidth: sidebarWidth))
@@ -59,6 +58,12 @@ struct MainView: View {
                             .gesture(drawerGesture(sidebarWidth: sidebarWidth))
                             .padding(.top, 60)
                     }
+                }
+                // Masking with a shape that ignores the safe area keeps the chat drawing under the
+                // status bar and home indicator while still rounding its corners when it slides away.
+                .mask {
+                    RoundedRectangle(cornerRadius: 34 * min(progress * 3, 1), style: .continuous)
+                        .ignoresSafeArea()
                 }
                 .shadow(color: .black.opacity(0.55 * progress), radius: 30)
                 .offset(x: sidebarWidth * progress)

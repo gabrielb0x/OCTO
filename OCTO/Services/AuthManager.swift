@@ -186,8 +186,6 @@ final class AuthManager {
     let vault: CredentialVault
     private let session: URLSession
     private let anchorProvider = PresentationAnchorProvider()
-    @ObservationIgnored private var webSession: ASWebAuthenticationSession?
-    @ObservationIgnored private var loopback: LoopbackCallbackServer?
 
     init(session: URLSession) {
         self.session = session
@@ -221,12 +219,8 @@ final class AuthManager {
 
     private func authorize(url: URL, expectedState: String) async throws -> String {
         let server = LoopbackCallbackServer()
-        loopback = server
-        defer {
-            server.stop()
-            loopback = nil
-            webSession = nil
-        }
+        let sessionBox = WebAuthenticationSessionBox()
+        defer { server.stop() }
 
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
             let resumer = OnceResumer(continuation)
@@ -242,14 +236,25 @@ final class AuthManager {
             }
 
             do {
-                try server.start(port: OpenAIAuth.loopbackPort, path: OpenAIAuth.callbackPath) { query in
-                    Task { @MainActor [weak self] in
-                        handleQuery(query)
-                        // The sheet normally closes itself by following the octo:// redirect.
-                        try? await Task.sleep(for: .seconds(2))
-                        self?.webSession?.cancel()
+                try server.start(
+                    port: OpenAIAuth.loopbackPort,
+                    path: OpenAIAuth.callbackPath,
+                    onCallback: { query in
+                        Task { @MainActor in
+                            handleQuery(query)
+                            // The sheet normally closes itself by following the octo:// redirect;
+                            // close it anyway once the code has arrived.
+                            try? await Task.sleep(for: .seconds(1))
+                            sessionBox.session?.cancel()
+                        }
+                    },
+                    onFailure: {
+                        Task { @MainActor in
+                            resumer.resume(throwing: AuthError.loopbackUnavailable)
+                            sessionBox.session?.cancel()
+                        }
                     }
-                }
+                )
             } catch {
                 resumer.resume(throwing: AuthError.loopbackUnavailable)
                 return
@@ -268,11 +273,17 @@ final class AuthManager {
             }
             webSession.presentationContextProvider = anchorProvider
             webSession.prefersEphemeralWebBrowserSession = false
-            self.webSession = webSession
+            sessionBox.session = webSession
             if !webSession.start() {
                 resumer.resume(throwing: AuthError.authorizationFailed(String(localized: "Could not open the sign-in page.")))
             }
         }
+    }
+
+    /// Keeps the web session alive for the whole flow so it can be closed once the code arrives.
+    @MainActor
+    private final class WebAuthenticationSessionBox {
+        var session: ASWebAuthenticationSession?
     }
 
     // MARK: Device code sign-in

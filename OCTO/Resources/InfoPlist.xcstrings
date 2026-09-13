@@ -18,6 +18,23 @@
         }
       }
     },
+    "NSLocalNetworkUsageDescription": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "OCTO briefly listens on this device (localhost) to receive the ChatGPT sign-in response."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO écoute brièvement sur cet appareil (localhost) pour recevoir la réponse de connexion ChatGPT."
+          }
+        }
+      }
+    },
     "NSMicrophoneUsageDescription": {
       "extractionState": "extracted_with_value",
       "localizations": {
