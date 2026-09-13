@@ -49,7 +49,7 @@ struct ChatView: View {
         .sensoryFeedback(.impact(weight: .light), trigger: session.sentCount) { _, _ in
             app.settings.hapticsEnabled
         }
-        .sensoryFeedback(.impact(weight: .soft), trigger: session.completedCount) { _, _ in
+        .sensoryFeedback(.impact(flexibility: .soft, intensity: 0.7), trigger: session.completedCount) { _, _ in
             app.settings.hapticsEnabled
         }
     }

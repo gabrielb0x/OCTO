@@ -419,6 +419,9 @@ final class PresentationAnchorProvider: NSObject, ASWebAuthenticationPresentatio
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         let windows = scenes.flatMap(\.windows)
-        return windows.first(where: \.isKeyWindow) ?? windows.first ?? ASPresentationAnchor()
+        if let window = windows.first(where: \.isKeyWindow) ?? windows.first {
+            return window
+        }
+        return ASPresentationAnchor(windowScene: scenes[0])
     }
 }
