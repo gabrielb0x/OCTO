@@ -153,7 +153,8 @@ struct TypingHeadline: View {
 
     private func headline(_ typed: String) -> AttributedString {
         var text = AttributedString(typed)
-        var dot = AttributedString(" ●")
+        // A no-break space keeps the dot on the same line as the last word.
+        var dot = AttributedString("\u{00A0}●")
         dot.font = .system(size: 30)
         text.append(dot)
         return text

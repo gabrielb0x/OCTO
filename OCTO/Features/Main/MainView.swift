@@ -6,27 +6,19 @@ import UIKit
 struct MainView: View {
     @Environment(AppModel.self) private var app
     @State private var session: ChatSession
-    @State private var isSidebarOpen: Bool
+    @State private var isSidebarOpen = false
     @State private var isDragging = false
     @State private var dragTranslation: CGFloat = 0
     @State private var showSettings = false
 
     init(app: AppModel) {
         var initialSession: ChatSession?
-        var sidebarOpen = false
         #if OCTO_DEMO
-        switch app.demoScene {
-        case .chat?, .voice?:
+        if let scene = app.demoScene, [DemoScene.chat, .sidebar, .voice].contains(scene) {
             initialSession = app.makeSession(conversationID: DemoContent.featuredConversationID)
-        case .sidebar?:
-            initialSession = app.makeSession(conversationID: DemoContent.featuredConversationID)
-            sidebarOpen = true
-        default:
-            break
         }
         #endif
         _session = State(initialValue: initialSession ?? app.makeSession())
-        _isSidebarOpen = State(initialValue: sidebarOpen)
     }
 
     var body: some View {
@@ -94,9 +86,15 @@ struct MainView: View {
         .task {
             await app.refreshModels()
             #if OCTO_DEMO
-            if app.demoScene == .settings {
-                try? await Task.sleep(for: .milliseconds(600))
+            switch app.demoScene {
+            case .sidebar?:
+                try? await Task.sleep(for: .milliseconds(500))
+                setSidebar(open: true)
+            case .settings?:
+                try? await Task.sleep(for: .milliseconds(500))
                 showSettings = true
+            default:
+                break
             }
             #endif
         }

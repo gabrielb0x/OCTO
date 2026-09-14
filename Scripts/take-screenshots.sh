@@ -37,7 +37,7 @@ override_status_bar() {
     --time "9:41" \
     --dataNetwork wifi --wifiMode active --wifiBars 3 \
     --cellularMode active --cellularBars 4 \
-    --batteryState charged --batteryLevel 100
+    --batteryState discharging --batteryLevel 100
 }
 
 launch() {
@@ -48,14 +48,33 @@ launch() {
     -AppleLocale "$LOCALE_ID" >/dev/null
 }
 
+# In demo builds the app creates tmp/OCTODemoReady once the scene is fully on screen.
+wait_until_ready() {
+  local marker="$1/tmp/OCTODemoReady"
+  for _ in $(seq 1 90); do
+    [ -f "$marker" ] && return 0
+    sleep 0.5
+  done
+  return 1
+}
+
 # The first launch after installing is slow, so warm up before capturing.
 launch home
-sleep 20
+DATA_DIR=$(xcrun simctl get_app_container "$UDID" "$BUNDLE_ID" data)
+wait_until_ready "$DATA_DIR" || echo "::warning title=Screenshots::Warm-up launch never reported ready"
 
 for scene in "${SCENES[@]}"; do
   override_status_bar
+  rm -f "$DATA_DIR/tmp/OCTODemoReady"
+  started=$SECONDS
   launch "$scene"
-  sleep 8
+  if wait_until_ready "$DATA_DIR"; then
+    echo "$scene ready after $((SECONDS - started)) s"
+    sleep 1
+  else
+    echo "::warning title=Screenshots::The $scene scene did not report ready after 45 s"
+    xcrun simctl spawn "$UDID" launchctl list 2>/dev/null | grep -i octo | sed 's/^/::warning title=launchctl::/' || true
+  fi
   xcrun simctl io "$UDID" screenshot --type=png "$OUTPUT_DIR/$scene.png"
   echo "Captured $scene"
 done

@@ -29,5 +29,14 @@ struct RootView: View {
             }
         }
         .animation(.smooth(duration: 0.35), value: app.auth.state)
+        .task {
+            #if OCTO_DEMO
+            if app.isDemo {
+                // Leaves time for sheets and the sidebar to finish animating before the capture.
+                try? await Task.sleep(for: .seconds(2.5))
+                DemoContent.markReady()
+            }
+            #endif
+        }
     }
 }

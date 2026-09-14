@@ -32,6 +32,12 @@ enum DemoContent {
         }
     }
 
+    /// Tells `take-screenshots.sh` that the scene is on screen (it watches the app's tmp folder).
+    static func markReady() {
+        let marker = FileManager.default.temporaryDirectory.appendingPathComponent("OCTODemoReady")
+        FileManager.default.createFile(atPath: marker.path, contents: Data())
+    }
+
     private static var usesFrench: Bool {
         Locale.preferredLanguages.first?.hasPrefix("fr") ?? false
     }
