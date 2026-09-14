@@ -52,7 +52,12 @@ final class AppModel {
         let auth = AuthManager(session: session)
         self.auth = auth
         settings = AppSettings()
-        store = ConversationStore(files: ConversationFiles(folderName: isDemo ? "Demo" : "OCTO", startEmpty: isDemo))
+        #if OCTO_DEMO
+        let files = ConversationFiles(folderName: isDemo ? "Demo" : "OCTO", startEmpty: isDemo)
+        #else
+        let files = ConversationFiles()
+        #endif
+        store = ConversationStore(files: files)
         backend = ChatBackend(vault: auth.vault, session: session)
         speech = SpeechPlayer()
         models = Self.cachedModels(for: auth.account?.method)
