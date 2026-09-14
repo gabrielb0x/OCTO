@@ -1,0 +1,98 @@
+name: Screenshots
+
+# Runs the app's demo scenes on an iPhone simulator and commits the framed
+# screenshots used by the README to docs/screenshots.
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "OCTO/**"
+      - "Packages/**"
+      - "project.yml"
+      - "Scripts/**"
+      - ".github/workflows/screenshots.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    name: Capture screenshots
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install XcodeGen
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+          HOMEBREW_NO_INSTALL_CLEANUP: "1"
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build demo app for the simulator
+        run: |
+          set -o pipefail
+          mkdir -p build
+          xcodebuild build \
+            -project OCTO.xcodeproj \
+            -scheme OCTO \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS='DEBUG OCTO_DEMO' \
+            2>&1 | tee build/xcodebuild-simulator.log | xcbeautify --renderer github-actions
+
+      - name: Report compiler errors
+        if: failure()
+        run: |
+          grep -E "error:" build/xcodebuild-simulator.log | sed -E 's#^.*/(OCTO|Packages)/#\1/#' | sort -u | head -40 | while IFS= read -r line; do
+            echo "::error::${line}"
+          done || true
+
+      - name: Capture screenshots
+        run: Scripts/take-screenshots.sh build/DerivedData/Build/Products/Debug-iphonesimulator/OCTO.app build/screenshots
+
+      - name: Add device frames
+        run: |
+          python3 -m venv build/venv
+          build/venv/bin/pip install --quiet pillow
+          build/venv/bin/python Scripts/frame-screenshots.py build/screenshots docs/screenshots
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: OCTO-screenshots
+          path: |
+            build/screenshots
+            docs/screenshots
+          if-no-files-found: ignore
+
+      - name: Commit screenshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots
+          if git diff --cached --quiet; then
+            echo "Screenshots are up to date."
+            exit 0
+          fi
+          git commit -m "Update screenshots [skip ci]"
+          for attempt in 1 2 3; do
+            if git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME"; then
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1

@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Captures OCTO's demo scenes on an iOS simulator.
+# Usage: Scripts/take-screenshots.sh <OCTO.app built with OCTO_DEMO> <output directory>
+set -euo pipefail
+
+APP_PATH="$1"
+OUTPUT_DIR="$2"
+DEVICE_NAME="${DEVICE_NAME:-iPhone 17 Pro}"
+LANGUAGE="${SCREENSHOT_LANGUAGE:-fr}"
+LOCALE_ID="${SCREENSHOT_LOCALE:-fr_FR}"
+BUNDLE_ID="com.gabrielb0x.octo"
+SCENES=(welcome home chat sidebar voice settings)
+
+UDID=$(xcrun simctl list devices available --json | python3 -c '
+import json, re, sys
+name = sys.argv[1]
+matches = []
+for runtime, devices in json.load(sys.stdin)["devices"].items():
+    if ".iOS-" not in runtime:
+        continue
+    version = tuple(int(part) for part in re.findall(r"\d+", runtime.split(".iOS-")[-1]))
+    matches += [(version, device["udid"]) for device in devices if device["name"] == name]
+if not matches:
+    sys.exit("No available simulator named " + name)
+print(max(matches)[1])
+' "$DEVICE_NAME")
+
+echo "Using $DEVICE_NAME ($UDID)"
+xcrun simctl boot "$UDID" 2>/dev/null || true
+xcrun simctl bootstatus "$UDID" -b
+xcrun simctl ui "$UDID" appearance dark
+xcrun simctl install "$UDID" "$APP_PATH"
+mkdir -p "$OUTPUT_DIR"
+
+override_status_bar() {
+  xcrun simctl status_bar "$UDID" override \
+    --time "9:41" \
+    --dataNetwork wifi --wifiMode active --wifiBars 3 \
+    --cellularMode active --cellularBars 4 \
+    --batteryState charged --batteryLevel 100
+}
+
+launch() {
+  xcrun simctl terminate "$UDID" "$BUNDLE_ID" >/dev/null 2>&1 || true
+  xcrun simctl launch "$UDID" "$BUNDLE_ID" \
+    -OCTODemoScene "$1" \
+    -AppleLanguages "($LANGUAGE)" \
+    -AppleLocale "$LOCALE_ID" >/dev/null
+}
+
+# The first launch after installing is slow, so warm up before capturing.
+launch home
+sleep 20
+
+for scene in "${SCENES[@]}"; do
+  override_status_bar
+  launch "$scene"
+  sleep 8
+  xcrun simctl io "$UDID" screenshot --type=png "$OUTPUT_DIR/$scene.png"
+  echo "Captured $scene"
+done
+
+xcrun simctl terminate "$UDID" "$BUNDLE_ID" >/dev/null 2>&1 || true
