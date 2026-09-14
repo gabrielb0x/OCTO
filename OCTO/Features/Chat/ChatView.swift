@@ -7,10 +7,15 @@ struct ChatView: View {
     let onOpenSidebar: () -> Void
     let onNewChat: () -> Void
     let onToggleTemporary: () -> Void
+    let onDelete: () -> Void
 
     @State private var scrollPosition = ScrollPosition(edge: .bottom)
     @State private var isNearBottom = true
     @State private var editingMessage: ChatMessage?
+    @State private var showVoiceMode = false
+    @State private var isRenaming = false
+    @State private var renameText = ""
+    @State private var confirmDelete = false
 
     var body: some View {
         NavigationStack {
@@ -26,16 +31,18 @@ struct ChatView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
             .safeAreaBar(edge: .bottom) {
-                ComposerView(session: session)
+                ComposerView(session: session) {
+                    showVoiceMode = true
+                }
             }
             .overlay(alignment: .bottom) {
                 if !isNearBottom, !session.messages.isEmpty {
-                    GlassIconButton(systemImage: "arrow.down", label: "Scroll to bottom", size: 40) {
+                    GlassIconButton(systemImage: "arrow.down", label: "Scroll to bottom", size: 38) {
                         withAnimation(.smooth) {
                             scrollPosition.scrollTo(edge: .bottom)
                         }
                     }
-                    .padding(.bottom, 10)
+                    .padding(.bottom, 12)
                     .transition(.scale(scale: 0.6).combined(with: .opacity))
                 }
             }
@@ -45,12 +52,35 @@ struct ChatView: View {
                     session.edit(message.id, text: text)
                 }
             }
+            .alert("Rename chat", isPresented: $isRenaming) {
+                TextField("Title", text: $renameText)
+                Button("Cancel", role: .cancel) {}
+                Button("Save") {
+                    session.rename(renameText)
+                }
+            }
+            .confirmationDialog("Delete this chat?", isPresented: $confirmDelete, titleVisibility: .visible) {
+                Button("Delete", role: .destructive, action: onDelete)
+            } message: {
+                Text("This can't be undone.")
+            }
+        }
+        .fullScreenCover(isPresented: $showVoiceMode) {
+            VoiceModeView(session: session)
         }
         .sensoryFeedback(.impact(weight: .light), trigger: session.sentCount) { _, _ in
             app.settings.hapticsEnabled
         }
         .sensoryFeedback(.impact(flexibility: .soft, intensity: 0.7), trigger: session.completedCount) { _, _ in
             app.settings.hapticsEnabled
+        }
+        .task {
+            #if OCTO_DEMO
+            if app.demoScene == .voice {
+                try? await Task.sleep(for: .milliseconds(600))
+                showVoiceMode = true
+            }
+            #endif
         }
     }
 
@@ -68,8 +98,8 @@ struct ChatView: View {
             }
             .readableWidth()
             .padding(.horizontal, Theme.horizontalPadding)
-            .padding(.top, 12)
-            .padding(.bottom, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 24)
         }
         .scrollPosition($scrollPosition)
         .defaultScrollAnchor(.bottom, for: .initialOffset)
@@ -96,11 +126,13 @@ struct ChatView: View {
         }
     }
 
+    // MARK: Toolbar
+
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button(action: onOpenSidebar) {
-                Image(systemName: "line.3.horizontal")
+                Image("SidebarIcon")
             }
             .accessibilityLabel(Text("Open sidebar"))
         }
@@ -109,26 +141,62 @@ struct ChatView: View {
             ModelMenu(session: session)
         }
 
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            if session.messages.isEmpty {
+        if session.messages.isEmpty {
+            ToolbarItem(placement: .topBarTrailing) {
                 Button(action: onToggleTemporary) {
-                    Image(systemName: session.isTemporary ? "eye.slash.fill" : "eye.slash")
+                    Image(session.isTemporary ? "TemporaryChatOn" : "TemporaryChat")
                 }
                 .accessibilityLabel(Text("Temporary chat"))
-            } else if !session.isStreaming {
-                ShareLink(item: session.markdownExport) {
-                    Image(systemName: "square.and.arrow.up")
+            }
+        } else {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: onNewChat) {
+                    Image(systemName: "square.and.pencil")
                 }
-                .accessibilityLabel(Text("Share chat"))
+                .accessibilityLabel(Text("New chat"))
             }
-            Button(action: onNewChat) {
-                Image(systemName: "square.and.pencil")
+            ToolbarItem(placement: .topBarTrailing) {
+                optionsMenu
             }
-            .accessibilityLabel(Text("New chat"))
         }
+    }
+
+    private var optionsMenu: some View {
+        Menu {
+            if !session.isTemporary {
+                Button {
+                    renameText = session.title
+                    isRenaming = true
+                } label: {
+                    Label("Rename", systemImage: "pencil")
+                }
+                Button {
+                    session.setPinned(!session.conversation.isPinned)
+                } label: {
+                    Label(
+                        session.conversation.isPinned ? LocalizedStringKey("Unpin") : LocalizedStringKey("Pin"),
+                        systemImage: session.conversation.isPinned ? "pin.slash" : "pin"
+                    )
+                }
+            }
+            ShareLink(item: session.markdownExport) {
+                Label("Share chat", systemImage: "square.and.arrow.up")
+            }
+            .disabled(session.isStreaming)
+            Divider()
+            Button(role: .destructive) {
+                confirmDelete = true
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+        }
+        .accessibilityLabel(Text("More options"))
     }
 }
 
+/// Title of the chat screen, like "ChatGPT ›" in the official app: model and thinking level.
 struct ModelMenu: View {
     @Environment(AppModel.self) private var app
     let session: ChatSession
@@ -176,22 +244,22 @@ struct ModelMenu: View {
                 }
             }
         } label: {
-            HStack(spacing: 6) {
+            HStack(spacing: 5) {
                 Text(verbatim: current.displayName)
                     .font(.headline)
-                    .lineLimit(1)
                 if let effort = session.reasoningEffort {
                     Text(verbatim: ReasoningEffortLabel.title(effort))
-                        .font(.subheadline)
+                        .font(.headline.weight(.regular))
                         .foregroundStyle(Theme.secondaryText)
-                        .lineLimit(1)
                 }
-                Image(systemName: "chevron.down")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(Theme.secondaryText)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.bold))
+                    .foregroundStyle(Theme.tertiaryText)
             }
+            .lineLimit(1)
             .foregroundStyle(Theme.primaryText)
-            .padding(.horizontal, 6)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
             .contentShape(Rectangle())
         }
         .menuOrder(.fixed)
@@ -203,31 +271,23 @@ struct EmptyChatView: View {
     let isTemporary: Bool
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 10) {
             if isTemporary {
-                Image(systemName: "eye.slash.circle")
-                    .font(.system(size: 46, weight: .light))
-                    .foregroundStyle(Theme.secondaryText)
                 Text("Temporary chat")
                     .font(.title2.weight(.semibold))
                 Text("This chat won't appear in your history and nothing is saved on this device.")
-                    .font(.subheadline)
+                    .font(.callout)
                     .foregroundStyle(Theme.secondaryText)
                     .multilineTextAlignment(.center)
             } else {
-                Image("Logo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 46, height: 46)
-                    .foregroundStyle(.white)
                 Text("What can I help with?")
-                    .font(.title2.weight(.semibold))
+                    .font(.system(size: 27, weight: .semibold))
                     .multilineTextAlignment(.center)
             }
         }
-        .padding(.horizontal, 36)
+        .padding(.horizontal, 40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.bottom, 60)
+        .padding(.bottom, 40)
     }
 }
 
@@ -244,6 +304,10 @@ struct EditMessageSheet: View {
         _text = State(initialValue: message.text)
     }
 
+    private var canSend: Bool {
+        !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !message.attachments.isEmpty
+    }
+
     var body: some View {
         NavigationStack {
             TextEditor(text: $text)
@@ -254,14 +318,22 @@ struct EditMessageSheet: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") { dismiss() }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Send") {
-                            onSend(text)
+                        Button(role: .close) {
                             dismiss()
                         }
-                        .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && message.attachments.isEmpty)
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button {
+                            onSend(text)
+                            dismiss()
+                        } label: {
+                            Image(systemName: "arrow.up")
+                                .foregroundStyle(.black)
+                        }
+                        .buttonStyle(.glassProminent)
+                        .tint(.white)
+                        .disabled(!canSend)
+                        .accessibilityLabel(Text("Send"))
                     }
                 }
         }

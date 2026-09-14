@@ -9,7 +9,6 @@ struct OCTOApp: App {
             RootView()
                 .environment(app)
                 .preferredColorScheme(.dark)
-                .tint(Theme.accent)
         }
     }
 }

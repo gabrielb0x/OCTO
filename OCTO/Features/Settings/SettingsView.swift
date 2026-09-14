@@ -1,10 +1,12 @@
 import OCTOCore
 import SwiftUI
+import UIKit
 
+/// Settings sheet organized like the ChatGPT app: account, chats, app and about.
 struct SettingsView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
-    @State private var confirmDeleteAll = false
+    @Environment(\.openURL) private var openURL
     @State private var confirmSignOut = false
 
     var body: some View {
@@ -13,25 +15,51 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    HStack(spacing: 14) {
-                        AccountAvatar(account: app.auth.account, size: 50)
-                        VStack(alignment: .leading, spacing: 3) {
+                    VStack(spacing: 10) {
+                        AccountAvatar(account: app.auth.account, size: 72)
+                        VStack(spacing: 3) {
                             Text(verbatim: app.auth.account?.displayTitle ?? "OCTO")
-                                .font(.headline)
+                                .font(.title3.weight(.semibold))
                                 .lineLimit(1)
                             Text(verbatim: app.auth.account?.displaySubtitle ?? "")
                                 .font(.subheadline)
                                 .foregroundStyle(Theme.secondaryText)
                         }
                     }
-                    .padding(.vertical, 4)
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+                }
 
+                Section("Account") {
+                    if let email = app.auth.account?.email {
+                        LabeledContent {
+                            Text(verbatim: email)
+                                .lineLimit(1)
+                        } label: {
+                            Label("Email", systemImage: "envelope")
+                        }
+                    }
+                    LabeledContent {
+                        Text(verbatim: app.auth.account?.displaySubtitle ?? "")
+                    } label: {
+                        Label("Subscription", systemImage: "plus.circle")
+                    }
                     if app.authMethod == .chatGPT {
                         NavigationLink {
                             UsageView()
                         } label: {
-                            Label("Usage limits", systemImage: "chart.bar.fill")
+                            Label("Usage limits", systemImage: "chart.bar")
                         }
+                    }
+                    NavigationLink {
+                        PersonalizationView()
+                    } label: {
+                        Label("Personalization", systemImage: "person.crop.circle")
+                    }
+                    NavigationLink {
+                        DataControlsView()
+                    } label: {
+                        Label("Data controls", systemImage: "externaldrive")
                     }
                 }
 
@@ -54,15 +82,18 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Personalization") {
-                    NavigationLink {
-                        PersonalizationView()
-                    } label: {
-                        Label("Custom instructions", systemImage: "person.text.rectangle")
+                Section("App") {
+                    Button(action: openSystemSettings) {
+                        LabeledContent {
+                            Text(verbatim: languageName)
+                        } label: {
+                            Label("App language", systemImage: "character.bubble")
+                        }
                     }
-                }
-
-                Section("Voice & feedback") {
+                    .foregroundStyle(Theme.primaryText)
+                    Toggle(isOn: $settings.hapticsEnabled) {
+                        Label("Haptic feedback", systemImage: "iphone.radiowaves.left.and.right")
+                    }
                     VStack(alignment: .leading, spacing: 6) {
                         Label("Read aloud speed", systemImage: "speaker.wave.2")
                         Slider(value: $settings.speechRate, in: 0.35...0.6) {
@@ -74,31 +105,20 @@ struct SettingsView: View {
                         }
                         .foregroundStyle(Theme.secondaryText)
                     }
-                    Toggle(isOn: $settings.hapticsEnabled) {
-                        Label("Haptics", systemImage: "iphone.radiowaves.left.and.right")
-                    }
                 }
 
                 Section {
-                    Button(role: .destructive) {
-                        confirmDeleteAll = true
-                    } label: {
-                        Label("Delete all chats", systemImage: "trash")
-                    }
-                    .disabled(app.store.summaries.isEmpty)
-                } header: {
-                    Text("Data")
-                } footer: {
-                    Text("Chats are stored only on this device. Messages go straight to OpenAI when you send them, with server-side storage turned off.")
-                }
-
-                Section {
-                    LabeledContent("Version", value: "\(AppInfo.version) (\(AppInfo.build))")
                     Link(destination: AppInfo.repositoryURL) {
                         Label("Source code on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
                     }
+                    .foregroundStyle(Theme.primaryText)
                     Label("No telemetry, no analytics, no third-party SDKs.", systemImage: "lock.shield")
                         .foregroundStyle(Theme.secondaryText)
+                    LabeledContent {
+                        Text(verbatim: "\(AppInfo.version) (\(AppInfo.build))")
+                    } label: {
+                        Label("Version", systemImage: "info.circle")
+                    }
                 } header: {
                     Text("About OCTO")
                 } footer: {
@@ -116,16 +136,11 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(role: .close) {
+                        dismiss()
+                    }
                 }
-            }
-            .confirmationDialog("Delete all chats?", isPresented: $confirmDeleteAll, titleVisibility: .visible) {
-                Button("Delete all", role: .destructive) {
-                    app.store.deleteAll()
-                }
-            } message: {
-                Text("Every chat and attachment will be removed from this device.")
             }
             .confirmationDialog("Sign out of OCTO?", isPresented: $confirmSignOut, titleVisibility: .visible) {
                 Button("Sign out", role: .destructive) {
@@ -138,6 +153,18 @@ struct SettingsView: View {
 
     private var defaultModelBinding: Binding<String> {
         Binding(get: { app.defaultModel.id }, set: { app.settings.defaultModelID = $0 })
+    }
+
+    private var languageName: String {
+        let code = Bundle.main.preferredLocalizations.first ?? "en"
+        return Locale.current.localizedString(forLanguageCode: code)?.capitalized(with: Locale.current) ?? code
+    }
+
+    /// iOS manages per-app languages in the Settings app, as for ChatGPT.
+    private func openSystemSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            openURL(url)
+        }
     }
 }
 
@@ -158,6 +185,35 @@ extension Account {
                 return String(localized: "ChatGPT \(plan)")
             }
             return "ChatGPT"
+        }
+    }
+}
+
+struct DataControlsView: View {
+    @Environment(AppModel.self) private var app
+    @State private var confirmDeleteAll = false
+
+    var body: some View {
+        Form {
+            Section {
+                Button(role: .destructive) {
+                    confirmDeleteAll = true
+                } label: {
+                    Label("Delete all chats", systemImage: "trash")
+                }
+                .disabled(app.store.summaries.isEmpty)
+            } footer: {
+                Text("Chats are stored only on this device. Messages go straight to OpenAI when you send them, with server-side storage turned off.")
+            }
+        }
+        .navigationTitle("Data controls")
+        .navigationBarTitleDisplayMode(.inline)
+        .confirmationDialog("Delete all chats?", isPresented: $confirmDeleteAll, titleVisibility: .visible) {
+            Button("Delete all", role: .destructive) {
+                app.store.deleteAll()
+            }
+        } message: {
+            Text("Every chat and attachment will be removed from this device.")
         }
     }
 }
@@ -285,7 +341,7 @@ struct PersonalizationView: View {
                 Text("For example: concise, friendly, with examples, always in French.")
             }
         }
-        .navigationTitle("Custom instructions")
+        .navigationTitle("Personalization")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

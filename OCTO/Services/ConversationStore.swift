@@ -20,11 +20,14 @@ final class ConversationFiles: @unchecked Sendable {
     let attachmentsDirectory: URL
     private let queue = DispatchQueue(label: "com.gabrielb0x.octo.storage", qos: .utility)
 
-    init() {
+    init(folderName: String = "OCTO", startEmpty: Bool = false) {
         let fileManager = FileManager.default
         let base = (try? fileManager.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true))
             ?? fileManager.temporaryDirectory
-        let root = base.appendingPathComponent("OCTO", isDirectory: true)
+        let root = base.appendingPathComponent(folderName, isDirectory: true)
+        if startEmpty {
+            try? fileManager.removeItem(at: root)
+        }
         conversationsDirectory = root.appendingPathComponent("Conversations", isDirectory: true)
         attachmentsDirectory = root.appendingPathComponent("Attachments", isDirectory: true)
         try? fileManager.createDirectory(at: conversationsDirectory, withIntermediateDirectories: true)

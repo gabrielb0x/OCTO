@@ -2,6 +2,7 @@ import OCTOCore
 import SwiftUI
 import UIKit
 
+/// Sign-in screen modeled on ChatGPT's: a typed headline and stacked Liquid Glass buttons.
 struct WelcomeView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -9,41 +10,28 @@ struct WelcomeView: View {
     @State private var errorMessage: String?
     @State private var showDeviceCode = false
     @State private var showAPIKey = false
-    @State private var appeared = false
 
     var body: some View {
-        ZStack {
-            WelcomeBackdrop(animated: !reduceMotion)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                Image("Logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 30, height: 30)
+                Text(verbatim: "OCTO")
+                    .font(.title3.weight(.bold))
+            }
+            .foregroundStyle(Theme.primaryText)
+            .padding(.top, 8)
 
-            VStack(spacing: 0) {
-                Spacer(minLength: 32)
+            Spacer(minLength: 24)
 
-                VStack(spacing: 16) {
-                    Image("Logo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 92, height: 92)
-                        .foregroundStyle(.white)
-                        .shadow(color: .white.opacity(0.3), radius: 28)
-                        .scaleEffect(appeared ? 1 : 0.8)
-                        .opacity(appeared ? 1 : 0)
-                    Text(verbatim: "OCTO")
-                        .font(.system(size: 46, weight: .bold, design: .rounded))
-                        .tracking(3)
-                    Text("Your ChatGPT, open source and private.")
-                        .font(.title3.weight(.medium))
-                        .foregroundStyle(Theme.secondaryText)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.horizontal, 24)
+            TypingHeadline(phrases: Self.phrases, animated: !reduceMotion && !app.isDemo)
 
-                FeatureHighlights()
-                    .padding(.top, 30)
-                    .padding(.horizontal, 16)
+            Spacer(minLength: 24)
 
-                Spacer(minLength: 32)
-
-                VStack(spacing: 12) {
+            GlassEffectContainer(spacing: 10) {
+                VStack(spacing: 10) {
                     Button(action: signIn) {
                         HStack(spacing: 10) {
                             if isSigningIn {
@@ -56,57 +44,50 @@ struct WelcomeView: View {
                                     .frame(width: 20, height: 20)
                             }
                             Text("Continue with ChatGPT")
-                                .font(.headline)
                         }
+                        .font(.headline)
                         .foregroundStyle(.black)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 54)
-                        .contentShape(Capsule())
                     }
-                    .buttonStyle(.plain)
-                    .glassEffect(.regular.tint(.white).interactive(), in: .capsule)
+                    .buttonStyle(.glassProminent)
+                    .tint(.white)
                     .disabled(isSigningIn)
 
                     Button {
                         showDeviceCode = true
                     } label: {
-                        Text("Sign in with a code")
+                        Label("Sign in with a code", systemImage: "number")
                             .font(.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.primaryText)
                             .frame(maxWidth: .infinity)
-                            .frame(height: 54)
-                            .contentShape(Capsule())
                     }
-                    .buttonStyle(.plain)
-                    .glassEffect(.regular.interactive(), in: .capsule)
+                    .buttonStyle(.glass)
 
                     Button {
                         showAPIKey = true
                     } label: {
-                        Text("Use an OpenAI API key")
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(Theme.secondaryText)
-                            .padding(.vertical, 8)
+                        Label("Use an OpenAI API key", systemImage: "key")
+                            .font(.headline)
+                            .foregroundStyle(Theme.primaryText)
+                            .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.glass)
                 }
-                .padding(.horizontal, 22)
+                .controlSize(.extraLarge)
+            }
 
-                Text("Not affiliated with OpenAI. Your chats stay on this device.")
-                    .font(.caption)
-                    .foregroundStyle(Theme.tertiaryText)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-                    .padding(.top, 6)
-                    .padding(.bottom, 10)
-            }
-            .frame(maxWidth: 520)
+            Text("Not affiliated with OpenAI. Your chats stay on this device.")
+                .font(.caption)
+                .foregroundStyle(Theme.tertiaryText)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 14)
+                .padding(.bottom, 8)
         }
-        .onAppear {
-            withAnimation(.spring(duration: 0.9, bounce: 0.35)) {
-                appeared = true
-            }
-        }
+        .padding(.horizontal, 24)
+        .frame(maxWidth: 520)
+        .frame(maxWidth: .infinity)
+        .background(Theme.background.ignoresSafeArea())
         .alert("Sign-in failed", isPresented: errorIsPresented) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -118,6 +99,16 @@ struct WelcomeView: View {
         .sheet(isPresented: $showAPIKey) {
             APIKeySheet()
         }
+    }
+
+    private static var phrases: [String] {
+        [
+            String(localized: "Let's brainstorm"),
+            String(localized: "Let's write together"),
+            String(localized: "Let's plan a trip"),
+            String(localized: "Let's debug some code"),
+            String(localized: "Let's learn something new"),
+        ]
     }
 
     private var errorIsPresented: Binding<Bool> {
@@ -140,31 +131,49 @@ struct WelcomeView: View {
     }
 }
 
-private struct FeatureHighlights: View {
+/// Large headline typed and erased letter by letter, ending with ChatGPT's white dot.
+struct TypingHeadline: View {
+    let phrases: [String]
+    let animated: Bool
+    @State private var phraseIndex = 0
+    @State private var typedCount = Int.max
+
     var body: some View {
-        GlassEffectContainer(spacing: 8) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) { pills }
-                VStack(spacing: 8) { pills }
+        let phrase = phrases.isEmpty ? "" : phrases[phraseIndex % phrases.count]
+        Text(headline(String(phrase.prefix(typedCount))))
+            .font(.system(size: 40, weight: .semibold))
+            .foregroundStyle(Theme.primaryText)
+            .frame(maxWidth: .infinity, minHeight: 110, alignment: .leading)
+            .accessibilityLabel(Text(verbatim: phrase))
+            .task(id: animated) {
+                guard animated, !phrases.isEmpty else { return }
+                await typeForever()
             }
+    }
+
+    private func headline(_ typed: String) -> AttributedString {
+        var text = AttributedString(typed)
+        var dot = AttributedString(" ●")
+        dot.font = .system(size: 30)
+        text.append(dot)
+        return text
+    }
+
+    private func typeForever() async {
+        while !Task.isCancelled {
+            let phrase = phrases[phraseIndex % phrases.count]
+            for count in 0...phrase.count {
+                typedCount = count
+                try? await Task.sleep(for: .milliseconds(55))
+            }
+            try? await Task.sleep(for: .seconds(1.6))
+            for count in stride(from: phrase.count, through: 0, by: -1) {
+                typedCount = count
+                try? await Task.sleep(for: .milliseconds(22))
+            }
+            phraseIndex += 1
+            try? await Task.sleep(for: .milliseconds(250))
         }
-    }
-
-    @ViewBuilder
-    private var pills: some View {
-        pill("lock.shield.fill", "No telemetry")
-        pill("chevron.left.forwardslash.chevron.right", "Open source")
-        pill("bolt.fill", "Direct to OpenAI")
-    }
-
-    private func pill(_ systemImage: String, _ title: LocalizedStringKey) -> some View {
-        Label(title, systemImage: systemImage)
-            .font(.footnote.weight(.semibold))
-            .lineLimit(1)
-            .fixedSize(horizontal: true, vertical: false)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .glassEffect(.regular, in: .capsule)
     }
 }
 
@@ -183,7 +192,7 @@ struct DeviceCodeSheet: View {
                 VStack(spacing: 22) {
                     Image(systemName: "rectangle.and.hand.point.up.left.filled")
                         .font(.system(size: 40))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.primaryText)
                         .padding(.top, 8)
 
                     Text("Open the page below on any device, sign in to ChatGPT and enter this code.")
@@ -218,7 +227,9 @@ struct DeviceCodeSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button(role: .close) {
+                        dismiss()
+                    }
                 }
             }
         }
@@ -236,7 +247,7 @@ struct DeviceCodeSheet: View {
                 .textSelection(.enabled)
                 .padding(.horizontal, 26)
                 .padding(.vertical, 18)
-                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .glassEffect(.regular, in: .rect(cornerRadius: 22))
 
             GlassEffectContainer(spacing: 10) {
                 HStack(spacing: 10) {
@@ -255,9 +266,11 @@ struct DeviceCodeSheet: View {
                         openURL(challenge.verificationURL)
                     } label: {
                         Label("Open page", systemImage: "safari")
+                            .foregroundStyle(.black)
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.glassProminent)
+                    .tint(.white)
                     .controlSize(.large)
                 }
             }
@@ -297,6 +310,10 @@ struct APIKeySheet: View {
     @State private var errorMessage: String?
     @FocusState private var isFocused: Bool
 
+    private var hasKey: Bool {
+        !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -325,20 +342,28 @@ struct APIKeySheet: View {
                     Link(destination: URL(string: "https://platform.openai.com/api-keys")!) {
                         Label("Create an API key", systemImage: "arrow.up.right.square")
                     }
+                    .foregroundStyle(Theme.primaryText)
                 }
             }
             .navigationTitle("OpenAI API key")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button(role: .close) {
+                        dismiss()
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     if isValidating {
                         ProgressView()
                     } else {
-                        Button("Save", action: save)
-                            .disabled(key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        Button(action: save) {
+                            Text("Save")
+                                .foregroundStyle(.black)
+                        }
+                        .buttonStyle(.glassProminent)
+                        .tint(.white)
+                        .disabled(!hasKey)
                     }
                 }
             }
@@ -348,7 +373,7 @@ struct APIKeySheet: View {
     }
 
     private func save() {
-        guard !isValidating, !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        guard !isValidating, hasKey else { return }
         isValidating = true
         errorMessage = nil
         Task {

@@ -1,24 +1,23 @@
 import OCTOCore
 import SwiftUI
 
-/// Round Liquid Glass button with an SF Symbol.
+/// Round Liquid Glass button with an SF Symbol, for icon-only controls outside toolbars.
 struct GlassIconButton: View {
     let systemImage: String
     let label: LocalizedStringKey
     var size: CGFloat = 44
-    var prominent = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: size * 0.38, weight: .semibold))
-                .foregroundStyle(prominent ? Color.black : Color.white)
+                .font(.system(size: size * 0.4, weight: .semibold))
+                .foregroundStyle(Theme.primaryText)
                 .frame(width: size, height: size)
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .glassEffect(prominent ? .regular.tint(.white).interactive() : .regular.interactive(), in: .circle)
+        .glassEffect(.regular.interactive(), in: .circle)
         .accessibilityLabel(Text(label))
     }
 }
@@ -102,31 +101,6 @@ struct AccountAvatar: View {
     private var initial: String {
         guard let first = account?.email?.first else { return "O" }
         return String(first).uppercased()
-    }
-}
-
-/// Animated dark mesh behind the onboarding glass.
-struct WelcomeBackdrop: View {
-    var animated: Bool
-
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !animated)) { context in
-            let time = animated ? context.date.timeIntervalSinceReferenceDate : 0
-            let dx = Float(sin(time * 0.33)) * 0.14
-            let dy = Float(cos(time * 0.27)) * 0.12
-            let points: [SIMD2<Float>] = [
-                SIMD2(0, 0), SIMD2(0.5, 0), SIMD2(1, 0),
-                SIMD2(0, 0.5), SIMD2(0.5 + dx, 0.42 + dy), SIMD2(1, 0.5),
-                SIMD2(0, 1), SIMD2(0.5, 1), SIMD2(1, 1),
-            ]
-            let colors: [Color] = [
-                .black, Color(red: 0.06, green: 0.06, blue: 0.14), .black,
-                Color(red: 0.03, green: 0.08, blue: 0.14), Color(red: 0.21, green: 0.16, blue: 0.44), Color(red: 0.04, green: 0.05, blue: 0.12),
-                .black, Color(red: 0.05, green: 0.04, blue: 0.10), .black,
-            ]
-            MeshGradient(width: 3, height: 3, points: points, colors: colors)
-        }
-        .ignoresSafeArea()
     }
 }
 

@@ -11,6 +11,11 @@ final class AppModel {
     let store: ConversationStore
     let backend: ChatBackend
     let speech: SpeechPlayer
+    /// Set when a screenshot build is launched with a demo scene: no network, no keychain.
+    let isDemo: Bool
+    #if OCTO_DEMO
+    let demoScene: DemoScene?
+    #endif
 
     private(set) var models: [ModelDescriptor]
     private(set) var isRefreshingModels = false
@@ -21,9 +26,18 @@ final class AppModel {
     @ObservationIgnored private var liveSessions: [UUID: ChatSession] = [:]
 
     init() {
+        #if OCTO_DEMO
+        let demoScene = DemoScene.current
+        let isDemo = demoScene != nil
+        self.demoScene = demoScene
+        #else
+        let isDemo = false
+        #endif
+        self.isDemo = isDemo
+
         // Keychain items survive app deletion: start clean on a fresh install.
         let launchedKey = "app.hasLaunchedBefore"
-        if !UserDefaults.standard.bool(forKey: launchedKey) {
+        if !isDemo, !UserDefaults.standard.bool(forKey: launchedKey) {
             Keychain.remove(CredentialVault.chatGPTAccount)
             Keychain.remove(CredentialVault.apiKeyAccount)
             UserDefaults.standard.set(true, forKey: launchedKey)
@@ -38,10 +52,17 @@ final class AppModel {
         let auth = AuthManager(session: session)
         self.auth = auth
         settings = AppSettings()
-        store = ConversationStore()
+        store = ConversationStore(files: ConversationFiles(folderName: isDemo ? "Demo" : "OCTO", startEmpty: isDemo))
         backend = ChatBackend(vault: auth.vault, session: session)
         speech = SpeechPlayer()
         models = Self.cachedModels(for: auth.account?.method)
+
+        #if OCTO_DEMO
+        if let demoScene {
+            models = ModelCatalog.chatGPTFallback
+            DemoContent.prepare(demoScene, auth: auth, store: store)
+        }
+        #endif
     }
 
     var authMethod: AuthMethod? {
@@ -65,7 +86,7 @@ final class AppModel {
     }
 
     func refreshModels() async {
-        guard let method = authMethod, !isRefreshingModels else { return }
+        guard !isDemo, let method = authMethod, !isRefreshingModels else { return }
         isRefreshingModels = true
         defer { isRefreshingModels = false }
         do {
@@ -80,6 +101,7 @@ final class AppModel {
     }
 
     func refreshUsage() async {
+        guard !isDemo else { return }
         do {
             usage = try await backend.fetchUsage()
             usageError = nil
@@ -121,6 +143,11 @@ final class AppModel {
             webSearchEnabled: settings.webSearchByDefault
         )
         return ChatSession(conversation: conversation, isTemporary: temporary, app: self)
+    }
+
+    /// A chat that is still generating in the background, if any.
+    func liveSession(for id: UUID) -> ChatSession? {
+        liveSessions[id]
     }
 
     func sessionStartedStreaming(_ session: ChatSession) {

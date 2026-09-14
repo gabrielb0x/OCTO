@@ -1,27 +1,29 @@
 import OCTOCore
 import SwiftUI
 
-/// OCTO's dark palette: a near-black canvas with Liquid Glass controls on top.
+/// OCTO's dark palette, modeled on the ChatGPT iOS app: a black canvas, monochrome text
+/// and Liquid Glass controls floating on top.
 enum Theme {
-    static let background = Color(red: 0.020, green: 0.020, blue: 0.024)
-    static let sidebarBackground = Color(red: 0.047, green: 0.047, blue: 0.055)
-    static let surface = Color(white: 0.105)
-    static let surfaceElevated = Color(white: 0.15)
-    static let userBubble = Color(white: 0.165)
-    static let separator = Color.white.opacity(0.08)
+    static let background = Color.black
+    static let sidebarBackground = Color(white: 0.07)
+    static let surface = Color(white: 0.11)
+    static let surfaceElevated = Color(white: 0.16)
+    static let userBubble = Color(white: 0.17)
+    static let separator = Color.white.opacity(0.1)
+    static let selection = Color.white.opacity(0.1)
 
     static let primaryText = Color.white
-    static let secondaryText = Color.white.opacity(0.62)
-    static let tertiaryText = Color.white.opacity(0.38)
+    static let secondaryText = Color.white.opacity(0.6)
+    static let tertiaryText = Color.white.opacity(0.4)
 
-    static let accent = Color.accentColor
-    static let link = Color(red: 0.55, green: 0.69, blue: 1.0)
+    static let accent = Color.white
+    static let link = Color(red: 0.49, green: 0.67, blue: 1.0)
     static let danger = Color(red: 1.0, green: 0.42, blue: 0.40)
     static let success = Color(red: 0.36, green: 0.84, blue: 0.55)
 
-    static let messageSpacing: CGFloat = 26
-    static let contentMaxWidth: CGFloat = 780
-    static let horizontalPadding: CGFloat = 18
+    static let messageSpacing: CGFloat = 28
+    static let contentMaxWidth: CGFloat = 760
+    static let horizontalPadding: CGFloat = 20
 
     static func syntaxColor(_ kind: SyntaxTokenKind) -> Color {
         switch kind {

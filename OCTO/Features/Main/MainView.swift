@@ -6,13 +6,27 @@ import UIKit
 struct MainView: View {
     @Environment(AppModel.self) private var app
     @State private var session: ChatSession
-    @State private var isSidebarOpen = false
+    @State private var isSidebarOpen: Bool
     @State private var isDragging = false
     @State private var dragTranslation: CGFloat = 0
     @State private var showSettings = false
 
     init(app: AppModel) {
-        _session = State(initialValue: app.makeSession())
+        var initialSession: ChatSession?
+        var sidebarOpen = false
+        #if OCTO_DEMO
+        switch app.demoScene {
+        case .chat?, .voice?:
+            initialSession = app.makeSession(conversationID: DemoContent.featuredConversationID)
+        case .sidebar?:
+            initialSession = app.makeSession(conversationID: DemoContent.featuredConversationID)
+            sidebarOpen = true
+        default:
+            break
+        }
+        #endif
+        _session = State(initialValue: initialSession ?? app.makeSession())
+        _isSidebarOpen = State(initialValue: sidebarOpen)
     }
 
     var body: some View {
@@ -25,6 +39,9 @@ struct MainView: View {
                     selectedID: session.isTemporary ? nil : session.id,
                     onSelect: open,
                     onNewChat: { startNewChat(temporary: false) },
+                    onNewTemporaryChat: { startNewChat(temporary: true) },
+                    onRename: rename,
+                    onSetPinned: setPinned,
                     onDelete: delete,
                     onOpenSettings: { showSettings = true }
                 )
@@ -37,13 +54,14 @@ struct MainView: View {
                     session: session,
                     onOpenSidebar: { setSidebar(open: true) },
                     onNewChat: { startNewChat(temporary: false) },
-                    onToggleTemporary: { startNewChat(temporary: !session.isTemporary) }
+                    onToggleTemporary: { startNewChat(temporary: !session.isTemporary) },
+                    onDelete: { delete(session.id) }
                 )
                 .frame(width: proxy.size.width)
                 .overlay {
                     if progress > 0.001 {
                         Color.black
-                            .opacity(0.4 * progress)
+                            .opacity(0.45 * progress)
                             .ignoresSafeArea()
                             .contentShape(Rectangle())
                             .onTapGesture { setSidebar(open: false) }
@@ -75,6 +93,12 @@ struct MainView: View {
         }
         .task {
             await app.refreshModels()
+            #if OCTO_DEMO
+            if app.demoScene == .settings {
+                try? await Task.sleep(for: .milliseconds(600))
+                showSettings = true
+            }
+            #endif
         }
         .sensoryFeedback(.selection, trigger: isSidebarOpen) { _, _ in
             app.settings.hapticsEnabled
@@ -104,9 +128,31 @@ struct MainView: View {
     private func delete(_ id: UUID) {
         if session.id == id {
             session.stop()
+            session.discardIfTemporary()
             session = app.makeSession()
         }
         app.store.delete(id: id)
+    }
+
+    private func rename(_ id: UUID, to title: String) {
+        if let live = liveSession(id) {
+            live.rename(title)
+        } else {
+            app.store.rename(id: id, to: title)
+        }
+    }
+
+    private func setPinned(_ id: UUID, _ isPinned: Bool) {
+        if let live = liveSession(id) {
+            live.setPinned(isPinned)
+        } else {
+            app.store.setPinned(isPinned, id: id)
+        }
+    }
+
+    /// The open chat, or one still generating in the background, holds its own copy of the conversation.
+    private func liveSession(_ id: UUID) -> ChatSession? {
+        id == session.id ? session : app.liveSession(for: id)
     }
 
     private func leaveCurrentSession() {

@@ -206,6 +206,13 @@ final class AuthManager {
         return nil
     }
 
+    #if OCTO_DEMO
+    /// Screenshot builds show a fake account without touching the keychain.
+    func useDemoAccount(_ account: Account?) {
+        state = account.map { .signedIn($0) } ?? .signedOut
+    }
+    #endif
+
     // MARK: Browser sign-in
 
     func signInWithChatGPT() async throws {

@@ -31,6 +31,16 @@
         }
       }
     },
+    "Account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compte"
+          }
+        }
+      }
+    },
     "Add attachments": {
       "localizations": {
         "fr": {
@@ -51,6 +61,16 @@
         }
       }
     },
+    "Allow microphone access in Settings to use voice mode.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autorise l'accès au micro dans Réglages pour utiliser le mode vocal."
+          }
+        }
+      }
+    },
     "Allow speech recognition in Settings to dictate.": {
       "localizations": {
         "fr": {
@@ -61,12 +81,52 @@
         }
       }
     },
+    "Allow speech recognition in Settings to use voice mode.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autorise la reconnaissance vocale dans Réglages pour utiliser le mode vocal."
+          }
+        }
+      }
+    },
+    "App": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App"
+          }
+        }
+      }
+    },
+    "App language": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Langue de l'app"
+          }
+        }
+      }
+    },
     "Ask anything": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Pose ta question"
+          }
+        }
+      }
+    },
+    "Brainstorm": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trouver des idées"
           }
         }
       }
@@ -97,6 +157,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Annuler"
+          }
+        }
+      }
+    },
+    "Change model": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changer de modèle"
           }
         }
       }
@@ -157,6 +227,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Effacer la recherche"
+          }
+        }
+      }
+    },
+    "Code": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coder"
           }
         }
       }
@@ -251,22 +331,12 @@
         }
       }
     },
-    "Custom instructions": {
+    "Data controls": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Instructions personnalisées"
-          }
-        }
-      }
-    },
-    "Data": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Données"
+            "value": "Gestion des données"
           }
         }
       }
@@ -351,26 +421,6 @@
         }
       }
     },
-    "Direct to OpenAI": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Direct vers OpenAI"
-          }
-        }
-      }
-    },
-    "Done": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OK"
-          }
-        }
-      }
-    },
     "Edit": {
       "localizations": {
         "fr": {
@@ -387,6 +437,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modifier le message"
+          }
+        }
+      }
+    },
+    "Email": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-mail"
+          }
+        }
+      }
+    },
+    "End voice mode": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitter le mode vocal"
           }
         }
       }
@@ -471,12 +541,22 @@
         }
       }
     },
-    "Haptics": {
+    "Get advice": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Retours haptiques"
+            "value": "Demander conseil"
+          }
+        }
+      }
+    },
+    "Haptic feedback": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retour haptique"
           }
         }
       }
@@ -541,12 +621,82 @@
         }
       }
     },
+    "Let's brainstorm": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trouvons des idées"
+          }
+        }
+      }
+    },
+    "Let's debug some code": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déboguons ton code"
+          }
+        }
+      }
+    },
+    "Let's learn something new": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apprenons quelque chose"
+          }
+        }
+      }
+    },
+    "Let's plan a trip": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préparons un voyage"
+          }
+        }
+      }
+    },
+    "Let's write together": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écrivons ensemble"
+          }
+        }
+      }
+    },
     "Light": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Léger"
+          }
+        }
+      }
+    },
+    "Listening": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À l'écoute"
+          }
+        }
+      }
+    },
+    "Make a plan": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faire un plan"
           }
         }
       }
@@ -571,6 +721,16 @@
         }
       }
     },
+    "Microphone off": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Micro coupé"
+          }
+        }
+      }
+    },
     "Minimal": {
       "localizations": {
         "fr": {
@@ -587,6 +747,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modèle"
+          }
+        }
+      }
+    },
+    "More options": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus d'options"
+          }
+        }
+      }
+    },
+    "Mute": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couper le micro"
           }
         }
       }
@@ -611,22 +791,22 @@
         }
       }
     },
+    "No microphone is available.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun micro n'est disponible."
+          }
+        }
+      }
+    },
     "No results": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Aucun résultat"
-          }
-        }
-      }
-    },
-    "No telemetry": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zéro télémétrie"
           }
         }
       }
@@ -697,16 +877,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ouvrir la barre latérale"
-          }
-        }
-      }
-    },
-    "Open source": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open source"
           }
         }
       }
@@ -991,12 +1161,22 @@
         }
       }
     },
-    "Search chats": {
+    "Search": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rechercher dans les chats"
+            "value": "Rechercher"
+          }
+        }
+      }
+    },
+    "Search the web": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher sur le web"
           }
         }
       }
@@ -1171,6 +1351,16 @@
         }
       }
     },
+    "Sources": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sources"
+          }
+        }
+      }
+    },
     "Speech recognition is not available right now.": {
       "localizations": {
         "fr": {
@@ -1187,6 +1377,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Standard"
+          }
+        }
+      }
+    },
+    "Starting…": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Démarrage…"
           }
         }
       }
@@ -1221,12 +1421,42 @@
         }
       }
     },
+    "Subscription": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnement"
+          }
+        }
+      }
+    },
     "Summarize an article for me": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Résumer un article"
+          }
+        }
+      }
+    },
+    "Summarize text": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Résumer un texte"
+          }
+        }
+      }
+    },
+    "Tap to interrupt": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touche pour interrompre"
           }
         }
       }
@@ -1411,12 +1641,32 @@
         }
       }
     },
+    "Turn off web search": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactiver la recherche web"
+          }
+        }
+      }
+    },
     "Ultra": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Ultra"
+          }
+        }
+      }
+    },
+    "Unmute": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réactiver le micro"
           }
         }
       }
@@ -1461,6 +1711,16 @@
         }
       }
     },
+    "Used %@": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modèle utilisé : %@"
+          }
+        }
+      }
+    },
     "Version": {
       "localizations": {
         "fr": {
@@ -1471,12 +1731,12 @@
         }
       }
     },
-    "Voice & feedback": {
+    "Voice mode": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Voix et retours"
+            "value": "Mode vocal"
           }
         }
       }
@@ -1607,16 +1867,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ton forfait ChatGPT n'inclut pas cette fonctionnalité. Change de forfait ou utilise une clé API."
-          }
-        }
-      }
-    },
-    "Your ChatGPT, open source and private.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ton ChatGPT, open source et privé."
           }
         }
       }

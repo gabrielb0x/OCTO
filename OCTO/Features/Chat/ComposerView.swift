@@ -4,21 +4,33 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
+/// ChatGPT-style composer: a single Liquid Glass capsule with attachments, dictation and voice mode.
 struct ComposerView: View {
     @Environment(AppModel.self) private var app
     @Bindable var session: ChatSession
+    let onStartVoice: () -> Void
+
     @FocusState private var isFocused: Bool
     @State private var dictation = DictationController()
-    @State private var dictationPrefix = ""
     @State private var photoSelection: [PhotosPickerItem] = []
     @State private var showPhotoPicker = false
     @State private var showCamera = false
     @State private var showFileImporter = false
     @State private var importError: String?
 
+    private static let rowHeight: CGFloat = 50
+
+    private var showsSuggestions: Bool {
+        session.messages.isEmpty && !session.isTemporary && session.draft.isEmpty && session.pendingAttachments.isEmpty && !isFocused
+    }
+
+    private var isWebSearchOn: Bool {
+        session.conversation.webSearchEnabled && session.model.supportsWebSearch
+    }
+
     var body: some View {
-        VStack(spacing: 10) {
-            if session.messages.isEmpty, session.draft.isEmpty, session.pendingAttachments.isEmpty, !isFocused {
+        VStack(spacing: 12) {
+            if showsSuggestions {
                 SuggestionChips { suggestion in
                     session.draft = suggestion
                     isFocused = true
@@ -26,20 +38,15 @@ struct ComposerView: View {
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
 
-            GlassEffectContainer(spacing: 10) {
-                HStack(alignment: .bottom, spacing: 10) {
-                    attachMenu
-                    inputField
-                    trailingButton
-                }
-            }
+            composer
         }
         .readableWidth()
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 14)
         .padding(.top, 6)
-        .padding(.bottom, 6)
+        .padding(.bottom, 8)
         .animation(.smooth(duration: 0.25), value: session.pendingAttachments)
-        .animation(.smooth(duration: 0.25), value: isFocused)
+        .animation(.smooth(duration: 0.25), value: showsSuggestions)
+        .animation(.smooth(duration: 0.2), value: isWebSearchOn)
         .photosPicker(isPresented: $showPhotoPicker, selection: $photoSelection, maxSelectionCount: 4, matching: .images)
         .onChange(of: photoSelection) { _, items in
             loadPhotos(items)
@@ -70,6 +77,53 @@ struct ComposerView: View {
 
     // MARK: Pieces
 
+    private var composer: some View {
+        GlassEffectContainer {
+            VStack(alignment: .leading, spacing: 0) {
+                if !session.pendingAttachments.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(session.pendingAttachments) { attachment in
+                                PendingAttachmentView(attachment: attachment) {
+                                    session.removeAttachment(attachment.id)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.top, 8)
+                    }
+                }
+
+                HStack(alignment: .bottom, spacing: 0) {
+                    attachMenu
+                    if isWebSearchOn {
+                        webSearchChip
+                    }
+                    TextField(placeholder, text: $session.draft, axis: .vertical)
+                        .font(.body)
+                        .lineLimit(1...8)
+                        .focused($isFocused)
+                        .padding(.leading, isWebSearchOn ? 8 : 0)
+                        .padding(.vertical, 14)
+                        .onKeyPress(.return, phases: .down) { press in
+                            guard press.modifiers.contains(.command) else { return .ignored }
+                            send()
+                            return .handled
+                        }
+                    dictationButton
+                    trailingButton
+                }
+                .padding(.horizontal, 4)
+            }
+            .glassEffect(.regular, in: .rect(cornerRadius: 26))
+        }
+    }
+
+    private var placeholder: LocalizedStringKey {
+        if session.isTemporary { return "Temporary message" }
+        return isWebSearchOn ? "Search the web" : "Ask anything"
+    }
+
     private var attachMenu: some View {
         Menu {
             if UIImagePickerController.isSourceTypeAvailable(.camera) {
@@ -89,7 +143,7 @@ struct ComposerView: View {
             Button {
                 showFileImporter = true
             } label: {
-                Label("Files", systemImage: "doc")
+                Label("Files", systemImage: "paperclip")
             }
             if session.model.supportsWebSearch {
                 Divider()
@@ -98,77 +152,84 @@ struct ComposerView: View {
                 }
             }
         } label: {
-            Image(systemName: session.conversation.webSearchEnabled && session.model.supportsWebSearch ? "globe" : "plus")
-                .font(.system(size: 20, weight: .medium))
-                .foregroundStyle(session.conversation.webSearchEnabled && session.model.supportsWebSearch ? Theme.accent : Theme.primaryText)
-                .contentTransition(.symbolEffect(.replace))
-                .frame(width: 48, height: 48)
-                .contentShape(Circle())
+            Image(systemName: "plus")
+                .font(.system(size: 21, weight: .regular))
+                .foregroundStyle(Theme.primaryText)
+                .frame(width: 44, height: Self.rowHeight)
+                .contentShape(Rectangle())
         }
-        .glassEffect(.regular.interactive(), in: .circle)
         .accessibilityLabel(Text("Add attachments"))
     }
 
-    private var inputField: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if !session.pendingAttachments.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(session.pendingAttachments) { attachment in
-                            PendingAttachmentView(attachment: attachment) {
-                                session.removeAttachment(attachment.id)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.top, 8)
-                }
-            }
-
-            HStack(alignment: .bottom, spacing: 2) {
-                TextField(session.isTemporary ? LocalizedStringKey("Temporary message") : LocalizedStringKey("Ask anything"), text: $session.draft, axis: .vertical)
-                    .font(.body)
-                    .lineLimit(1...8)
-                    .focused($isFocused)
-                    .padding(.leading, 16)
-                    .padding(.vertical, 13)
-                    .onKeyPress(.return, phases: .down) { press in
-                        guard press.modifiers.contains(.command) else { return .ignored }
-                        send()
-                        return .handled
-                    }
-
-                Button(action: toggleDictation) {
-                    Image(systemName: dictation.isActive ? "waveform" : "mic")
-                        .symbolEffect(.variableColor.iterative, isActive: dictation.state == .listening)
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundStyle(dictation.isActive ? Theme.accent : Theme.secondaryText)
-                        .frame(width: 40, height: 46)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(dictation.isActive ? Text("Stop dictation") : Text("Dictate"))
-            }
-            .padding(.trailing, 6)
+    private var webSearchChip: some View {
+        Button {
+            session.setWebSearch(false)
+        } label: {
+            Image(systemName: "globe")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Theme.link)
+                .frame(width: 34, height: 34)
+                .background(Theme.link.opacity(0.18), in: Circle())
+                .frame(height: Self.rowHeight)
+                .contentShape(Rectangle())
         }
-        .frame(minHeight: 48)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .buttonStyle(.plain)
+        .transition(.scale.combined(with: .opacity))
+        .accessibilityLabel(Text("Turn off web search"))
     }
 
-    @ViewBuilder
-    private var trailingButton: some View {
-        if session.isStreaming {
-            GlassIconButton(systemImage: "stop.fill", label: "Stop generating", size: 48, prominent: true) {
-                session.stop()
-            }
-        } else {
-            GlassIconButton(systemImage: "arrow.up", label: "Send", size: 48, prominent: session.canSend, action: send)
-                .disabled(!session.canSend)
-                .opacity(session.canSend ? 1 : 0.6)
+    private var dictationButton: some View {
+        Button(action: toggleDictation) {
+            Image(systemName: dictation.isActive ? "waveform" : "mic")
+                .symbolEffect(.variableColor.iterative, isActive: dictation.state == .listening)
+                .font(.system(size: 18, weight: .regular))
+                .foregroundStyle(dictation.isActive ? Theme.link : Theme.primaryText)
+                .frame(width: 40, height: Self.rowHeight)
+                .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .accessibilityLabel(dictation.isActive ? Text("Stop dictation") : Text("Dictate"))
+    }
+
+    /// Voice mode when the composer is empty, send once there is something to send, stop while generating.
+    private var trailingButton: some View {
+        Button(action: trailingAction) {
+            Image(systemName: trailingSymbol)
+                .font(.system(size: session.isStreaming ? 13 : 16, weight: .bold))
+                .foregroundStyle(.black)
+                .contentTransition(.symbolEffect(.replace))
+                .frame(width: 36, height: 36)
+                .background(.white, in: Circle())
+                .frame(width: 44, height: Self.rowHeight)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(trailingLabel)
+    }
+
+    private var trailingSymbol: String {
+        if session.isStreaming { return "stop.fill" }
+        return session.canSend ? "arrow.up" : "waveform"
+    }
+
+    private var trailingLabel: Text {
+        if session.isStreaming { return Text("Stop generating") }
+        return session.canSend ? Text("Send") : Text("Voice mode")
     }
 
     // MARK: Actions
+
+    private func trailingAction() {
+        if session.isStreaming {
+            session.stop()
+        } else if session.canSend {
+            send()
+        } else {
+            dictation.stop()
+            isFocused = false
+            onStartVoice()
+        }
+    }
 
     private func send() {
         guard session.canSend else { return }
@@ -182,8 +243,7 @@ struct ComposerView: View {
             return
         }
         let existing = session.draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        dictationPrefix = existing.isEmpty ? "" : existing + " "
-        let prefix = dictationPrefix
+        let prefix = existing.isEmpty ? "" : existing + " "
         Task {
             await dictation.start { transcript in
                 session.draft = prefix + transcript
@@ -301,22 +361,25 @@ struct PendingAttachmentView: View {
     }
 }
 
+/// Starter prompts above the composer of a new chat, as native glass buttons.
 struct SuggestionChips: View {
     let onSelect: (String) -> Void
 
     private struct Suggestion: Identifiable {
+        let title: String
+        let prompt: String
         let systemImage: String
-        let text: String
-        var id: String { text }
+        let color: Color
+        var id: String { title }
     }
 
     private var suggestions: [Suggestion] {
         [
-            Suggestion(systemImage: "lightbulb", text: String(localized: "Brainstorm ideas for a weekend project")),
-            Suggestion(systemImage: "text.magnifyingglass", text: String(localized: "Summarize an article for me")),
-            Suggestion(systemImage: "chevron.left.forwardslash.chevron.right", text: String(localized: "Help me debug my code")),
-            Suggestion(systemImage: "airplane", text: String(localized: "Plan a 3-day trip to Lisbon")),
-            Suggestion(systemImage: "graduationcap", text: String(localized: "Explain a complex topic simply")),
+            Suggestion(title: String(localized: "Brainstorm"), prompt: String(localized: "Brainstorm ideas for a weekend project"), systemImage: "lightbulb", color: .yellow),
+            Suggestion(title: String(localized: "Code"), prompt: String(localized: "Help me debug my code"), systemImage: "chevron.left.forwardslash.chevron.right", color: .purple),
+            Suggestion(title: String(localized: "Summarize text"), prompt: String(localized: "Summarize an article for me"), systemImage: "text.alignleft", color: .orange),
+            Suggestion(title: String(localized: "Make a plan"), prompt: String(localized: "Plan a 3-day trip to Lisbon"), systemImage: "list.bullet.clipboard", color: .mint),
+            Suggestion(title: String(localized: "Get advice"), prompt: String(localized: "Explain a complex topic simply"), systemImage: "graduationcap", color: .cyan),
         ]
     }
 
@@ -326,23 +389,22 @@ struct SuggestionChips: View {
                 HStack(spacing: 8) {
                     ForEach(suggestions) { suggestion in
                         Button {
-                            onSelect(suggestion.text)
+                            onSelect(suggestion.prompt)
                         } label: {
                             Label {
-                                Text(verbatim: suggestion.text)
+                                Text(verbatim: suggestion.title)
+                                    .foregroundStyle(Theme.primaryText)
                             } icon: {
                                 Image(systemName: suggestion.systemImage)
+                                    .foregroundStyle(suggestion.color)
                             }
                             .font(.subheadline.weight(.medium))
-                            .foregroundStyle(Theme.primaryText)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 10)
                         }
-                        .buttonStyle(.plain)
-                        .glassEffect(.regular.interactive(), in: .capsule)
+                        .buttonStyle(.glass)
+                        .controlSize(.large)
                     }
                 }
-                .padding(.horizontal, 4)
+                .padding(.horizontal, 2)
                 .padding(.vertical, 2)
             }
         }

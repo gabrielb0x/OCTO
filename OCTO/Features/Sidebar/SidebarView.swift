@@ -1,11 +1,15 @@
 import OCTOCore
 import SwiftUI
 
+/// History drawer modeled on the ChatGPT app: glass search field, shortcuts, chats and account.
 struct SidebarView: View {
     @Environment(AppModel.self) private var app
     let selectedID: UUID?
     let onSelect: (UUID) -> Void
     let onNewChat: () -> Void
+    let onNewTemporaryChat: () -> Void
+    let onRename: (UUID, String) -> Void
+    let onSetPinned: (UUID, Bool) -> Void
     let onDelete: (UUID) -> Void
     let onOpenSettings: () -> Void
 
@@ -29,6 +33,7 @@ struct SidebarView: View {
                             ForEach(results) { row($0) }
                         }
                     } else {
+                        shortcuts
                         let sections = ConversationGrouping.sections(for: app.store.summaries)
                         if sections.isEmpty {
                             placeholder(title: "Your chats will appear here", systemImage: "bubble.left.and.bubble.right")
@@ -52,7 +57,7 @@ struct SidebarView: View {
             Button("Cancel", role: .cancel) {}
             Button("Save") {
                 if let target = renameTarget {
-                    app.store.rename(id: target.id, to: renameText)
+                    onRename(target.id, renameText)
                 }
             }
         }
@@ -77,7 +82,7 @@ struct SidebarView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(Theme.secondaryText)
-                    TextField("Search chats", text: $query)
+                    TextField("Search", text: $query)
                         .submitLabel(.search)
                         .autocorrectionDisabled()
                     if !query.isEmpty {
@@ -92,26 +97,46 @@ struct SidebarView: View {
                     }
                 }
                 .padding(.horizontal, 14)
-                .frame(height: 46)
-                .glassEffect(.regular, in: .capsule)
+                .frame(height: 44)
+                .glassEffect(.regular.interactive(), in: .capsule)
 
-                GlassIconButton(systemImage: "square.and.pencil", label: "New chat", size: 46, action: onNewChat)
+                GlassIconButton(systemImage: "square.and.pencil", label: "New chat", size: 44, action: onNewChat)
             }
         }
         .padding(.horizontal, 14)
-        .padding(.top, 6)
+        .padding(.top, 8)
+        .padding(.bottom, 6)
+    }
+
+    private var shortcuts: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            shortcutRow(action: onNewChat) {
+                Image("Logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 22, height: 22)
+            } title: {
+                Text(verbatim: "OCTO")
+            }
+            shortcutRow(action: onNewTemporaryChat) {
+                Image("TemporaryChat")
+            } title: {
+                Text("Temporary chat")
+            }
+        }
+        .padding(.top, 4)
         .padding(.bottom, 4)
     }
 
     private var footer: some View {
         Button(action: onOpenSettings) {
             HStack(spacing: 12) {
-                AccountAvatar(account: app.auth.account, size: 38)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: accountTitle)
+                AccountAvatar(account: app.auth.account, size: 36)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(verbatim: app.auth.account?.displayTitle ?? "OCTO")
                         .font(.subheadline.weight(.semibold))
                         .lineLimit(1)
-                    Text(verbatim: accountSubtitle)
+                    Text(verbatim: app.auth.account?.displaySubtitle ?? "")
                         .font(.caption)
                         .foregroundStyle(Theme.secondaryText)
                         .lineLimit(1)
@@ -122,41 +147,40 @@ struct SidebarView: View {
                     .foregroundStyle(Theme.secondaryText)
             }
             .foregroundStyle(Theme.primaryText)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .contentShape(Rectangle())
+            .padding(.leading, 8)
+            .padding(.trailing, 16)
+            .padding(.vertical, 8)
+            .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .glassEffect(.regular.interactive(), in: .capsule)
         .padding(.horizontal, 12)
         .padding(.bottom, 8)
         .accessibilityLabel(Text("Settings"))
     }
 
-    private var accountTitle: String {
-        guard let account = app.auth.account else { return "OCTO" }
-        switch account.method {
-        case .apiKey:
-            return String(localized: "OpenAI API key")
-        case .chatGPT:
-            return account.email ?? String(localized: "ChatGPT account")
-        }
-    }
-
-    private var accountSubtitle: String {
-        guard let account = app.auth.account else { return "" }
-        switch account.method {
-        case .apiKey:
-            return String(localized: "Pay as you go")
-        case .chatGPT:
-            if let plan = ChatGPTPlan.displayName(for: account.planType) {
-                return String(localized: "ChatGPT \(plan)")
-            }
-            return String(localized: "ChatGPT")
-        }
-    }
-
     // MARK: Rows
+
+    private func shortcutRow<Icon: View, Title: View>(
+        action: @escaping () -> Void,
+        @ViewBuilder icon: () -> Icon,
+        @ViewBuilder title: () -> Title
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                icon()
+                    .frame(width: 26, height: 26)
+                title()
+                    .font(.body.weight(.medium))
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(Theme.primaryText)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .contentShape(.rect(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
+    }
 
     private func row(_ summary: ConversationSummary) -> some View {
         let isSelected = summary.id == selectedID
@@ -178,13 +202,13 @@ struct SidebarView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 11)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(isSelected ? Color.white.opacity(0.1) : Color.clear, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(isSelected ? Theme.selection : Color.clear, in: .rect(cornerRadius: 14))
+            .contentShape(.rect(cornerRadius: 14))
         }
         .buttonStyle(.plain)
         .contextMenu {
             Button {
-                app.store.setPinned(!summary.isPinned, id: summary.id)
+                onSetPinned(summary.id, !summary.isPinned)
             } label: {
                 Label(summary.isPinned ? LocalizedStringKey("Unpin") : LocalizedStringKey("Pin"), systemImage: summary.isPinned ? "pin.slash" : "pin")
             }

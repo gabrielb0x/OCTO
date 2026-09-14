@@ -33,13 +33,13 @@ struct UserMessageView: View {
                     .font(.body)
                     .foregroundStyle(Theme.primaryText)
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 11)
-                    .background(Theme.userBubble, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .padding(.vertical, 10)
+                    .background(Theme.userBubble, in: .rect(cornerRadius: 22))
                     .contextMenu {
                         Button {
                             UIPasteboard.general.string = message.text
                         } label: {
-                            Label("Copy", systemImage: "doc.on.doc")
+                            Label("Copy", systemImage: "square.on.square")
                         }
                         if canEdit {
                             Button(action: onEdit) {
@@ -50,7 +50,7 @@ struct UserMessageView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
-        .padding(.leading, 44)
+        .padding(.leading, 56)
     }
 }
 
@@ -75,7 +75,7 @@ struct AttachmentGallery: View {
                             }
                         }
                         .frame(width: imageSide, height: imageSide)
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     case .text:
                         FileChip(name: attachment.displayName ?? "file", byteCount: attachment.byteCount)
                     }
@@ -95,7 +95,7 @@ struct FileChip: View {
         HStack(spacing: 10) {
             Image(systemName: "doc.text.fill")
                 .font(.title3)
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.link)
             VStack(alignment: .leading, spacing: 1) {
                 Text(verbatim: name)
                     .font(.subheadline.weight(.medium))
@@ -109,7 +109,7 @@ struct FileChip: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(Theme.surface, in: .rect(cornerRadius: 16))
     }
 }
 
@@ -149,7 +149,7 @@ struct AssistantMessageView: View {
             }
 
             if !message.citations.isEmpty, !isActive {
-                SourcesView(citations: message.citations)
+                SourcesButton(citations: message.citations)
             }
 
             switch message.status {
@@ -176,8 +176,8 @@ struct AssistantMessageView: View {
     }
 
     private var actionBar: some View {
-        HStack(spacing: 0) {
-            actionButton(copied ? "checkmark" : "doc.on.doc", label: "Copy") {
+        HStack(spacing: 2) {
+            actionButton(copied ? "checkmark" : "square.on.square", label: "Copy") {
                 UIPasteboard.general.string = message.text
                 copied = true
                 Task {
@@ -188,29 +188,18 @@ struct AssistantMessageView: View {
             actionButton(app.speech.speakingMessageID == message.id ? "stop.circle" : "speaker.wave.2", label: "Read aloud") {
                 app.speech.toggle(messageID: message.id, markdown: message.text, rate: app.settings.speechRate)
             }
-            if isLast {
-                actionButton("arrow.clockwise", label: "Regenerate") {
-                    session.regenerate(message.id)
-                }
-                .disabled(session.isStreaming)
-            }
             ShareLink(item: message.text) {
                 Image(systemName: "square.and.arrow.up")
-                    .frame(width: 36, height: 36)
+                    .frame(width: 34, height: 34)
                     .contentShape(Rectangle())
             }
             .accessibilityLabel(Text("Share"))
-
-            Spacer(minLength: 8)
-
-            if let modelID = message.modelID {
-                Text(verbatim: app.models.first(where: { $0.id == modelID })?.displayName ?? modelID)
-                    .font(.caption)
-                    .foregroundStyle(Theme.tertiaryText)
-                    .lineLimit(1)
+            if isLast {
+                regenerateMenu
             }
+            Spacer(minLength: 0)
         }
-        .font(.subheadline)
+        .font(.system(size: 15, weight: .medium))
         .foregroundStyle(Theme.secondaryText)
         .buttonStyle(.plain)
         .padding(.leading, -8)
@@ -219,11 +208,48 @@ struct AssistantMessageView: View {
         }
     }
 
+    /// Tap to try again, press and hold to pick another model, like ChatGPT.
+    private var regenerateMenu: some View {
+        Menu {
+            if let usedModelTitle {
+                Text(verbatim: usedModelTitle)
+            }
+            Button {
+                session.regenerate(message.id)
+            } label: {
+                Label("Try again", systemImage: "arrow.clockwise")
+            }
+            Menu {
+                ForEach(app.models) { model in
+                    Button(model.displayName) {
+                        session.regenerate(message.id, using: model)
+                    }
+                }
+            } label: {
+                Label("Change model", systemImage: "cpu")
+            }
+        } label: {
+            Image(systemName: "arrow.clockwise")
+                .frame(width: 34, height: 34)
+                .contentShape(Rectangle())
+        } primaryAction: {
+            session.regenerate(message.id)
+        }
+        .disabled(session.isStreaming)
+        .accessibilityLabel(Text("Regenerate"))
+    }
+
+    private var usedModelTitle: String? {
+        guard let modelID = message.modelID else { return nil }
+        let name = app.models.first { $0.id == modelID }?.displayName ?? modelID
+        return String(localized: "Used \(name)")
+    }
+
     private func actionButton(_ systemImage: String, label: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .contentTransition(.symbolEffect(.replace))
-                .frame(width: 36, height: 36)
+                .frame(width: 34, height: 34)
                 .contentShape(Rectangle())
         }
         .accessibilityLabel(Text(label))
@@ -320,40 +346,89 @@ struct SearchStatusView: View {
     }
 }
 
-struct SourcesView: View {
+/// "Sources" pill with stacked site badges that opens the list of citations.
+struct SourcesButton: View {
     let citations: [Citation]
-    @Environment(\.openURL) private var openURL
+    @State private var isPresented = false
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            GlassEffectContainer(spacing: 8) {
-                HStack(spacing: 8) {
-                    ForEach(citations) { citation in
-                        Button {
-                            if let url = URL(string: citation.url) {
-                                openURL(url)
-                            }
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "link")
-                                    .font(.caption2.weight(.bold))
-                                Text(verbatim: citation.host ?? citation.url)
-                                    .lineLimit(1)
-                            }
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(Theme.primaryText)
-                            .padding(.horizontal, 11)
-                            .padding(.vertical, 7)
-                        }
-                        .buttonStyle(.plain)
-                        .glassEffect(.regular.interactive(), in: .capsule)
-                        .help(citation.title ?? citation.url)
+        Button {
+            isPresented = true
+        } label: {
+            HStack(spacing: 8) {
+                HStack(spacing: -6) {
+                    ForEach(citations.prefix(3)) { citation in
+                        SourceBadge(citation: citation)
                     }
                 }
-                .padding(.vertical, 2)
+                Text("Sources")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.primaryText)
             }
         }
-        .scrollClipDisabled()
+        .buttonStyle(.glass)
+        .sheet(isPresented: $isPresented) {
+            SourcesSheet(citations: citations)
+        }
+    }
+}
+
+struct SourceBadge: View {
+    let citation: Citation
+
+    var body: some View {
+        let host = citation.host ?? citation.url
+        Text(verbatim: String(host.prefix(1)).uppercased())
+            .font(.system(size: 10, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(width: 20, height: 20)
+            .background(Color(hue: Self.hue(for: host), saturation: 0.55, brightness: 0.72), in: Circle())
+            .overlay(Circle().strokeBorder(Color.black.opacity(0.6), lineWidth: 1))
+    }
+
+    /// Stable color per site (String.hashValue changes between launches).
+    private static func hue(for host: String) -> Double {
+        let value = host.unicodeScalars.reduce(0) { ($0 &* 31 &+ Int($1.value)) & 0xFFFF }
+        return Double(value % 360) / 360
+    }
+}
+
+struct SourcesSheet: View {
+    let citations: [Citation]
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List(citations) { citation in
+                if let url = URL(string: citation.url) {
+                    Link(destination: url) {
+                        HStack(spacing: 12) {
+                            SourceBadge(citation: citation)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(verbatim: citation.title ?? citation.host ?? citation.url)
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(Theme.primaryText)
+                                    .lineLimit(2)
+                                Text(verbatim: citation.host ?? citation.url)
+                                    .font(.caption)
+                                    .foregroundStyle(Theme.secondaryText)
+                                    .lineLimit(1)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Sources")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(role: .close) {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 }
 
@@ -374,9 +449,15 @@ struct ErrorCard: View {
             .font(.subheadline)
 
             if needsSignIn {
-                Button("Sign in again", action: onSignIn)
-                    .buttonStyle(.glassProminent)
-                    .controlSize(.small)
+                Button {
+                    onSignIn()
+                } label: {
+                    Text("Sign in again")
+                        .foregroundStyle(.black)
+                }
+                .buttonStyle(.glassProminent)
+                .tint(.white)
+                .controlSize(.small)
             } else if let onRetry {
                 Button(action: onRetry) {
                     Label("Retry", systemImage: "arrow.clockwise")
@@ -387,6 +468,6 @@ struct ErrorCard: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(.regular.tint(Theme.danger.opacity(0.16)), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .glassEffect(.regular.tint(Theme.danger.opacity(0.16)), in: .rect(cornerRadius: 20))
     }
 }

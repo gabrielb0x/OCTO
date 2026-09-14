@@ -22,6 +22,8 @@ final class ChatSession: Identifiable {
     private(set) var needsSignIn = false
     var draft = ""
     var pendingAttachments: [PendingAttachment] = []
+    /// While voice mode is open, replies are written to be read aloud.
+    var isVoiceConversation = false
 
     /// Counters used as haptic feedback triggers.
     private(set) var sentCount = 0
@@ -73,6 +75,16 @@ final class ChatSession: Identifiable {
         persist()
     }
 
+    func rename(_ title: String) {
+        conversation.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        persist()
+    }
+
+    func setPinned(_ isPinned: Bool) {
+        conversation.isPinned = isPinned
+        persist()
+    }
+
     // MARK: Attachments
 
     func addImage(_ image: UIImage) {
@@ -103,15 +115,28 @@ final class ChatSession: Identifiable {
         startAssistantTurn()
     }
 
+    /// Sends a transcript from voice mode, leaving the composer draft untouched.
+    func sendVoiceMessage(_ text: String) {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !isStreaming, !text.isEmpty else { return }
+        conversation.messages.append(ChatMessage(role: .user, text: text))
+        conversation.updatedAt = Date()
+        sentCount += 1
+        startAssistantTurn()
+    }
+
     func stop() {
         streamTask?.cancel()
     }
 
-    func regenerate(_ messageID: UUID) {
+    func regenerate(_ messageID: UUID, using model: ModelDescriptor? = nil) {
         guard !isStreaming,
               let index = conversation.messages.firstIndex(where: { $0.id == messageID }),
               conversation.messages[index].role == .assistant
         else { return }
+        if let model {
+            selectModel(model)
+        }
         conversation.messages.removeSubrange(index...)
         startAssistantTurn()
     }
@@ -170,7 +195,7 @@ final class ChatSession: Identifiable {
         let settings = app.settings
         let assistantID = assistant.id
         let effort = model.resolvedEffort(preferred: conversation.reasoningEffort)
-        let instructions = SystemPrompt.make(aboutUser: settings.aboutUser, responseStyle: settings.responseStyle)
+        let instructions = SystemPrompt.make(aboutUser: settings.aboutUser, responseStyle: settings.responseStyle, spokenReplies: isVoiceConversation)
         let webSearch = conversation.webSearchEnabled && model.supportsWebSearch
         let summaries = settings.showReasoning && model.supportsReasoningSummaries
         let cacheKey = conversation.id.uuidString
