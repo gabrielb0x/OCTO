@@ -198,7 +198,8 @@ public enum SystemPrompt {
         timeZone: TimeZone = .current,
         localeIdentifier: String = Locale.current.identifier,
         aboutUser: String = "",
-        responseStyle: String = ""
+        responseStyle: String = "",
+        spokenReplies: Bool = false
     ) -> String {
         let dayFormatter = DateFormatter()
         dayFormatter.locale = Locale(identifier: "en_US_POSIX")
@@ -223,6 +224,16 @@ public enum SystemPrompt {
         let style = responseStyle.trimmingCharacters(in: .whitespacesAndNewlines)
         if !style.isEmpty {
             prompt += "\n\nHow the user wants you to respond:\n\(style)"
+        }
+        if spokenReplies {
+            prompt += """
+
+
+            Voice conversation: the user is speaking to you and your reply is read aloud by text-to-speech.
+            - Answer like a natural spoken conversation, in short sentences.
+            - Do not use Markdown, lists, tables, code blocks, links or emoji.
+            - Keep it brief unless the user asks for more detail.
+            """
         }
         return prompt
     }
