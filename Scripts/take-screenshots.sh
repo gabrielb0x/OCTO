@@ -11,7 +11,8 @@ LOCALE_ID="${SCREENSHOT_LOCALE:-fr_FR}"
 BUNDLE_ID="com.gabrielb0x.octo"
 SCENES=(welcome home chat sidebar voice settings)
 
-xcrun simctl list runtimes available | sed 's/^/::notice title=Simulator runtimes::/'
+# GitHub keeps 10 annotations per step: list iOS runtimes only so readiness warnings stay visible.
+xcrun simctl list runtimes available | grep "^iOS" | sed 's/^/::notice title=Simulator runtimes::/' || true
 
 # Uses the device on the newest installed iOS runtime, creating it when the image doesn't ship one.
 UDID=$(python3 - "$DEVICE_NAME" <<'PY'
