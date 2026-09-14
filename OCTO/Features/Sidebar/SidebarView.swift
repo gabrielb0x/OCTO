@@ -1,7 +1,7 @@
 import OCTOCore
 import SwiftUI
 
-/// History drawer modeled on the ChatGPT app: glass search field, shortcuts, chats and account.
+/// History drawer modeled on the ChatGPT app: glass search field, shortcuts, projects, chats and account.
 struct SidebarView: View {
     @Environment(AppModel.self) private var app
     let selectedID: UUID?
@@ -17,6 +17,7 @@ struct SidebarView: View {
     @State private var renameTarget: ConversationSummary?
     @State private var renameText = ""
     @State private var deleteTarget: ConversationSummary?
+    @State private var expandedProjects: Set<String> = []
 
     var body: some View {
         VStack(spacing: 0) {
@@ -34,20 +35,18 @@ struct SidebarView: View {
                         }
                     } else {
                         shortcuts
-                        let sections = ConversationGrouping.sections(for: app.store.summaries)
-                        if sections.isEmpty {
-                            placeholder(title: "Your chats will appear here", systemImage: "bubble.left.and.bubble.right")
-                        }
-                        ForEach(sections) { section in
-                            sectionHeader(title(for: section.bucket))
-                            ForEach(section.conversations) { row($0) }
-                        }
+                        syncStatus
+                        projectsSection
+                        chatsSection
                     }
                 }
                 .padding(.horizontal, 10)
                 .padding(.bottom, 16)
             }
             .scrollDismissesKeyboard(.immediately)
+            .refreshable {
+                await app.store.syncWithAccount()
+            }
 
             footer
         }
@@ -116,7 +115,7 @@ struct SidebarView: View {
                     .scaledToFit()
                     .frame(width: 22, height: 22)
             } title: {
-                Text(verbatim: "OCTO")
+                Text(verbatim: "ChatGPT")
             }
             shortcutRow(action: onNewTemporaryChat) {
                 Image("TemporaryChat")
@@ -131,12 +130,12 @@ struct SidebarView: View {
     private var footer: some View {
         Button(action: onOpenSettings) {
             HStack(spacing: 12) {
-                AccountAvatar(account: app.auth.account, size: 36)
+                AccountAvatar(name: app.account.profile?.name, email: app.accountEmail, image: app.account.avatar, size: 36)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(verbatim: app.auth.account?.displayTitle ?? "OCTO")
+                    Text(verbatim: app.accountName)
                         .font(.subheadline.weight(.semibold))
                         .lineLimit(1)
-                    Text(verbatim: app.auth.account?.displaySubtitle ?? "")
+                    Text(verbatim: app.planName)
                         .font(.caption)
                         .foregroundStyle(Theme.secondaryText)
                         .lineLimit(1)
@@ -157,6 +156,83 @@ struct SidebarView: View {
         .padding(.horizontal, 12)
         .padding(.bottom, 8)
         .accessibilityLabel(Text("Settings"))
+    }
+
+    // MARK: Sections
+
+    @ViewBuilder
+    private var syncStatus: some View {
+        if case .failed(let message) = app.store.syncState {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Couldn't load your ChatGPT chats")
+                        .font(.subheadline.weight(.semibold))
+                    Text(verbatim: message)
+                        .font(.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                    Button("Try again") {
+                        Task { await app.store.syncWithAccount() }
+                    }
+                    .buttonStyle(.glass)
+                    .controlSize(.small)
+                }
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(Theme.primaryText)
+            .padding(12)
+            .background(Theme.surface, in: .rect(cornerRadius: 16))
+            .padding(.vertical, 6)
+        }
+    }
+
+    @ViewBuilder
+    private var projectsSection: some View {
+        if !app.store.projects.isEmpty {
+            sectionHeader(String(localized: "Projects"))
+            ForEach(app.store.projects) { project in
+                projectRow(project)
+                if expandedProjects.contains(project.id) {
+                    let chats = app.store.summaries(inProject: project.id)
+                    if chats.isEmpty {
+                        Text("No chats in this project")
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.tertiaryText)
+                            .padding(.leading, 50)
+                            .padding(.vertical, 8)
+                    } else {
+                        ForEach(chats) { row($0, indented: true) }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var chatsSection: some View {
+        let sections = ConversationGrouping.sections(for: app.store.looseSummaries)
+        if sections.isEmpty {
+            if app.store.syncState == .syncing {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 60)
+            } else if app.store.projects.isEmpty {
+                placeholder(title: "Your chats will appear here", systemImage: "bubble.left.and.bubble.right")
+            }
+        }
+        ForEach(sections) { section in
+            sectionHeader(title(for: section.bucket))
+            ForEach(section.conversations) { row($0) }
+        }
+        if app.store.canLoadMore {
+            ProgressView()
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .task(id: app.store.summaries.count) {
+                    await app.store.loadMoreFromAccount()
+                }
+        }
     }
 
     // MARK: Rows
@@ -182,7 +258,40 @@ struct SidebarView: View {
         .buttonStyle(.plain)
     }
 
-    private func row(_ summary: ConversationSummary) -> some View {
+    private func projectRow(_ project: ChatProject) -> some View {
+        let isExpanded = expandedProjects.contains(project.id)
+        return Button {
+            withAnimation(.smooth(duration: 0.25)) {
+                if isExpanded {
+                    expandedProjects.remove(project.id)
+                } else {
+                    expandedProjects.insert(project.id)
+                }
+            }
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: ProjectIcon.systemImage(for: project.iconName))
+                    .font(.body)
+                    .foregroundStyle(project.colorHex.flatMap { Color(hex: $0) } ?? Theme.primaryText)
+                    .frame(width: 26, height: 26)
+                Text(verbatim: project.name.isEmpty ? String(localized: "Project") : project.name)
+                    .font(.body.weight(.medium))
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Theme.tertiaryText)
+                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
+            }
+            .foregroundStyle(Theme.primaryText)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .contentShape(.rect(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func row(_ summary: ConversationSummary, indented: Bool = false) -> some View {
         let isSelected = summary.id == selectedID
         return Button {
             onSelect(summary.id)
@@ -199,7 +308,8 @@ struct SidebarView: View {
                         .foregroundStyle(Theme.tertiaryText)
                 }
             }
-            .padding(.horizontal, 12)
+            .padding(.leading, indented ? 50 : 12)
+            .padding(.trailing, 12)
             .padding(.vertical, 11)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(isSelected ? Theme.selection : Color.clear, in: .rect(cornerRadius: 14))
@@ -276,5 +386,32 @@ struct SidebarView: View {
 
     private var deleteIsPresented: Binding<Bool> {
         Binding(get: { deleteTarget != nil }, set: { if !$0 { deleteTarget = nil } })
+    }
+}
+
+/// SF Symbol for the icon of a ChatGPT project.
+enum ProjectIcon {
+    static func systemImage(for name: String?) -> String {
+        switch name?.lowercased() {
+        case "graduation-cap"?: return "graduationcap"
+        case "book"?, "book-open"?: return "book"
+        case "code"?, "terminal"?: return "chevron.left.forwardslash.chevron.right"
+        case "briefcase"?: return "briefcase"
+        case "heart"?: return "heart"
+        case "star"?: return "star"
+        case "flask"?, "beaker"?: return "flask"
+        case "music"?: return "music.note"
+        case "camera"?: return "camera"
+        case "globe"?: return "globe"
+        case "pencil"?, "pen"?: return "pencil"
+        case "lightbulb"?: return "lightbulb"
+        case "dollar"?, "money"?: return "dollarsign"
+        case "plane"?, "airplane"?: return "airplane"
+        case "house"?, "home"?: return "house"
+        case "chart"?, "chart-bar"?: return "chart.bar"
+        case "palette"?, "paint"?: return "paintpalette"
+        case "gamepad"?, "game"?: return "gamecontroller"
+        default: return "folder"
+        }
     }
 }

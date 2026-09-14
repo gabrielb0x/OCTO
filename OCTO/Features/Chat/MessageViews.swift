@@ -6,15 +6,37 @@ struct MessageRow: View {
     let message: ChatMessage
     let session: ChatSession
     let isLast: Bool
+    /// True for the first message written in OCTO after the account copy of a chat.
+    let showsLocalNote: Bool
     let onEdit: () -> Void
 
     var body: some View {
-        switch message.role {
-        case .user:
-            UserMessageView(message: message, canEdit: !session.isStreaming, onEdit: onEdit)
-        case .assistant:
-            AssistantMessageView(message: message, session: session, isLast: isLast)
+        VStack(spacing: Theme.messageSpacing) {
+            if showsLocalNote {
+                LocalMessagesNote()
+            }
+            switch message.role {
+            case .user:
+                UserMessageView(message: message, canEdit: session.canModify(message), onEdit: onEdit)
+            case .assistant:
+                AssistantMessageView(message: message, session: session, isLast: isLast)
+            }
         }
+    }
+}
+
+/// Marks where the messages written in OCTO start in a chat from the ChatGPT account.
+struct LocalMessagesNote: View {
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "iphone")
+            Text("The messages below are only on this device")
+        }
+        .font(.footnote)
+        .foregroundStyle(Theme.tertiaryText)
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -57,6 +79,7 @@ struct UserMessageView: View {
 struct AttachmentGallery: View {
     @Environment(AppModel.self) private var app
     let attachments: [MessageAttachment]
+    var alignment: HorizontalAlignment = .trailing
 
     var body: some View {
         let imageSide: CGFloat = attachments.count == 1 ? 200 : 116
@@ -65,25 +88,36 @@ struct AttachmentGallery: View {
                 ForEach(attachments) { attachment in
                     switch attachment.kind {
                     case .image:
-                        Group {
-                            if let image = AttachmentThumbnails.image(for: attachment, files: app.store.files) {
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .scaledToFill()
-                            } else {
-                                Theme.surfaceElevated
-                            }
-                        }
-                        .frame(width: imageSide, height: imageSide)
-                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        imageTile(attachment, side: attachment.isStoredOnDevice ? imageSide : 116)
                     case .text:
-                        FileChip(name: attachment.displayName ?? "file", byteCount: attachment.byteCount)
+                        FileChip(name: attachment.displayName ?? "file", byteCount: attachment.byteCount > 0 ? attachment.byteCount : nil)
                     }
                 }
             }
         }
-        .defaultScrollAnchor(.trailing)
+        .defaultScrollAnchor(alignment == .trailing ? UnitPoint.trailing : UnitPoint.leading)
         .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private func imageTile(_ attachment: MessageAttachment, side: CGFloat) -> some View {
+        Group {
+            if attachment.isStoredOnDevice, let image = AttachmentThumbnails.image(for: attachment, files: app.store.files) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                // Images of account chats stay in the account.
+                ZStack {
+                    Theme.surfaceElevated
+                    Image(systemName: "photo")
+                        .font(.title2)
+                        .foregroundStyle(Theme.tertiaryText)
+                }
+            }
+        }
+        .frame(width: side, height: side)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .accessibilityLabel(Text("Image"))
     }
 }
 
@@ -114,42 +148,71 @@ struct FileChip: View {
 }
 
 struct AssistantMessageView: View {
+    let message: ChatMessage
+    let session: ChatSession
+    let isLast: Bool
+
+    var body: some View {
+        AssistantMessageContent(
+            message: message,
+            live: session.live?.messageID == message.id ? session.live : nil,
+            session: session,
+            isLast: isLast
+        )
+    }
+}
+
+/// A reply, either stored or still being written (`live`), whose text is then read from the live reply.
+private struct AssistantMessageContent: View {
     @Environment(AppModel.self) private var app
     let message: ChatMessage
+    let live: LiveReply?
     let session: ChatSession
     let isLast: Bool
     @State private var copied = false
 
-    private var isActive: Bool { message.status == .streaming }
+    private var isActive: Bool { live != nil || message.status == .streaming }
     private var activity: ChatSession.Activity { isActive ? session.activity : .idle }
+    private var text: String { live?.text ?? message.text }
+    private var reasoning: String { live?.reasoning ?? message.reasoning }
+    private var reasoningDuration: TimeInterval? { live?.reasoningDuration ?? message.reasoningDuration }
+    private var searchQueries: [String] { live?.searchQueries ?? message.searchQueries }
+    private var citations: [Citation] { live?.citations ?? message.citations }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if activity == .thinking || !message.reasoning.isEmpty || message.reasoningDuration != nil {
+            if activity == .thinking || !reasoning.isEmpty || reasoningDuration != nil {
                 ReasoningView(
-                    reasoning: message.reasoning,
-                    duration: message.reasoningDuration,
+                    reasoning: reasoning,
+                    duration: reasoningDuration,
                     isThinking: activity == .thinking,
-                    canExpand: app.settings.showReasoning && !message.reasoning.isEmpty
+                    canExpand: app.settings.showReasoning && !reasoning.isEmpty
                 )
             }
 
-            if activity == .searching || !message.searchQueries.isEmpty {
-                SearchStatusView(queries: message.searchQueries, isSearching: activity == .searching)
+            if activity == .searching || !searchQueries.isEmpty {
+                SearchStatusView(queries: searchQueries, isSearching: activity == .searching)
             }
 
-            if message.text.isEmpty {
+            if !message.attachments.isEmpty {
+                AttachmentGallery(attachments: message.attachments, alignment: .leading)
+            }
+
+            if text.isEmpty {
                 if activity == .waiting || activity == .writing {
                     PulsingDot()
                         .padding(.vertical, 4)
                 }
+            } else if let live {
+                MarkdownView(text: text)
+                    .environment(\.streamingFadeLength, live.fadeLength)
             } else {
-                MarkdownView(text: message.text)
+                MarkdownView(text: text)
                     .textSelection(.enabled)
             }
 
-            if !message.citations.isEmpty, !isActive {
-                SourcesButton(citations: message.citations)
+            if !citations.isEmpty, !isActive {
+                SourcesButton(citations: citations)
             }
 
             switch message.status {
@@ -194,7 +257,7 @@ struct AssistantMessageView: View {
                     .contentShape(Rectangle())
             }
             .accessibilityLabel(Text("Share"))
-            if isLast {
+            if isLast, message.remoteID == nil {
                 regenerateMenu
             }
             Spacer(minLength: 0)

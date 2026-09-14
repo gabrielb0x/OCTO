@@ -192,13 +192,50 @@ public enum ResponsesInputBuilder {
     }
 }
 
+/// What the ChatGPT account says about the user: custom instructions, personality and memories.
+public struct PersonalContext: Equatable, Sendable {
+    public var nickname: String
+    public var occupation: String
+    public var aboutUser: String
+    public var responseStyle: String
+    /// Personality key, such as "cynic".
+    public var personality: String?
+    /// Label and description from the catalog, used for personalities OCTO doesn't know.
+    public var personalityDescription: String?
+    /// Trait key → "more" or "less".
+    public var traits: [String: String]
+    public var memories: [String]
+
+    public init(
+        nickname: String = "",
+        occupation: String = "",
+        aboutUser: String = "",
+        responseStyle: String = "",
+        personality: String? = nil,
+        personalityDescription: String? = nil,
+        traits: [String: String] = [:],
+        memories: [String] = []
+    ) {
+        self.nickname = nickname
+        self.occupation = occupation
+        self.aboutUser = aboutUser
+        self.responseStyle = responseStyle
+        self.personality = personality
+        self.personalityDescription = personalityDescription
+        self.traits = traits
+        self.memories = memories
+    }
+}
+
 public enum SystemPrompt {
+    /// Saved memories beyond this many characters are left out to keep requests small.
+    public static let memoryBudget = 8_000
+
     public static func make(
         now: Date = Date(),
         timeZone: TimeZone = .current,
         localeIdentifier: String = Locale.current.identifier,
-        aboutUser: String = "",
-        responseStyle: String = "",
+        personal: PersonalContext = PersonalContext(),
         spokenReplies: Bool = false
     ) -> String {
         let dayFormatter = DateFormatter()
@@ -207,7 +244,7 @@ public enum SystemPrompt {
         dayFormatter.dateFormat = "EEEE, MMMM d, yyyy"
 
         var prompt = """
-        You are OCTO, a helpful and knowledgeable AI assistant inside an open-source iOS chat app, powered by OpenAI models.
+        You are ChatGPT, a large language model trained by OpenAI.
         Current date: \(dayFormatter.string(from: now)). Time zone: \(timeZone.identifier). User locale: \(localeIdentifier).
 
         Formatting:
@@ -217,14 +254,42 @@ public enum SystemPrompt {
         - Reply in the language the user writes in.
         """
 
-        let about = aboutUser.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !about.isEmpty {
-            prompt += "\n\nWhat the user wants you to know about them:\n\(about)"
+        var style: [String] = []
+        if let personality = personalityInstruction(key: personal.personality, fallback: personal.personalityDescription) {
+            style.append(personality)
         }
-        let style = responseStyle.trimmingCharacters(in: .whitespacesAndNewlines)
+        for key in personal.traits.keys.sorted() {
+            if let trait = traitInstruction(key: key, level: personal.traits[key] ?? "") {
+                style.append(trait)
+            }
+        }
         if !style.isEmpty {
-            prompt += "\n\nHow the user wants you to respond:\n\(style)"
+            prompt += "\n\nPersonality chosen by the user:\n" + style.map { "- \($0)" }.joined(separator: "\n")
         }
+
+        var profile: [String] = []
+        let nickname = personal.nickname.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !nickname.isEmpty { profile.append("Preferred name: \(nickname)") }
+        let occupation = personal.occupation.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !occupation.isEmpty { profile.append("Occupation: \(occupation)") }
+        let about = personal.aboutUser.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !about.isEmpty { profile.append("More about the user:\n\(about)") }
+        if !profile.isEmpty {
+            prompt += "\n\nThe user shared this about themselves. Use it only when it's relevant to the request, and don't mention it otherwise:\n"
+            prompt += profile.joined(separator: "\n")
+        }
+
+        let instructions = personal.responseStyle.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !instructions.isEmpty {
+            prompt += "\n\nHow the user wants you to respond:\n\(instructions)"
+        }
+
+        let memories = memoryLines(personal.memories)
+        if !memories.isEmpty {
+            prompt += "\n\nSaved memories about the user. Use them when they help, without pointing them out:\n"
+            prompt += memories.map { "- \($0)" }.joined(separator: "\n")
+        }
+
         if spokenReplies {
             prompt += """
 
@@ -236,6 +301,64 @@ public enum SystemPrompt {
             """
         }
         return prompt
+    }
+
+    static func personalityInstruction(key: String?, fallback: String?) -> String? {
+        switch (key ?? "").lowercased() {
+        case "", "default":
+            return nil
+        case "professional":
+            return "Professional: polished and precise, with a courteous tone."
+        case "listener", "friendly", "warm":
+            return "Friendly: warm, natural and engaging."
+        case "coach", "candid":
+            return "Candid: direct and honest, while staying encouraging."
+        case "creative", "quirky":
+            return "Quirky: playful, witty and imaginative."
+        case "robot", "efficient":
+            return "Efficient: concise and plain, straight to the point."
+        case "cynic", "cynical":
+            return "Cynical: critical and sarcastic, while staying genuinely helpful."
+        case "nerd", "nerdy":
+            return "Nerdy: curious and exploratory, enjoying the details."
+        default:
+            let description = fallback?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return description.isEmpty ? nil : description
+        }
+    }
+
+    static func traitInstruction(key: String, level: String) -> String? {
+        let level = level.lowercased()
+        guard level == "more" || level == "less" else { return nil }
+        let more = level == "more"
+        switch key.lowercased() {
+        case "warm":
+            return more ? "Be warmer and more personal." : "Be more neutral and less effusive."
+        case "enthusiastic":
+            return more ? "Show more enthusiasm." : "Keep enthusiasm low-key."
+        case "scannable", "headers_and_lists":
+            return more ? "Use more headings and lists." : "Use fewer headings and lists, favor prose."
+        case "emoji":
+            return more ? "Use more emoji." : "Use fewer emoji."
+        default:
+            let name = key.replacingOccurrences(of: "_", with: " ")
+            return more ? "More \(name)." : "Less \(name)."
+        }
+    }
+
+    static func memoryLines(_ memories: [String]) -> [String] {
+        var lines: [String] = []
+        var used = 0
+        for memory in memories {
+            let line = memory
+                .replacingOccurrences(of: "\n", with: " ")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !line.isEmpty else { continue }
+            guard used + line.count <= memoryBudget else { break }
+            lines.append(line)
+            used += line.count
+        }
+        return lines
     }
 }
 

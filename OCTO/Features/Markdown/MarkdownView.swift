@@ -2,6 +2,11 @@ import OCTOCore
 import SwiftUI
 import UIKit
 
+extension EnvironmentValues {
+    /// Letters at the end of a reply being written that are still fading in; nil once the reply is complete.
+    @Entry var streamingFadeLength: Double? = nil
+}
+
 struct MarkdownView: View {
     let text: String
 
@@ -13,11 +18,14 @@ struct MarkdownView: View {
 struct MarkdownBlocksView: View {
     let blocks: [MarkdownBlock]
     var spacing: CGFloat = 14
+    @Environment(\.streamingFadeLength) private var fadeLength
 
     var body: some View {
         VStack(alignment: .leading, spacing: spacing) {
-            ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in
+            ForEach(Array(blocks.enumerated()), id: \.offset) { index, block in
+                // Only the block being written fades in.
                 MarkdownBlockView(block: block)
+                    .environment(\.streamingFadeLength, index == blocks.count - 1 ? fadeLength : nil)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -26,17 +34,20 @@ struct MarkdownBlocksView: View {
 
 struct MarkdownBlockView: View {
     let block: MarkdownBlock
+    @Environment(\.streamingFadeLength) private var fadeLength
 
     var body: some View {
         switch block {
         case .heading(let level, let text):
             Text(InlineMarkdown.attributed(text))
                 .font(Self.headingFont(level))
+                .modifier(StreamingFade(length: fadeLength))
                 .padding(.top, level <= 2 ? 6 : 2)
                 .accessibilityAddTraits(.isHeader)
         case .paragraph(let text):
             Text(InlineMarkdown.attributed(text))
                 .lineSpacing(3)
+                .modifier(StreamingFade(length: fadeLength))
         case .code(let language, let code):
             CodeBlockView(language: language, code: code)
         case .quote(let blocks):
@@ -81,6 +92,7 @@ struct MarkdownBlockView: View {
 
 struct MarkdownListView: View {
     let list: MarkdownList
+    @Environment(\.streamingFadeLength) private var fadeLength
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -89,6 +101,7 @@ struct MarkdownListView: View {
                     marker(index: index, item: item)
                     MarkdownBlocksView(blocks: item.blocks, spacing: 8)
                 }
+                .environment(\.streamingFadeLength, index == list.items.count - 1 ? fadeLength : nil)
             }
         }
         .padding(.leading, 2)
@@ -183,6 +196,7 @@ private extension MarkdownTableAlignment {
 struct CodeBlockView: View {
     let language: String?
     let code: String
+    @Environment(\.streamingFadeLength) private var fadeLength
     @State private var copied = false
 
     var body: some View {
@@ -216,11 +230,64 @@ struct CodeBlockView: View {
                 Text(CodeHighlighting.attributed(code, language: language))
                     .font(.system(.footnote, design: .monospaced))
                     .lineSpacing(3)
+                    .modifier(StreamingFade(length: fadeLength))
                     .padding(14)
             }
         }
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Theme.separator))
+    }
+}
+
+/// Fades in the end of the text while a reply is being written.
+struct StreamingFade: ViewModifier {
+    let length: Double?
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if let length {
+            content.textRenderer(StreamingTextRenderer(fadeLength: length))
+        } else {
+            content
+        }
+    }
+}
+
+/// Draws the last letters of a text more and more transparent, so new words seem to flow onto
+/// the screen as the reply is revealed. Animating `fadeLength` to zero settles the last letters.
+struct StreamingTextRenderer: TextRenderer, Animatable {
+    var fadeLength: Double
+
+    var animatableData: Double {
+        get { fadeLength }
+        set { fadeLength = newValue }
+    }
+
+    func draw(layout: Text.Layout, in context: inout GraphicsContext) {
+        var total = 0
+        for line in layout {
+            for run in line {
+                total += run.count
+            }
+        }
+
+        var index = 0
+        for line in layout {
+            for run in line {
+                // Runs that end before the fading letters are drawn in one go.
+                if fadeLength < 0.5 || Double(total - index - run.count) >= fadeLength {
+                    context.draw(run)
+                    index += run.count
+                    continue
+                }
+                for slice in run {
+                    var letter = context
+                    letter.opacity = min(max(Double(total - index) / fadeLength, 0), 1)
+                    letter.draw(slice)
+                    index += 1
+                }
+            }
+        }
     }
 }
 

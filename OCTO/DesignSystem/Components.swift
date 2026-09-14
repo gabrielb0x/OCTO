@@ -1,5 +1,6 @@
 import OCTOCore
 import SwiftUI
+import UIKit
 
 /// Round Liquid Glass button with an SF Symbol, for icon-only controls outside toolbars.
 struct GlassIconButton: View {
@@ -73,34 +74,42 @@ struct PulsingDot: View {
     }
 }
 
+/// The profile picture of the ChatGPT account, or the account's initial on a gradient.
 struct AccountAvatar: View {
-    let account: Account?
+    let name: String?
+    let email: String?
+    let image: UIImage?
     var size: CGFloat = 36
 
     var body: some View {
         ZStack {
-            Circle()
-                .fill(LinearGradient(
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                LinearGradient(
                     colors: [Color(red: 0.36, green: 0.46, blue: 1.0), Color(red: 0.64, green: 0.38, blue: 0.96)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
-                ))
-            if account?.method == .apiKey {
-                Image(systemName: "key.fill")
-                    .font(.system(size: size * 0.4, weight: .semibold))
-            } else {
+                )
                 Text(verbatim: initial)
                     .font(.system(size: size * 0.42, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
             }
         }
-        .foregroundStyle(.white)
         .frame(width: size, height: size)
+        .clipShape(Circle())
         .accessibilityHidden(true)
     }
 
     private var initial: String {
-        guard let first = account?.email?.first else { return "O" }
-        return String(first).uppercased()
+        for source in [name, email] {
+            if let letter = source?.first(where: { $0.isLetter || $0.isNumber }) {
+                return String(letter).uppercased()
+            }
+        }
+        return "C"
     }
 }
 

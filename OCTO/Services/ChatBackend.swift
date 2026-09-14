@@ -33,9 +33,9 @@ enum ChatBackendError: LocalizedError {
                 let time = resetsAt.formatted(date: .omitted, time: .shortened)
                 return String(localized: "You've reached your ChatGPT usage limit. It resets at \(time).")
             case .usageNotIncluded:
-                return String(localized: "Your ChatGPT plan doesn't include this. Upgrade your plan or use an API key.")
+                return String(localized: "Your ChatGPT plan doesn't include this. Upgrade your plan to continue.")
             case .insufficientQuota:
-                return String(localized: "Your OpenAI API quota is used up. Check your billing settings.")
+                return String(localized: "Your OpenAI quota is used up.")
             case .rateLimited:
                 return String(localized: "Too many requests right now. Wait a moment and try again.")
             case .contextTooLong:
@@ -58,8 +58,8 @@ enum ChatBackendError: LocalizedError {
     }
 }
 
-/// Talks directly to OpenAI: the ChatGPT backend when signed in with ChatGPT,
-/// or the public API with an API key. No proxy, no analytics.
+/// Generates replies through the Codex backend of the ChatGPT plan, straight from the device.
+/// No proxy, no analytics.
 final class ChatBackend: Sendable {
     let vault: CredentialVault
     let session: URLSession
@@ -101,7 +101,7 @@ final class ChatBackend: Sendable {
             }
             let payload = APIErrorPayload.parse(body)
 
-            if http.statusCode == 401, attempt == 0, case .chatGPT = credential {
+            if http.statusCode == 401, attempt == 0 {
                 return try await run(request, continuation: continuation, attempt: attempt + 1)
             }
             if http.statusCode == 400, !request.instructionsAsDeveloperMessage,
@@ -133,22 +133,10 @@ final class ChatBackend: Sendable {
     }
 
     private func makeURLRequest(for request: ChatStreamRequest, credential: CredentialVault.Credential) throws -> URLRequest {
-        var urlRequest: URLRequest
-        let isChatGPT: Bool
-        switch credential {
-        case .chatGPT(let accessToken, let accountID):
-            urlRequest = URLRequest(url: CodexBackend.responsesURL)
-            let headers = CodexBackend.headers(accessToken: accessToken, accountID: accountID, userAgent: AppInfo.userAgent, sessionID: request.cacheKey)
-            for (name, value) in headers {
-                urlRequest.setValue(value, forHTTPHeaderField: name)
-            }
-            isChatGPT = true
-        case .apiKey(let key):
-            urlRequest = URLRequest(url: OpenAIPlatform.responsesURL)
-            for (name, value) in OpenAIPlatform.headers(apiKey: key, userAgent: AppInfo.userAgent) {
-                urlRequest.setValue(value, forHTTPHeaderField: name)
-            }
-            isChatGPT = false
+        var urlRequest = URLRequest(url: CodexBackend.responsesURL)
+        let headers = CodexBackend.headers(accessToken: credential.accessToken, accountID: credential.accountID, userAgent: AppInfo.userAgent, sessionID: request.cacheKey)
+        for (name, value) in headers {
+            urlRequest.setValue(value, forHTTPHeaderField: name)
         }
         urlRequest.httpMethod = "POST"
         urlRequest.timeoutInterval = 300
@@ -166,7 +154,7 @@ final class ChatBackend: Sendable {
             model: request.modelID,
             instructions: instructions,
             input: input,
-            tools: request.webSearch ? [.webSearch(externalWebAccess: isChatGPT ? true : nil)] : [],
+            tools: request.webSearch ? [.webSearch(externalWebAccess: true)] : [],
             reasoning: request.reasoningEffort.map { ResponsesReasoning(effort: $0, summary: request.reasoningSummaries ? "auto" : nil) },
             promptCacheKey: request.cacheKey,
             text: request.verbosity.map { ResponsesTextOptions(verbosity: $0) }
@@ -179,18 +167,9 @@ final class ChatBackend: Sendable {
 
     func fetchModels() async throws -> [ModelDescriptor] {
         let credential = try await vault.credential()
-        var request: URLRequest
-        switch credential {
-        case .chatGPT(let accessToken, let accountID):
-            request = URLRequest(url: CodexBackend.modelsURL)
-            for (name, value) in CodexBackend.headers(accessToken: accessToken, accountID: accountID, userAgent: AppInfo.userAgent) {
-                request.setValue(value, forHTTPHeaderField: name)
-            }
-        case .apiKey(let key):
-            request = URLRequest(url: OpenAIPlatform.modelsURL)
-            for (name, value) in OpenAIPlatform.headers(apiKey: key, userAgent: AppInfo.userAgent) {
-                request.setValue(value, forHTTPHeaderField: name)
-            }
+        var request = URLRequest(url: CodexBackend.modelsURL)
+        for (name, value) in CodexBackend.headers(accessToken: credential.accessToken, accountID: credential.accountID, userAgent: AppInfo.userAgent) {
+            request.setValue(value, forHTTPHeaderField: name)
         }
         request.timeoutInterval = 30
 
@@ -199,21 +178,16 @@ final class ChatBackend: Sendable {
         guard (200..<300).contains(status) else {
             throw ChatBackendError.failure(ChatFailureKind.classify(status: status, payload: APIErrorPayload.parse(data)))
         }
-        let models: [ModelDescriptor]?
-        switch credential {
-        case .chatGPT: models = ModelCatalog.parseCodexModels(data)
-        case .apiKey: models = ModelCatalog.parsePlatformModels(data)
-        }
-        guard let models, !models.isEmpty else { throw ChatBackendError.invalidResponse }
+        guard let models = ModelCatalog.parseCodexModels(data), !models.isEmpty else { throw ChatBackendError.invalidResponse }
         return models
     }
 
-    /// ChatGPT plan usage windows; nil when signed in with an API key.
+    /// Usage windows of the ChatGPT plan.
     func fetchUsage() async throws -> UsageSnapshot? {
-        guard case .chatGPT(let accessToken, let accountID) = try await vault.credential() else { return nil }
+        let credential = try await vault.credential()
         var request = URLRequest(url: CodexBackend.usageURL)
         request.timeoutInterval = 30
-        for (name, value) in CodexBackend.headers(accessToken: accessToken, accountID: accountID, userAgent: AppInfo.userAgent) {
+        for (name, value) in CodexBackend.headers(accessToken: credential.accessToken, accountID: credential.accountID, userAgent: AppInfo.userAgent) {
             request.setValue(value, forHTTPHeaderField: name)
         }
         let (data, response) = try await session.data(for: request)

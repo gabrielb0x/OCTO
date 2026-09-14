@@ -17,6 +17,8 @@ struct RootView: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
+        @Bindable var app = app
+
         ZStack {
             Theme.background.ignoresSafeArea()
             switch app.auth.state {
@@ -29,6 +31,9 @@ struct RootView: View {
             }
         }
         .animation(.smooth(duration: 0.35), value: app.auth.state)
+        .sheet(item: $app.whatsNew) { notes in
+            WhatsNewView(notes: notes)
+        }
         .task {
             #if OCTO_DEMO
             if app.isDemo {

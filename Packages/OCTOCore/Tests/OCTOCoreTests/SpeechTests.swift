@@ -29,10 +29,32 @@ import Testing
 }
 
 @Suite struct SystemPromptTests {
-    @Test func addsVoiceGuidanceOnlyForSpokenReplies() {
-        let written = SystemPrompt.make(aboutUser: "I am a developer")
+    @Test func presentsItselfAsChatGPTWithTheAccountPersonalization() {
+        let personal = PersonalContext(
+            nickname: "Gabriel",
+            occupation: "Student",
+            aboutUser: "I am a developer",
+            responseStyle: "Always use tu",
+            personality: "cynic",
+            traits: ["emoji": "more", "enthusiastic": "default"],
+            memories: ["Has a kitten", "  "]
+        )
+        let written = SystemPrompt.make(personal: personal)
+        #expect(written.hasPrefix("You are ChatGPT"))
+        #expect(!written.contains("OCTO"))
+        #expect(written.contains("Preferred name: Gabriel"))
+        #expect(written.contains("Occupation: Student"))
         #expect(written.contains("I am a developer"))
+        #expect(written.contains("Always use tu"))
+        #expect(written.contains("Cynical"))
+        #expect(written.contains("Use more emoji."))
+        #expect(!written.contains("enthusiasm"))
+        #expect(written.contains("- Has a kitten\n") || written.hasSuffix("- Has a kitten"))
         #expect(!written.contains("read aloud"))
+
+        let plain = SystemPrompt.make()
+        #expect(!plain.contains("Personality chosen"))
+        #expect(!plain.contains("Saved memories"))
         #expect(SystemPrompt.make(spokenReplies: true).contains("read aloud"))
     }
 }

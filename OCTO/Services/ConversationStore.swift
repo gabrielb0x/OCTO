@@ -14,6 +14,14 @@ struct PendingAttachment: Identifiable, Equatable {
     var content: Content
 }
 
+/// A ChatGPT project, listed in the sidebar with its chats.
+struct ChatProject: Codable, Equatable, Identifiable, Sendable {
+    var id: String
+    var name: String
+    var iconName: String?
+    var colorHex: String?
+}
+
 /// JSON files in Application Support. Writes happen on a serial background queue.
 final class ConversationFiles: @unchecked Sendable {
     let conversationsDirectory: URL
@@ -38,17 +46,29 @@ final class ConversationFiles: @unchecked Sendable {
         conversationsDirectory.appendingPathComponent("index.json")
     }
 
+    private var projectsURL: URL {
+        conversationsDirectory.appendingPathComponent("projects.json")
+    }
+
     private func fileURL(for id: UUID) -> URL {
         conversationsDirectory.appendingPathComponent("\(id.uuidString).json")
     }
 
-    func attachmentURL(_ name: String) -> URL {
-        attachmentsDirectory.appendingPathComponent(name)
+    /// nil for names that don't point to a file inside the attachments folder,
+    /// such as the placeholders of attachments that stayed in the ChatGPT account.
+    func attachmentURL(_ name: String) -> URL? {
+        guard !name.isEmpty, !name.contains("/"), name != ".", name != ".." else { return nil }
+        return attachmentsDirectory.appendingPathComponent(name)
     }
 
     func loadIndex() -> [ConversationSummary]? {
         guard let data = try? Data(contentsOf: indexURL) else { return nil }
         return try? JSONDecoder().decode([ConversationSummary].self, from: data)
+    }
+
+    func loadProjects() -> [ChatProject] {
+        guard let data = try? Data(contentsOf: projectsURL) else { return [] }
+        return (try? JSONDecoder().decode([ChatProject].self, from: data)) ?? []
     }
 
     func loadConversation(_ id: UUID) -> Conversation? {
@@ -75,11 +95,23 @@ final class ConversationFiles: @unchecked Sendable {
         }
     }
 
-    func delete(_ id: UUID, attachmentNames: [String], index: [ConversationSummary]) {
+    func writeProjects(_ projects: [ChatProject]) {
         queue.async { [self] in
-            try? FileManager.default.removeItem(at: fileURL(for: id))
+            if let data = try? JSONEncoder().encode(projects) {
+                try? data.write(to: projectsURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            }
+        }
+    }
+
+    func delete(_ ids: [UUID], attachmentNames: [String], index: [ConversationSummary]) {
+        queue.async { [self] in
+            for id in ids {
+                try? FileManager.default.removeItem(at: fileURL(for: id))
+            }
             for name in attachmentNames {
-                try? FileManager.default.removeItem(at: attachmentURL(name))
+                if let url = attachmentURL(name) {
+                    try? FileManager.default.removeItem(at: url)
+                }
             }
             if let data = try? JSONEncoder().encode(index) {
                 try? data.write(to: indexURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
@@ -101,7 +133,7 @@ final class ConversationFiles: @unchecked Sendable {
     func saveAttachment(_ data: Data, fileExtension: String) -> String? {
         let name = "\(UUID().uuidString).\(fileExtension)"
         do {
-            try data.write(to: attachmentURL(name), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            try data.write(to: attachmentsDirectory.appendingPathComponent(name), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
             return name
         } catch {
             return nil
@@ -114,16 +146,35 @@ final class ConversationFiles: @unchecked Sendable {
     }
 }
 
-/// Local chat history. Nothing is stored on OpenAI's servers (`store: false`).
+/// Chat history: the chats of the ChatGPT account, downloaded and kept on the device, and the
+/// replies written in OCTO, which are generated with server-side storage turned off.
 @MainActor
 @Observable
 final class ConversationStore {
+    enum SyncState: Equatable {
+        case idle
+        case syncing
+        case failed(String)
+    }
+
+    static let pageSize = 50
+
     private(set) var summaries: [ConversationSummary] = []
+    private(set) var projects: [ChatProject] = []
+    private(set) var syncState: SyncState = .idle
+    /// True while older account chats remain to be listed.
+    private(set) var canLoadMore = false
+    /// Set when a change couldn't be applied to the ChatGPT account.
+    var syncError: String?
 
     let files: ConversationFiles
+    /// Nil in screenshot builds, which never touch the network.
+    @ObservationIgnored var service: AccountService?
     @ObservationIgnored private var cache: [UUID: Conversation] = [:]
     @ObservationIgnored private var searchCorpus: [UUID: String] = [:]
     @ObservationIgnored private var corpusLoaded = false
+    @ObservationIgnored private var nextOffset = 0
+    @ObservationIgnored private var isLoadingMore = false
 
     init(files: ConversationFiles = ConversationFiles()) {
         self.files = files
@@ -135,7 +186,21 @@ final class ConversationStore {
                 files.write(nil, index: summaries)
             }
         }
+        projects = files.loadProjects()
         sortSummaries()
+    }
+
+    /// Chats outside projects, as listed under the sidebar's date sections.
+    var looseSummaries: [ConversationSummary] {
+        summaries.filter { $0.projectID == nil }
+    }
+
+    func summaries(inProject projectID: String) -> [ConversationSummary] {
+        summaries.filter { $0.projectID == projectID }
+    }
+
+    func summary(id: UUID) -> ConversationSummary? {
+        summaries.first { $0.id == id }
     }
 
     func conversation(id: UUID) -> Conversation? {
@@ -152,8 +217,10 @@ final class ConversationStore {
     func save(_ conversation: Conversation) {
         guard !conversation.messages.isEmpty else { return }
         cache[conversation.id] = conversation
-        let summary = conversation.summary
+        var summary = conversation.summary
         if let index = summaries.firstIndex(where: { $0.id == conversation.id }) {
+            // The chat list may know about a newer account copy than the one saved with the chat.
+            summary.remoteUpdatedAt = [summary.remoteUpdatedAt, summaries[index].remoteUpdatedAt].compactMap { $0 }.max()
             summaries[index] = summary
         } else {
             summaries.append(summary)
@@ -166,31 +233,71 @@ final class ConversationStore {
     }
 
     func delete(id: UUID) {
-        let conversation = cache[id] ?? files.loadConversation(id)
-        let names = conversation?.messages.flatMap { $0.attachments.map(\.storedFileName) } ?? []
-        cache[id] = nil
-        searchCorpus[id] = nil
-        summaries.removeAll { $0.id == id }
-        files.delete(id, attachmentNames: names, index: summaries)
+        let remoteID = remoteID(for: id)
+        removeLocally([id])
+        guard let service, let remoteID else { return }
+        Task {
+            do {
+                try await service.delete(conversationID: remoteID)
+            } catch AccountAPIError.notFound {
+                // Already gone from the account.
+            } catch {
+                syncError = ChatSession.describe(error)
+                await syncWithAccount()
+            }
+        }
     }
 
-    func deleteAll() {
+    /// Deletes every chat on this device, then in the ChatGPT account.
+    func deleteAll() async throws {
         cache.removeAll()
         searchCorpus.removeAll()
         summaries.removeAll()
+        projects.removeAll()
+        canLoadMore = false
+        nextOffset = 0
         files.deleteEverything()
+        if let service {
+            try await service.deleteAllConversations()
+        }
     }
 
     func setPinned(_ isPinned: Bool, id: UUID) {
-        guard var conversation = conversation(id: id) else { return }
-        conversation.isPinned = isPinned
-        save(conversation)
+        if var conversation = conversation(id: id) {
+            conversation.isPinned = isPinned
+            save(conversation)
+        } else if let index = summaries.firstIndex(where: { $0.id == id }) {
+            summaries[index].isPinned = isPinned
+            files.write(nil, index: summaries)
+        }
     }
 
     func rename(id: UUID, to title: String) {
-        guard var conversation = conversation(id: id) else { return }
-        conversation.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        save(conversation)
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if var conversation = conversation(id: id) {
+            conversation.title = trimmed
+            save(conversation)
+        } else if let index = summaries.firstIndex(where: { $0.id == id }) {
+            summaries[index].title = trimmed
+            files.write(nil, index: summaries)
+        }
+        renameInAccount(id: id, title: trimmed)
+    }
+
+    /// Applies a new title to the account copy of a chat.
+    func renameInAccount(id: UUID, title: String) {
+        guard let service, let remoteID = remoteID(for: id), !title.isEmpty else { return }
+        Task {
+            do {
+                try await service.rename(conversationID: remoteID, to: title)
+            } catch {
+                syncError = ChatSession.describe(error)
+            }
+        }
+    }
+
+    func remoteID(for id: UUID) -> String? {
+        summaries.first { $0.id == id }?.remoteID ?? cache[id]?.remoteID
     }
 
     func search(_ query: String) -> [ConversationSummary] {
@@ -201,6 +308,78 @@ final class ConversationStore {
             summary.title.lowercased().contains(needle) || (searchCorpus[summary.id]?.contains(needle) ?? false)
         }
     }
+
+    // MARK: ChatGPT account
+
+    /// Lists the latest chats and the projects of the account, and forgets chats deleted elsewhere.
+    func syncWithAccount() async {
+        guard let service, syncState != .syncing else { return }
+        syncState = .syncing
+        do {
+            let page = try await service.conversations(offset: 0, limit: Self.pageSize)
+            upsert(page.items)
+            removeMissingChats(firstPage: page.items, isComplete: page.items.count < Self.pageSize)
+            nextOffset = page.items.count
+            canLoadMore = hasMore(after: page)
+            files.write(nil, index: summaries)
+            syncState = .idle
+        } catch {
+            syncState = .failed(ChatSession.describe(error))
+            return
+        }
+        await syncProjects(service: service)
+    }
+
+    /// Lists the next page of older chats, when the sidebar reaches the end of the list.
+    func loadMoreFromAccount() async {
+        guard let service, canLoadMore, !isLoadingMore, syncState != .syncing else { return }
+        isLoadingMore = true
+        defer { isLoadingMore = false }
+        do {
+            let page = try await service.conversations(offset: nextOffset, limit: Self.pageSize)
+            upsert(page.items)
+            nextOffset += page.items.count
+            canLoadMore = !page.items.isEmpty && hasMore(after: page)
+            files.write(nil, index: summaries)
+        } catch {
+            canLoadMore = false
+        }
+    }
+
+    /// Downloads the account copy of a chat and merges it with the replies written in OCTO.
+    func downloadAccountChat(id: UUID) async throws -> Conversation? {
+        guard let service, let remoteID = remoteID(for: id) else { return nil }
+        let remote: RemoteConversation
+        do {
+            remote = try await service.conversation(id: remoteID)
+        } catch AccountAPIError.notFound {
+            removeLocally([id])
+            throw AccountAPIError.notFound
+        }
+        var merged = AccountChatMapper.conversation(from: remote, merging: conversation(id: id))
+        merged.id = id
+        if let summary = summary(id: id) {
+            merged.isPinned = summary.isPinned
+        }
+        save(merged)
+        return merged
+    }
+
+    /// Forgets the account's chats on sign-out. Chats started in OCTO stay on the device.
+    func removeAccountChats() {
+        removeLocally(summaries.filter(\.isAccountChat).map(\.id))
+        projects = []
+        files.writeProjects([])
+        canLoadMore = false
+        nextOffset = 0
+        syncState = .idle
+    }
+
+    #if OCTO_DEMO
+    func useDemoProjects(_ demoProjects: [ChatProject]) {
+        projects = demoProjects
+    }
+    #endif
 
     // MARK: Attachments
 
@@ -217,7 +396,7 @@ final class ConversationStore {
     }
 
     nonisolated func payload(for attachment: MessageAttachment) -> AttachmentPayload? {
-        guard let data = try? Data(contentsOf: files.attachmentURL(attachment.storedFileName)) else { return nil }
+        guard let url = files.attachmentURL(attachment.storedFileName), let data = try? Data(contentsOf: url) else { return nil }
         switch attachment.kind {
         case .image:
             return .imageDataURL("data:\(attachment.mimeType);base64,\(data.base64EncodedString())")
@@ -229,7 +408,7 @@ final class ConversationStore {
     func markdownExport(of conversation: Conversation) -> String {
         var lines = ["# \(conversation.displayTitle)", ""]
         for message in conversation.messages where !message.text.isEmpty {
-            let author = message.role == .user ? String(localized: "You") : "OCTO"
+            let author = message.role == .user ? String(localized: "You") : "ChatGPT"
             lines.append("**\(author)**")
             lines.append("")
             lines.append(message.text)
@@ -239,6 +418,103 @@ final class ConversationStore {
     }
 
     // MARK: Private
+
+    private func upsert(_ items: [RemoteConversationSummary]) {
+        var indexByRemoteID: [String: Int] = [:]
+        for (index, summary) in summaries.enumerated() {
+            if let remoteID = summary.remoteID {
+                indexByRemoteID[remoteID] = index
+            }
+        }
+        for item in items where !item.isArchived {
+            if let index = indexByRemoteID[item.id] {
+                summaries[index] = AccountChatMapper.summary(from: item, existing: summaries[index])
+            } else {
+                summaries.append(AccountChatMapper.summary(from: item, existing: nil))
+                indexByRemoteID[item.id] = summaries.count - 1
+            }
+        }
+        sortSummaries()
+    }
+
+    /// Chats missing from the first page of the account list were deleted or archived elsewhere,
+    /// unless they're older than everything on that page.
+    private func removeMissingChats(firstPage items: [RemoteConversationSummary], isComplete: Bool) {
+        let listed = Set(items.map(\.id))
+        let oldest = items.compactMap(\.updatedAt).min()
+        let missing = summaries.filter { summary in
+            guard let remoteID = summary.remoteID, summary.projectID == nil, !listed.contains(remoteID) else { return false }
+            if isComplete { return true }
+            guard let oldest, let updatedAt = summary.remoteUpdatedAt else { return false }
+            return updatedAt >= oldest
+        }
+        if !missing.isEmpty {
+            removeLocally(missing.map(\.id))
+        }
+    }
+
+    private func syncProjects(service: AccountService) async {
+        guard let remoteProjects = try? await service.projects() else { return }
+        projects = remoteProjects.map { ChatProject(id: $0.id, name: $0.name, iconName: $0.iconName, colorHex: $0.colorHex) }
+
+        var items: [RemoteConversationSummary] = []
+        var completeProjects = Set<String>()
+        for project in remoteProjects {
+            var chats = project.conversations
+            var cursor = project.conversationsCursor
+            for _ in 0..<10 {
+                guard let next = cursor else { break }
+                guard let page = try? await service.projectConversations(projectID: project.id, cursor: next) else { break }
+                chats += page.items
+                cursor = page.items.isEmpty || page.cursor == next ? nil : page.cursor
+            }
+            if cursor == nil {
+                completeProjects.insert(project.id)
+            }
+            items += chats.map { chat in
+                var chat = chat
+                chat.projectID = project.id
+                return chat
+            }
+        }
+        upsert(items)
+
+        let listed = Set(items.map(\.id))
+        let projectIDs = Set(projects.map(\.id))
+        // The sidebar endpoint returns up to 20 projects: chats of unlisted projects are kept if there may be more.
+        let allProjectsListed = remoteProjects.count < 20
+        let missing = summaries.filter { summary in
+            guard let remoteID = summary.remoteID, let projectID = summary.projectID else { return false }
+            if !projectIDs.contains(projectID) { return allProjectsListed }
+            return completeProjects.contains(projectID) && !listed.contains(remoteID)
+        }
+        if !missing.isEmpty {
+            removeLocally(missing.map(\.id))
+        }
+        files.writeProjects(projects)
+        files.write(nil, index: summaries)
+    }
+
+    private func hasMore(after page: RemoteConversationPage) -> Bool {
+        if let total = page.total {
+            return nextOffset < total
+        }
+        return page.items.count >= Self.pageSize
+    }
+
+    private func removeLocally(_ ids: [UUID]) {
+        guard !ids.isEmpty else { return }
+        let removed = Set(ids)
+        var names: [String] = []
+        for id in ids {
+            let conversation = cache[id] ?? files.loadConversation(id)
+            names += conversation?.messages.flatMap { $0.attachments.filter(\.isStoredOnDevice).map(\.storedFileName) } ?? []
+            cache[id] = nil
+            searchCorpus[id] = nil
+        }
+        summaries.removeAll { removed.contains($0.id) }
+        files.delete(ids, attachmentNames: names, index: summaries)
+    }
 
     private func loadCorpusIfNeeded() {
         guard !corpusLoaded else { return }

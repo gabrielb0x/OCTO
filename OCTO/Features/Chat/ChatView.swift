@@ -9,8 +9,10 @@ struct ChatView: View {
     let onToggleTemporary: () -> Void
     let onDelete: () -> Void
 
-    @State private var scrollPosition = ScrollPosition(edge: .bottom)
+    @State private var scrollPosition = ScrollPosition(idType: UUID.self, edge: .bottom)
     @State private var isNearBottom = true
+    @State private var viewportHeight: CGFloat = 0
+    @State private var sentMessageHeight: CGFloat = 0
     @State private var editingMessage: ChatMessage?
     @State private var showVoiceMode = false
     @State private var isRenaming = false
@@ -21,11 +23,15 @@ struct ChatView: View {
         NavigationStack {
             ZStack {
                 Theme.background.ignoresSafeArea()
-                if session.messages.isEmpty {
-                    EmptyChatView(isTemporary: session.isTemporary)
-                } else {
+                if !session.messages.isEmpty {
                     messageList
                         .id(session.id)
+                } else if session.conversation.isAccountChat {
+                    AccountChatPlaceholder(load: session.accountLoad) {
+                        Task { await session.loadFromAccount(force: true) }
+                    }
+                } else {
+                    EmptyChatView(isTemporary: session.isTemporary)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -74,13 +80,15 @@ struct ChatView: View {
         .sensoryFeedback(.impact(flexibility: .soft, intensity: 0.7), trigger: session.completedCount) { _, _ in
             app.settings.hapticsEnabled
         }
-        .task {
+        .task(id: session.id) {
             #if OCTO_DEMO
             if app.demoScene == .voice {
                 try? await Task.sleep(for: .milliseconds(600))
                 showVoiceMode = true
+                return
             }
             #endif
+            await session.loadFromAccount()
         }
     }
 
@@ -92,8 +100,17 @@ struct ChatView: View {
                         message: message,
                         session: session,
                         isLast: message.id == session.messages.last?.id,
+                        showsLocalNote: message.id == session.firstLocalMessageID,
                         onEdit: { editingMessage = message }
                     )
+                    .frame(minHeight: roomForReply(below: message), alignment: .topLeading)
+                    .onGeometryChange(for: CGFloat.self) { proxy in
+                        proxy.size.height
+                    } action: { height in
+                        if message.id == session.lastSentMessageID {
+                            sentMessageHeight = height
+                        }
+                    }
                 }
             }
             .readableWidth()
@@ -104,26 +121,36 @@ struct ChatView: View {
         .scrollPosition($scrollPosition)
         .defaultScrollAnchor(.bottom, for: .initialOffset)
         .scrollDismissesKeyboard(.interactively)
-        .onScrollGeometryChange(for: Bool.self) { geometry in
-            geometry.visibleRect.maxY >= geometry.contentSize.height - 140
-        } action: { _, nearBottom in
-            isNearBottom = nearBottom
-        }
-        .onChange(of: session.messages.last?.text.count) { _, _ in
-            if session.isStreaming, isNearBottom {
-                scrollPosition.scrollTo(edge: .bottom)
-            }
-        }
-        .onChange(of: session.messages.last?.reasoning.count) { _, _ in
-            if session.isStreaming, isNearBottom {
-                scrollPosition.scrollTo(edge: .bottom)
-            }
+        .onScrollGeometryChange(for: ScrollMetrics.self) { geometry in
+            ScrollMetrics(
+                isNearBottom: geometry.visibleRect.maxY >= geometry.contentSize.height - 140,
+                viewportHeight: geometry.containerSize.height - geometry.contentInsets.top - geometry.contentInsets.bottom
+            )
+        } action: { _, metrics in
+            isNearBottom = metrics.isNearBottom
+            viewportHeight = metrics.viewportHeight
         }
         .onChange(of: session.sentCount) { _, _ in
-            withAnimation(.smooth) {
-                scrollPosition.scrollTo(edge: .bottom)
+            guard let messageID = session.lastSentMessageID else { return }
+            // The question moves to the top and the reply is written below it. The chat doesn't
+            // follow the reply as it grows: scrolling stays in the user's hands.
+            Task { @MainActor in
+                withAnimation(.smooth(duration: 0.4)) {
+                    scrollPosition.scrollTo(id: messageID, anchor: .top)
+                }
             }
         }
+    }
+
+    /// Minimum height of the reply to the question just sent, so that question can sit at the top of the screen.
+    private func roomForReply(below message: ChatMessage) -> CGFloat? {
+        guard message.role == .assistant,
+              let sentID = session.lastSentMessageID,
+              message.id == session.messages.last?.id,
+              session.messages.dropLast().last?.id == sentID
+        else { return nil }
+        let room = viewportHeight - sentMessageHeight - Theme.messageSpacing - 24
+        return room > 0 ? room : nil
     }
 
     // MARK: Toolbar
@@ -141,7 +168,7 @@ struct ChatView: View {
             ModelMenu(session: session)
         }
 
-        if session.messages.isEmpty {
+        if session.isBlank {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(action: onToggleTemporary) {
                     Image(session.isTemporary ? "TemporaryChatOn" : "TemporaryChat")
@@ -182,7 +209,7 @@ struct ChatView: View {
             ShareLink(item: session.markdownExport) {
                 Label("Share chat", systemImage: "square.and.arrow.up")
             }
-            .disabled(session.isStreaming)
+            .disabled(session.isStreaming || session.messages.isEmpty)
             Divider()
             Button(role: .destructive) {
                 confirmDelete = true
@@ -194,6 +221,11 @@ struct ChatView: View {
         }
         .accessibilityLabel(Text("More options"))
     }
+}
+
+private struct ScrollMetrics: Equatable {
+    var isNearBottom: Bool
+    var viewportHeight: CGFloat
 }
 
 /// Title of the chat screen, like "ChatGPT ›" in the official app: model and thinking level.
@@ -283,6 +315,45 @@ struct EmptyChatView: View {
                 Text("What can I help with?")
                     .font(.system(size: 27, weight: .semibold))
                     .multilineTextAlignment(.center)
+            }
+        }
+        .padding(.horizontal, 40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.bottom, 40)
+    }
+}
+
+/// Shown while the messages of an account chat download, or when they couldn't be.
+struct AccountChatPlaceholder: View {
+    let load: ChatSession.AccountLoad
+    let onRetry: () -> Void
+
+    var body: some View {
+        VStack(spacing: 14) {
+            switch load {
+            case .idle, .loading:
+                ProgressView()
+                    .controlSize(.large)
+                Text("Loading chat…")
+                    .font(.callout)
+                    .foregroundStyle(Theme.secondaryText)
+            case .loaded:
+                Text("This chat has no messages to show.")
+                    .font(.callout)
+                    .foregroundStyle(Theme.secondaryText)
+                    .multilineTextAlignment(.center)
+            case .failed(let message):
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.title)
+                    .foregroundStyle(Theme.secondaryText)
+                Text(verbatim: message)
+                    .font(.callout)
+                    .foregroundStyle(Theme.secondaryText)
+                    .multilineTextAlignment(.center)
+                Button(action: onRetry) {
+                    Label("Try again", systemImage: "arrow.clockwise")
+                }
+                .buttonStyle(.glass)
             }
         }
         .padding(.horizontal, 40)

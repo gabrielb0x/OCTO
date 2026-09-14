@@ -44,7 +44,8 @@ enum AttachmentThumbnails {
     static func image(for attachment: MessageAttachment, files: ConversationFiles) -> UIImage? {
         let key = attachment.storedFileName as NSString
         if let cached = cache.object(forKey: key) { return cached }
-        guard let data = try? Data(contentsOf: files.attachmentURL(attachment.storedFileName)),
+        guard let url = files.attachmentURL(attachment.storedFileName),
+              let data = try? Data(contentsOf: url),
               let image = ImageProcessing.thumbnail(from: data)
         else { return nil }
         cache.setObject(image, forKey: key)

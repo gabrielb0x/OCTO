@@ -285,7 +285,8 @@ final class VoiceConversation {
                 guard let self, let session else { return }
                 let isStreaming = session.isStreaming
                 if let reply = session.messages.last, reply.role == .assistant {
-                    if let chunk = chunker.nextChunk(in: reply.text, isFinal: !isStreaming) {
+                    // Speaks what has arrived, without waiting for it to be revealed on screen.
+                    if let chunk = chunker.nextChunk(in: session.fullText(of: reply), isFinal: !isStreaming) {
                         self.speak(chunk)
                     }
                     if !isStreaming, reply.status == .failed, let error = reply.errorMessage {

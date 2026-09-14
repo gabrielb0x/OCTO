@@ -1,7 +1,8 @@
 import Foundation
 import Observation
 
-/// User preferences persisted in UserDefaults (nothing here is sensitive).
+/// Preferences of this device, persisted in UserDefaults (nothing here is sensitive).
+/// Custom instructions and personality come from the ChatGPT account instead.
 @MainActor
 @Observable
 final class AppSettings {
@@ -31,14 +32,6 @@ final class AppSettings {
         didSet { defaults.set(hapticsEnabled, forKey: Keys.hapticsEnabled) }
     }
 
-    var aboutUser: String {
-        didSet { defaults.set(aboutUser, forKey: Keys.aboutUser) }
-    }
-
-    var responseStyle: String {
-        didSet { defaults.set(responseStyle, forKey: Keys.responseStyle) }
-    }
-
     var speechRate: Double {
         didSet { defaults.set(speechRate, forKey: Keys.speechRate) }
     }
@@ -51,8 +44,6 @@ final class AppSettings {
         autoGenerateTitles = defaults.object(forKey: Keys.autoGenerateTitles) as? Bool ?? true
         showReasoning = defaults.object(forKey: Keys.showReasoning) as? Bool ?? true
         hapticsEnabled = defaults.object(forKey: Keys.hapticsEnabled) as? Bool ?? true
-        aboutUser = defaults.string(forKey: Keys.aboutUser) ?? ""
-        responseStyle = defaults.string(forKey: Keys.responseStyle) ?? ""
         speechRate = defaults.object(forKey: Keys.speechRate) as? Double ?? 0.5
     }
 
@@ -63,8 +54,6 @@ final class AppSettings {
         static let autoGenerateTitles = "settings.autoGenerateTitles"
         static let showReasoning = "settings.showReasoning"
         static let hapticsEnabled = "settings.hapticsEnabled"
-        static let aboutUser = "settings.aboutUser"
-        static let responseStyle = "settings.responseStyle"
         static let speechRate = "settings.speechRate"
     }
 }

@@ -40,6 +40,22 @@ enum Theme {
     }
 }
 
+extension Color {
+    /// A color from a "#RRGGBB" string, such as the color of a ChatGPT project.
+    init?(hex: String) {
+        var digits = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        if digits.hasPrefix("#") {
+            digits.removeFirst()
+        }
+        guard digits.count == 6, let value = UInt32(digits, radix: 16) else { return nil }
+        self.init(
+            red: Double((value >> 16) & 0xFF) / 255,
+            green: Double((value >> 8) & 0xFF) / 255,
+            blue: Double(value & 0xFF) / 255
+        )
+    }
+}
+
 extension View {
     /// Constrains reading width on iPad and landscape while staying centered.
     func readableWidth() -> some View {

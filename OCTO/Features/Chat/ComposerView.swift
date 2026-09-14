@@ -4,7 +4,8 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
-/// ChatGPT-style composer: a single Liquid Glass capsule with attachments, dictation and voice mode.
+/// ChatGPT-style message bar made of Liquid Glass: a round + button next to a glass capsule
+/// holding the text field, dictation and the voice, send or stop button.
 struct ComposerView: View {
     @Environment(AppModel.self) private var app
     @Bindable var session: ChatSession
@@ -18,10 +19,10 @@ struct ComposerView: View {
     @State private var showFileImporter = false
     @State private var importError: String?
 
-    private static let rowHeight: CGFloat = 50
+    private static let barHeight: CGFloat = 50
 
     private var showsSuggestions: Bool {
-        session.messages.isEmpty && !session.isTemporary && session.draft.isEmpty && session.pendingAttachments.isEmpty && !isFocused
+        session.isBlank && !session.isTemporary && session.draft.isEmpty && session.pendingAttachments.isEmpty && !isFocused
     }
 
     private var isWebSearchOn: Bool {
@@ -38,7 +39,12 @@ struct ComposerView: View {
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
 
-            composer
+            GlassEffectContainer(spacing: 10) {
+                HStack(alignment: .bottom, spacing: 10) {
+                    attachMenu
+                    field
+                }
+            }
         }
         .readableWidth()
         .padding(.horizontal, 14)
@@ -77,53 +83,6 @@ struct ComposerView: View {
 
     // MARK: Pieces
 
-    private var composer: some View {
-        GlassEffectContainer {
-            VStack(alignment: .leading, spacing: 0) {
-                if !session.pendingAttachments.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(session.pendingAttachments) { attachment in
-                                PendingAttachmentView(attachment: attachment) {
-                                    session.removeAttachment(attachment.id)
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.top, 8)
-                    }
-                }
-
-                HStack(alignment: .bottom, spacing: 0) {
-                    attachMenu
-                    if isWebSearchOn {
-                        webSearchChip
-                    }
-                    TextField(placeholder, text: $session.draft, axis: .vertical)
-                        .font(.body)
-                        .lineLimit(1...8)
-                        .focused($isFocused)
-                        .padding(.leading, isWebSearchOn ? 8 : 0)
-                        .padding(.vertical, 14)
-                        .onKeyPress(.return, phases: .down) { press in
-                            guard press.modifiers.contains(.command) else { return .ignored }
-                            send()
-                            return .handled
-                        }
-                    dictationButton
-                    trailingButton
-                }
-                .padding(.horizontal, 4)
-            }
-            .glassEffect(.regular, in: .rect(cornerRadius: 26))
-        }
-    }
-
-    private var placeholder: LocalizedStringKey {
-        if session.isTemporary { return "Temporary message" }
-        return isWebSearchOn ? "Search the web" : "Ask anything"
-    }
-
     private var attachMenu: some View {
         Menu {
             if UIImagePickerController.isSourceTypeAvailable(.camera) {
@@ -155,10 +114,57 @@ struct ComposerView: View {
             Image(systemName: "plus")
                 .font(.system(size: 21, weight: .regular))
                 .foregroundStyle(Theme.primaryText)
-                .frame(width: 44, height: Self.rowHeight)
-                .contentShape(Rectangle())
+                .frame(width: Self.barHeight, height: Self.barHeight)
+                .contentShape(Circle())
         }
+        .glassEffect(.regular.interactive(), in: .circle)
         .accessibilityLabel(Text("Add attachments"))
+    }
+
+    /// The glass capsule: round while it holds one line, a rounded rectangle as the message grows.
+    private var field: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if !session.pendingAttachments.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(session.pendingAttachments) { attachment in
+                            PendingAttachmentView(attachment: attachment) {
+                                session.removeAttachment(attachment.id)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.top, 8)
+                }
+            }
+
+            HStack(alignment: .bottom, spacing: 0) {
+                if isWebSearchOn {
+                    webSearchChip
+                }
+                TextField(placeholder, text: $session.draft, axis: .vertical)
+                    .font(.body)
+                    .lineLimit(1...8)
+                    .focused($isFocused)
+                    .padding(.leading, isWebSearchOn ? 6 : 18)
+                    .padding(.vertical, 14)
+                    .onKeyPress(.return, phases: .down) { press in
+                        guard press.modifiers.contains(.command) else { return .ignored }
+                        send()
+                        return .handled
+                    }
+                dictationButton
+                trailingButton
+            }
+            .padding(.trailing, 3)
+        }
+        .frame(minHeight: Self.barHeight)
+        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: Self.barHeight / 2, style: .continuous))
+    }
+
+    private var placeholder: LocalizedStringKey {
+        if session.isTemporary { return "Temporary message" }
+        return isWebSearchOn ? "Search the web" : "Ask anything"
     }
 
     private var webSearchChip: some View {
@@ -170,7 +176,8 @@ struct ComposerView: View {
                 .foregroundStyle(Theme.link)
                 .frame(width: 34, height: 34)
                 .background(Theme.link.opacity(0.18), in: Circle())
-                .frame(height: Self.rowHeight)
+                .padding(.leading, 8)
+                .frame(height: Self.barHeight)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -184,7 +191,7 @@ struct ComposerView: View {
                 .symbolEffect(.variableColor.iterative, isActive: dictation.state == .listening)
                 .font(.system(size: 18, weight: .regular))
                 .foregroundStyle(dictation.isActive ? Theme.link : Theme.primaryText)
-                .frame(width: 40, height: Self.rowHeight)
+                .frame(width: 40, height: Self.barHeight)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -198,9 +205,9 @@ struct ComposerView: View {
                 .font(.system(size: session.isStreaming ? 13 : 16, weight: .bold))
                 .foregroundStyle(.black)
                 .contentTransition(.symbolEffect(.replace))
-                .frame(width: 36, height: 36)
+                .frame(width: 38, height: 38)
                 .background(.white, in: Circle())
-                .frame(width: 44, height: Self.rowHeight)
+                .frame(width: 44, height: Self.barHeight)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

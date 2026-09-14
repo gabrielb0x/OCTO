@@ -9,6 +9,7 @@ final class AppModel {
     let settings: AppSettings
     let auth: AuthManager
     let store: ConversationStore
+    let account: AccountStore
     let backend: ChatBackend
     let speech: SpeechPlayer
     /// Set when a screenshot build is launched with a demo scene: no network, no keychain.
@@ -21,9 +22,12 @@ final class AppModel {
     private(set) var isRefreshingModels = false
     private(set) var usage: UsageSnapshot?
     private(set) var usageError: String?
+    /// Release notes presented once after an update.
+    var whatsNew: ReleaseNotes?
 
     /// Chats that are still generating keep running when you switch to another chat.
     @ObservationIgnored private var liveSessions: [UUID: ChatSession] = [:]
+    @ObservationIgnored private var lastAccountRefresh: Date?
 
     init() {
         #if OCTO_DEMO
@@ -35,12 +39,14 @@ final class AppModel {
         #endif
         self.isDemo = isDemo
 
+        // Decided before the first launch is recorded below, so a fresh install shows no notes.
+        let notes = isDemo ? nil : ReleaseNotes.notesToShowAfterUpdate()
+
         // Keychain items survive app deletion: start clean on a fresh install.
-        let launchedKey = "app.hasLaunchedBefore"
-        if !isDemo, !UserDefaults.standard.bool(forKey: launchedKey) {
+        if !isDemo, !UserDefaults.standard.bool(forKey: ReleaseNotes.launchedBeforeKey) {
             Keychain.remove(CredentialVault.chatGPTAccount)
-            Keychain.remove(CredentialVault.apiKeyAccount)
-            UserDefaults.standard.set(true, forKey: launchedKey)
+            Keychain.remove(CredentialVault.legacyAPIKeyAccount)
+            UserDefaults.standard.set(true, forKey: ReleaseNotes.launchedBeforeKey)
         }
 
         let configuration = URLSessionConfiguration.default
@@ -53,25 +59,63 @@ final class AppModel {
         self.auth = auth
         settings = AppSettings()
         #if OCTO_DEMO
-        let files = ConversationFiles(folderName: isDemo ? "Demo" : "OCTO", startEmpty: isDemo)
+        let folderName = isDemo ? "Demo" : "OCTO"
+        let files = ConversationFiles(folderName: folderName, startEmpty: isDemo)
+        let accountCache = AccountCache(folderName: folderName)
         #else
         let files = ConversationFiles()
+        let accountCache = AccountCache()
         #endif
+        let accountService = AccountService(vault: auth.vault, session: session)
         store = ConversationStore(files: files)
+        account = AccountStore(service: isDemo ? nil : accountService, cache: accountCache)
         backend = ChatBackend(vault: auth.vault, session: session)
         speech = SpeechPlayer()
-        models = Self.cachedModels(for: auth.account?.method)
+        models = Self.cachedModels()
+        whatsNew = notes
+        if !isDemo {
+            store.service = accountService
+        }
 
         #if OCTO_DEMO
         if let demoScene {
             models = ModelCatalog.chatGPTFallback
-            DemoContent.prepare(demoScene, auth: auth, store: store)
+            DemoContent.prepare(demoScene, app: self)
         }
         #endif
     }
 
-    var authMethod: AuthMethod? {
-        auth.account?.method
+    // MARK: Account
+
+    /// Name shown for the account: the ChatGPT profile name, else the email address.
+    var accountName: String {
+        if let name = account.profile?.name?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+            return name
+        }
+        return accountEmail ?? "ChatGPT"
+    }
+
+    var accountEmail: String? {
+        account.profile?.email ?? auth.account?.email
+    }
+
+    var planName: String {
+        if let plan = ChatGPTPlan.displayName(for: auth.account?.planType) {
+            return String(localized: "ChatGPT \(plan)")
+        }
+        return "ChatGPT"
+    }
+
+    /// Refreshes the models, the account and the chat list together.
+    /// Skipped when it ran less than a minute ago, unless forced.
+    func refreshAccount(force: Bool = false) async {
+        guard !isDemo, auth.account != nil else { return }
+        if !force, let lastAccountRefresh, Date().timeIntervalSince(lastAccountRefresh) < 60 { return }
+        lastAccountRefresh = Date()
+        async let modelsRefresh: Void = refreshModels()
+        async let accountRefresh: Void = account.refresh()
+        async let chatsRefresh: Void = store.syncWithAccount()
+        _ = await (modelsRefresh, accountRefresh, chatsRefresh)
     }
 
     // MARK: Models
@@ -91,16 +135,16 @@ final class AppModel {
     }
 
     func refreshModels() async {
-        guard !isDemo, let method = authMethod, !isRefreshingModels else { return }
+        guard !isDemo, auth.account != nil, !isRefreshingModels else { return }
         isRefreshingModels = true
         defer { isRefreshingModels = false }
         do {
             let fetched = try await backend.fetchModels()
             models = fetched
-            Self.cache(fetched, for: method)
+            Self.cache(fetched)
         } catch {
             if models.isEmpty {
-                models = Self.fallback(for: method)
+                models = ModelCatalog.chatGPTFallback
             }
         }
     }
@@ -111,13 +155,13 @@ final class AppModel {
             usage = try await backend.fetchUsage()
             usageError = nil
         } catch {
-            usageError = error.localizedDescription
+            usageError = ChatSession.describe(error)
         }
     }
 
     func didSignIn() async {
-        models = Self.cachedModels(for: authMethod)
-        await refreshModels()
+        models = Self.cachedModels()
+        await refreshAccount(force: true)
     }
 
     func signOut() async {
@@ -127,6 +171,9 @@ final class AppModel {
         liveSessions.removeAll()
         speech.stop()
         usage = nil
+        lastAccountRefresh = nil
+        account.clear()
+        store.removeAccountChats()
         await auth.signOut()
     }
 
@@ -138,6 +185,20 @@ final class AppModel {
                 return live
             }
             if let conversation = store.conversation(id: conversationID) {
+                return ChatSession(conversation: conversation, isTemporary: false, app: self)
+            }
+            if let summary = store.summary(id: conversationID), summary.isAccountChat {
+                // Opened before its messages were downloaded: the chat loads them from the account.
+                let conversation = Conversation(
+                    id: summary.id,
+                    title: summary.title,
+                    createdAt: summary.createdAt,
+                    updatedAt: summary.updatedAt,
+                    isPinned: summary.isPinned,
+                    webSearchEnabled: settings.webSearchByDefault,
+                    remoteID: summary.remoteID,
+                    projectID: summary.projectID
+                )
                 return ChatSession(conversation: conversation, isTemporary: false, app: self)
             }
         }
@@ -165,26 +226,19 @@ final class AppModel {
 
     // MARK: Model cache
 
-    private static func cacheKey(for method: AuthMethod) -> String {
-        "models.cache.\(method.rawValue)"
-    }
+    private static let modelsCacheKey = "models.cache.chatGPT"
 
-    private static func fallback(for method: AuthMethod) -> [ModelDescriptor] {
-        method == .chatGPT ? ModelCatalog.chatGPTFallback : ModelCatalog.platformFallback
-    }
-
-    private static func cachedModels(for method: AuthMethod?) -> [ModelDescriptor] {
-        guard let method else { return ModelCatalog.chatGPTFallback }
-        if let data = UserDefaults.standard.data(forKey: cacheKey(for: method)),
+    private static func cachedModels() -> [ModelDescriptor] {
+        if let data = UserDefaults.standard.data(forKey: modelsCacheKey),
            let models = try? JSONDecoder().decode([ModelDescriptor].self, from: data),
            !models.isEmpty {
             return models
         }
-        return fallback(for: method)
+        return ModelCatalog.chatGPTFallback
     }
 
-    private static func cache(_ models: [ModelDescriptor], for method: AuthMethod) {
+    private static func cache(_ models: [ModelDescriptor]) {
         guard let data = try? JSONEncoder().encode(models) else { return }
-        UserDefaults.standard.set(data, forKey: cacheKey(for: method))
+        UserDefaults.standard.set(data, forKey: modelsCacheKey)
     }
 }

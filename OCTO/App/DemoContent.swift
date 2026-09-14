@@ -10,6 +10,7 @@ enum DemoScene: String, CaseIterable {
     case sidebar
     case voice
     case settings
+    case whatsNew
 
     static var current: DemoScene? {
         UserDefaults.standard.string(forKey: "OCTODemoScene").flatMap(DemoScene.init(rawValue:))
@@ -20,15 +21,40 @@ enum DemoScene: String, CaseIterable {
 @MainActor
 enum DemoContent {
     static let featuredConversationID = UUID(uuidString: "0C70C0DE-0000-4000-8000-000000000001")!
+    private static let projectID = "g-p-0c70c0de"
 
-    static func prepare(_ scene: DemoScene, auth: AuthManager, store: ConversationStore) {
+    static func prepare(_ scene: DemoScene, app: AppModel) {
         guard scene != .welcome else {
-            auth.useDemoAccount(nil)
+            app.auth.useDemoAccount(nil)
             return
         }
-        auth.useDemoAccount(Account(method: .chatGPT, email: "gabriel@example.com", planType: "plus"))
+        app.auth.useDemoAccount(Account(email: "gabriel@example.com", planType: "plus", userID: "user-demo"))
+        app.account.useDemo(AccountSnapshot(
+            profile: AccountProfile(userID: "user-demo", name: "Gabriel", email: "gabriel@example.com"),
+            settings: AccountSettings(referencesSavedMemories: true, referencesChatHistory: true, trainingAllowed: false),
+            instructions: CustomInstructions(
+                nickname: "Gabriel",
+                occupation: localized("Student", "Étudiant"),
+                aboutUser: localized("I'm learning Swift and SwiftUI.", "J'apprends Swift et SwiftUI."),
+                responseStyle: localized("Be concise and give examples.", "Sois concis et donne des exemples."),
+                personality: "default"
+            ),
+            personalities: [
+                PersonalityOption(key: "default", label: localized("Default", "Par défaut"), summary: localized("Preset style and tone", "Style et ton prédéfinis")),
+                PersonalityOption(key: "professional", label: localized("Professional", "Professionnel"), summary: localized("Polished and precise", "Courtois et précis")),
+            ],
+            traits: [],
+            memories: MemoriesSnapshot(memories: [SavedMemory(id: "demo-memory", content: localized("Is learning Swift", "Apprend Swift"))]),
+            trainingAllowed: false
+        ))
+        app.store.useDemoProjects([
+            ChatProject(id: projectID, name: localized("School", "Cours"), iconName: "graduation-cap", colorHex: "#0285FF"),
+        ])
         for conversation in conversations(now: Date()) {
-            store.save(conversation)
+            app.store.save(conversation)
+        }
+        if scene == .whatsNew {
+            app.whatsNew = ReleaseNotes.current
         }
     }
 
@@ -49,8 +75,19 @@ enum DemoContent {
     private static func conversations(now: Date) -> [Conversation] {
         let model = ModelCatalog.chatGPTFallback[0]
 
-        func chat(_ id: UUID = UUID(), title: String, hoursAgo: Double, pinned: Bool = false, question: String, answer: String, thinking: TimeInterval? = nil) -> Conversation {
+        func chat(
+            _ id: UUID = UUID(),
+            title: String,
+            hoursAgo: Double,
+            pinned: Bool = false,
+            fromAccount: Bool = true,
+            inProject: Bool = false,
+            question: String,
+            answer: String,
+            thinking: TimeInterval? = nil
+        ) -> Conversation {
             let date = now.addingTimeInterval(-hoursAgo * 3_600)
+            let remoteID = fromAccount ? id.uuidString.lowercased() : nil
             return Conversation(
                 id: id,
                 title: title,
@@ -60,9 +97,12 @@ enum DemoContent {
                 modelID: model.id,
                 reasoningEffort: model.defaultReasoningEffort,
                 messages: [
-                    ChatMessage(role: .user, text: question, createdAt: date),
-                    ChatMessage(role: .assistant, text: answer, reasoningDuration: thinking, modelID: model.id, createdAt: date),
-                ]
+                    ChatMessage(role: .user, text: question, createdAt: date, remoteID: remoteID.map { "\($0)-question" }),
+                    ChatMessage(role: .assistant, text: answer, reasoningDuration: thinking, modelID: model.id, createdAt: date, remoteID: remoteID.map { "\($0)-answer" }),
+                ],
+                remoteID: remoteID,
+                projectID: inProject ? projectID : nil,
+                remoteUpdatedAt: fromAccount ? date : nil
             )
         }
 
@@ -71,6 +111,7 @@ enum DemoContent {
                 featuredConversationID,
                 title: localized("Networking with async/await", "Requête réseau en Swift"),
                 hoursAgo: 0.05,
+                fromAccount: false,
                 question: localized("How do I make a network request in Swift with async/await?", "Comment faire une requête réseau en Swift avec async/await ?"),
                 answer: localized(featuredAnswerEnglish, featuredAnswerFrench),
                 thinking: 7
@@ -97,6 +138,7 @@ enum DemoContent {
             chat(
                 title: localized("Summary of The Plague", "Résumé de La Peste"),
                 hoursAgo: 60,
+                inProject: true,
                 question: localized("Summarize The Plague by Camus", "Résume La Peste de Camus"),
                 answer: localized("In Oran, a plague epidemic isolates the city…", "À Oran, une épidémie de peste isole la ville…")
             ),
@@ -115,6 +157,7 @@ enum DemoContent {
             chat(
                 title: localized("Black holes explained", "Les trous noirs expliqués"),
                 hoursAgo: 400,
+                inProject: true,
                 question: localized("Explain black holes simply", "Explique-moi simplement les trous noirs"),
                 answer: localized("A black hole is a region where gravity is so strong that nothing escapes.", "Un trou noir est une région où la gravité est si forte que rien ne s'en échappe.")
             ),

@@ -15,11 +15,22 @@ final class ChatSession: Identifiable {
         case writing
     }
 
+    /// Download of the account copy of the chat.
+    enum AccountLoad: Equatable {
+        case idle
+        case loading
+        case loaded
+        case failed(String)
+    }
+
     let id: UUID
     let isTemporary: Bool
     private(set) var conversation: Conversation
     private(set) var activity: Activity = .idle
     private(set) var needsSignIn = false
+    private(set) var accountLoad: AccountLoad = .idle
+    /// The reply being written. Its text is observed by its own view only.
+    private(set) var live: LiveReply?
     var draft = ""
     var pendingAttachments: [PendingAttachment] = []
     /// While voice mode is open, replies are written to be read aloud.
@@ -28,6 +39,8 @@ final class ChatSession: Identifiable {
     /// Counters used as haptic feedback triggers.
     private(set) var sentCount = 0
     private(set) var completedCount = 0
+    /// The message sent last, which the chat brings to the top of the screen.
+    private(set) var lastSentMessageID: UUID?
 
     @ObservationIgnored private weak var app: AppModel?
     @ObservationIgnored private var streamTask: Task<Void, Never>?
@@ -43,8 +56,14 @@ final class ChatSession: Identifiable {
     var isStreaming: Bool { activity != .idle }
     var title: String { conversation.displayTitle }
 
+    /// A new chat with nothing in it yet. An account chat whose messages are still downloading doesn't count.
+    var isBlank: Bool {
+        conversation.messages.isEmpty && !conversation.isAccountChat
+    }
+
     var canSend: Bool {
-        !isStreaming && (!draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !pendingAttachments.isEmpty)
+        guard !isStreaming, !isWaitingForAccountCopy else { return false }
+        return !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !pendingAttachments.isEmpty
     }
 
     var model: ModelDescriptor {
@@ -53,6 +72,55 @@ final class ChatSession: Identifiable {
 
     var reasoningEffort: String? {
         model.resolvedEffort(preferred: conversation.reasoningEffort)
+    }
+
+    /// First message written in OCTO after the account copy of the chat.
+    var firstLocalMessageID: UUID? {
+        guard conversation.isAccountChat,
+              let index = conversation.messages.firstIndex(where: { $0.remoteID == nil }),
+              index > 0
+        else { return nil }
+        return conversation.messages[index].id
+    }
+
+    /// Everything received for a message, including text still waiting to appear.
+    func fullText(of message: ChatMessage) -> String {
+        if let live, live.messageID == message.id {
+            return live.receivedText
+        }
+        return message.text
+    }
+
+    /// Messages of the account copy stay as they are: only replies written in OCTO can be edited or regenerated.
+    func canModify(_ message: ChatMessage) -> Bool {
+        !isStreaming && message.remoteID == nil
+    }
+
+    private var isWaitingForAccountCopy: Bool {
+        conversation.isAccountChat && conversation.messages.isEmpty
+    }
+
+    // MARK: Account
+
+    /// Shows the account copy of the chat, downloading it when it's missing or has changed.
+    func loadFromAccount(force: Bool = false) async {
+        guard let app, conversation.isAccountChat, !isTemporary, !isStreaming, accountLoad != .loading else { return }
+        if !force, !conversation.messages.isEmpty, let downloaded = conversation.remoteUpdatedAt {
+            let listed = app.store.summary(id: id)?.remoteUpdatedAt
+            if listed.map({ $0 <= downloaded }) ?? true { return }
+        }
+        accountLoad = .loading
+        do {
+            let downloaded = try await app.store.downloadAccountChat(id: id)
+            accountLoad = .loaded
+            guard var downloaded, !isStreaming else { return }
+            downloaded.modelID = conversation.modelID ?? downloaded.modelID
+            downloaded.reasoningEffort = conversation.reasoningEffort ?? downloaded.reasoningEffort
+            downloaded.webSearchEnabled = conversation.webSearchEnabled
+            conversation = downloaded
+        } catch {
+            accountLoad = .failed(Self.describe(error))
+        }
     }
 
     // MARK: Chat options
@@ -76,13 +144,25 @@ final class ChatSession: Identifiable {
     }
 
     func rename(_ title: String) {
-        conversation.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        persist()
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        conversation.title = trimmed
+        guard !isTemporary, let app else { return }
+        if conversation.messages.isEmpty {
+            app.store.rename(id: id, to: trimmed)
+        } else {
+            persist()
+            app.store.renameInAccount(id: id, title: trimmed)
+        }
     }
 
     func setPinned(_ isPinned: Bool) {
         conversation.isPinned = isPinned
-        persist()
+        guard !isTemporary, let app else { return }
+        if conversation.messages.isEmpty {
+            app.store.setPinned(isPinned, id: id)
+        } else {
+            persist()
+        }
     }
 
     // MARK: Attachments
@@ -109,8 +189,10 @@ final class ChatSession: Identifiable {
         let attachments = pendingAttachments.compactMap { app.store.storeAttachment($0) }
         draft = ""
         pendingAttachments = []
-        conversation.messages.append(ChatMessage(role: .user, text: text, attachments: attachments))
+        let message = ChatMessage(role: .user, text: text, attachments: attachments)
+        conversation.messages.append(message)
         conversation.updatedAt = Date()
+        lastSentMessageID = message.id
         sentCount += 1
         startAssistantTurn()
     }
@@ -118,9 +200,11 @@ final class ChatSession: Identifiable {
     /// Sends a transcript from voice mode, leaving the composer draft untouched.
     func sendVoiceMessage(_ text: String) {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !isStreaming, !text.isEmpty else { return }
-        conversation.messages.append(ChatMessage(role: .user, text: text))
+        guard !isStreaming, !isWaitingForAccountCopy, !text.isEmpty else { return }
+        let message = ChatMessage(role: .user, text: text)
+        conversation.messages.append(message)
         conversation.updatedAt = Date()
+        lastSentMessageID = message.id
         sentCount += 1
         startAssistantTurn()
     }
@@ -132,7 +216,8 @@ final class ChatSession: Identifiable {
     func regenerate(_ messageID: UUID, using model: ModelDescriptor? = nil) {
         guard !isStreaming,
               let index = conversation.messages.firstIndex(where: { $0.id == messageID }),
-              conversation.messages[index].role == .assistant
+              conversation.messages[index].role == .assistant,
+              conversation.messages[index].remoteID == nil
         else { return }
         if let model {
             selectModel(model)
@@ -153,13 +238,15 @@ final class ChatSession: Identifiable {
     func edit(_ messageID: UUID, text newText: String) {
         guard !isStreaming,
               let index = conversation.messages.firstIndex(where: { $0.id == messageID }),
-              conversation.messages[index].role == .user
+              conversation.messages[index].role == .user,
+              conversation.messages[index].remoteID == nil
         else { return }
         let text = newText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty || !conversation.messages[index].attachments.isEmpty else { return }
         conversation.messages[index].text = text
         conversation.messages.removeSubrange((index + 1)...)
         conversation.updatedAt = Date()
+        lastSentMessageID = messageID
         sentCount += 1
         startAssistantTurn()
     }
@@ -169,7 +256,9 @@ final class ChatSession: Identifiable {
         guard isTemporary, let app else { return }
         stop()
         for attachment in conversation.messages.flatMap(\.attachments) {
-            try? FileManager.default.removeItem(at: app.store.files.attachmentURL(attachment.storedFileName))
+            if let url = app.store.files.attachmentURL(attachment.storedFileName) {
+                try? FileManager.default.removeItem(at: url)
+            }
         }
     }
 
@@ -186,18 +275,18 @@ final class ChatSession: Identifiable {
         let history = conversation.messages
         let assistant = ChatMessage(role: .assistant, modelID: model.id, status: .streaming)
         conversation.messages.append(assistant)
+        let reply = LiveReply(messageID: assistant.id)
+        live = reply
         activity = .waiting
         persist()
         app.sessionStartedStreaming(self)
 
         let store = app.store
         let backend = app.backend
-        let settings = app.settings
-        let assistantID = assistant.id
         let effort = model.resolvedEffort(preferred: conversation.reasoningEffort)
-        let instructions = SystemPrompt.make(aboutUser: settings.aboutUser, responseStyle: settings.responseStyle, spokenReplies: isVoiceConversation)
+        let instructions = SystemPrompt.make(personal: app.account.personalContext, spokenReplies: isVoiceConversation)
         let webSearch = conversation.webSearchEnabled && model.supportsWebSearch
-        let summaries = settings.showReasoning && model.supportsReasoningSummaries
+        let summaries = app.settings.showReasoning && model.supportsReasoningSummaries
         let cacheKey = conversation.id.uuidString
 
         streamTask = Task { [weak self] in
@@ -214,29 +303,14 @@ final class ChatSession: Identifiable {
                 webSearch: webSearch,
                 cacheKey: cacheKey
             )
-            await self?.consume(backend.stream(request), assistantID: assistantID)
+            await self?.consume(backend.stream(request), reply: reply)
         }
     }
 
-    private func consume(_ stream: AsyncThrowingStream<ResponseStreamUpdate, Error>, assistantID: UUID) async {
-        var textBuffer = ""
-        var reasoningBuffer = ""
-        var lastFlush = Date.distantPast
+    private func consume(_ stream: AsyncThrowingStream<ResponseStreamUpdate, Error>, reply: LiveReply) async {
         var reasoningStartedAt: Date?
         var failure: Error?
-
-        func flush() {
-            lastFlush = Date()
-            guard !textBuffer.isEmpty || !reasoningBuffer.isEmpty else { return }
-            let text = textBuffer
-            let reasoning = reasoningBuffer
-            textBuffer = ""
-            reasoningBuffer = ""
-            updateMessage(assistantID) { message in
-                message.text += text
-                message.reasoning += reasoning
-            }
-        }
+        reply.start()
 
         do {
             for try await update in stream {
@@ -248,58 +322,58 @@ final class ChatSession: Identifiable {
                     if activity != .writing { activity = .thinking }
                 case .reasoningDelta(let delta):
                     reasoningStartedAt = reasoningStartedAt ?? Date()
-                    reasoningBuffer += delta
+                    reply.receiveReasoning(delta)
                     if activity != .writing { activity = .thinking }
                 case .reasoningSectionBreak:
-                    let existing = (message(assistantID)?.reasoning ?? "") + reasoningBuffer
-                    if !existing.isEmpty { reasoningBuffer += "\n\n" }
+                    reply.startReasoningSection()
                 case .reasoningFinished:
-                    recordReasoningDuration(assistantID, since: reasoningStartedAt)
+                    reply.recordReasoningDuration(since: reasoningStartedAt)
                 case .textDelta(let delta):
                     if activity != .writing {
-                        recordReasoningDuration(assistantID, since: reasoningStartedAt)
+                        reply.recordReasoningDuration(since: reasoningStartedAt)
                         activity = .writing
                     }
-                    textBuffer += delta
+                    reply.receiveText(delta)
                 case .webSearchStarted:
                     activity = .searching
                 case .webSearchFinished(let query):
-                    updateMessage(assistantID) { message in
-                        if let query, !query.isEmpty, !message.searchQueries.contains(query) {
-                            message.searchQueries.append(query)
-                        }
-                    }
+                    reply.addSearchQuery(query)
                     if activity == .searching { activity = .thinking }
                 case .citations(let citations):
-                    updateMessage(assistantID) { message in
-                        for citation in citations where !message.citations.contains(where: { $0.url == citation.url }) {
-                            message.citations.append(citation)
-                        }
-                    }
+                    reply.addCitations(citations)
                 case .completed(let usage):
-                    updateMessage(assistantID) { $0.usage = usage }
-                }
-                if Date().timeIntervalSince(lastFlush) > 0.05 {
-                    flush()
+                    reply.usage = usage
                 }
             }
         } catch {
             failure = error
         }
-        flush()
 
         let cancelled = Task.isCancelled || failure is CancellationError || (failure as? URLError)?.code == .cancelled
         if cancelled {
-            finishTurn(assistantID, status: .cancelled, error: nil)
+            reply.revealEverything()
+            finishTurn(reply, status: .cancelled, error: nil)
         } else {
-            finishTurn(assistantID, status: failure == nil ? .complete : .failed, error: failure)
+            // Stopping while the end of a complete reply is still appearing keeps the whole reply.
+            await reply.finishRevealing()
+            finishTurn(reply, status: failure == nil ? .complete : .failed, error: failure)
         }
     }
 
-    private func finishTurn(_ id: UUID, status: ChatMessage.Status, error: Error?) {
-        updateMessage(id) { message in
+    private func finishTurn(_ reply: LiveReply, status: ChatMessage.Status, error: Error?) {
+        reply.stop()
+        updateMessage(reply.messageID) { message in
+            message.text = reply.receivedText
+            message.reasoning = reply.receivedReasoning
+            message.reasoningDuration = reply.reasoningDuration
+            message.searchQueries = reply.searchQueries
+            message.citations = reply.citations
+            message.usage = reply.usage
             message.status = status
             message.errorMessage = error.map(Self.describe)
+        }
+        if live === reply {
+            live = nil
         }
         conversation.updatedAt = Date()
         activity = .idle
@@ -314,7 +388,7 @@ final class ChatSession: Identifiable {
     }
 
     private func generateTitleIfNeeded() {
-        guard !isTemporary, conversation.title.isEmpty, let app, app.settings.autoGenerateTitles,
+        guard !isTemporary, !conversation.isAccountChat, conversation.title.isEmpty, let app, app.settings.autoGenerateTitles,
               let userMessage = conversation.messages.first(where: { $0.role == .user }),
               let reply = conversation.messages.first(where: { $0.role == .assistant && $0.status == .complete && !$0.text.isEmpty })
         else { return }
@@ -337,22 +411,9 @@ final class ChatSession: Identifiable {
         }
     }
 
-    private func recordReasoningDuration(_ id: UUID, since start: Date?) {
-        guard let start else { return }
-        updateMessage(id) { message in
-            if message.reasoningDuration == nil {
-                message.reasoningDuration = Date().timeIntervalSince(start)
-            }
-        }
-    }
-
     private func updateMessage(_ id: UUID, _ transform: (inout ChatMessage) -> Void) {
         guard let index = conversation.messages.lastIndex(where: { $0.id == id }) else { return }
         transform(&conversation.messages[index])
-    }
-
-    private func message(_ id: UUID) -> ChatMessage? {
-        conversation.messages.last { $0.id == id }
     }
 
     private func persist() {

@@ -40,7 +40,7 @@ public struct MessageAttachment: Codable, Hashable, Sendable, Identifiable {
 
     public var id: UUID
     public var kind: Kind
-    /// File name inside the app's attachments directory.
+    /// File name inside the app's attachments directory; empty for files that stayed in the ChatGPT account.
     public var storedFileName: String
     /// Original file name shown to the user (text files).
     public var displayName: String?
@@ -54,6 +54,11 @@ public struct MessageAttachment: Codable, Hashable, Sendable, Identifiable {
         self.displayName = displayName
         self.mimeType = mimeType
         self.byteCount = byteCount
+    }
+
+    /// False for placeholders of account attachments, which have no file on the device.
+    public var isStoredOnDevice: Bool {
+        !storedFileName.isEmpty && !storedFileName.contains("/") && storedFileName != ".." && storedFileName != "."
     }
 }
 
@@ -83,6 +88,8 @@ public struct ChatMessage: Codable, Hashable, Sendable, Identifiable {
     public var errorMessage: String?
     public var usage: TokenUsage?
     public var createdAt: Date
+    /// Id of the message in the ChatGPT account; nil for messages written in OCTO.
+    public var remoteID: String?
 
     public init(
         id: UUID = UUID(),
@@ -97,7 +104,8 @@ public struct ChatMessage: Codable, Hashable, Sendable, Identifiable {
         status: Status = .complete,
         errorMessage: String? = nil,
         usage: TokenUsage? = nil,
-        createdAt: Date = Date()
+        createdAt: Date = Date(),
+        remoteID: String? = nil
     ) {
         self.id = id
         self.role = role
@@ -112,11 +120,12 @@ public struct ChatMessage: Codable, Hashable, Sendable, Identifiable {
         self.errorMessage = errorMessage
         self.usage = usage
         self.createdAt = createdAt
+        self.remoteID = remoteID
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, role, text, reasoning, reasoningDuration, attachments, citations, searchQueries
-        case modelID, status, errorMessage, usage, createdAt
+        case modelID, status, errorMessage, usage, createdAt, remoteID
     }
 
     // Lenient decoding keeps old files readable when fields are added later.
@@ -135,6 +144,7 @@ public struct ChatMessage: Codable, Hashable, Sendable, Identifiable {
         errorMessage = try container.decodeIfPresent(String.self, forKey: .errorMessage)
         usage = try? container.decodeIfPresent(TokenUsage.self, forKey: .usage)
         createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+        remoteID = try container.decodeIfPresent(String.self, forKey: .remoteID)
     }
 }
 
@@ -148,6 +158,12 @@ public struct Conversation: Codable, Hashable, Sendable, Identifiable {
     public var reasoningEffort: String?
     public var webSearchEnabled: Bool
     public var messages: [ChatMessage]
+    /// Id of the chat in the ChatGPT account; nil for chats created in OCTO.
+    public var remoteID: String?
+    /// ChatGPT project (`g-p-…`) the chat belongs to.
+    public var projectID: String?
+    /// Last update of the account copy that was downloaded.
+    public var remoteUpdatedAt: Date?
 
     public init(
         id: UUID = UUID(),
@@ -158,7 +174,10 @@ public struct Conversation: Codable, Hashable, Sendable, Identifiable {
         modelID: String? = nil,
         reasoningEffort: String? = nil,
         webSearchEnabled: Bool = false,
-        messages: [ChatMessage] = []
+        messages: [ChatMessage] = [],
+        remoteID: String? = nil,
+        projectID: String? = nil,
+        remoteUpdatedAt: Date? = nil
     ) {
         self.id = id
         self.title = title
@@ -169,10 +188,14 @@ public struct Conversation: Codable, Hashable, Sendable, Identifiable {
         self.reasoningEffort = reasoningEffort
         self.webSearchEnabled = webSearchEnabled
         self.messages = messages
+        self.remoteID = remoteID
+        self.projectID = projectID
+        self.remoteUpdatedAt = remoteUpdatedAt
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, title, createdAt, updatedAt, isPinned, modelID, reasoningEffort, webSearchEnabled, messages
+        case remoteID, projectID, remoteUpdatedAt
     }
 
     public init(from decoder: Decoder) throws {
@@ -186,7 +209,13 @@ public struct Conversation: Codable, Hashable, Sendable, Identifiable {
         reasoningEffort = try container.decodeIfPresent(String.self, forKey: .reasoningEffort)
         webSearchEnabled = try container.decodeIfPresent(Bool.self, forKey: .webSearchEnabled) ?? false
         messages = try container.decodeIfPresent([ChatMessage].self, forKey: .messages) ?? []
+        remoteID = try container.decodeIfPresent(String.self, forKey: .remoteID)
+        projectID = try container.decodeIfPresent(String.self, forKey: .projectID)
+        remoteUpdatedAt = try container.decodeIfPresent(Date.self, forKey: .remoteUpdatedAt)
     }
+
+    /// True for chats that come from the ChatGPT account.
+    public var isAccountChat: Bool { remoteID != nil }
 
     /// Title to display, falling back to the first user message.
     public var displayTitle: String {
@@ -204,7 +233,10 @@ public struct Conversation: Codable, Hashable, Sendable, Identifiable {
             createdAt: createdAt,
             updatedAt: updatedAt,
             isPinned: isPinned,
-            preview: String(preview.prefix(160))
+            preview: String(preview.prefix(160)),
+            remoteID: remoteID,
+            projectID: projectID,
+            remoteUpdatedAt: remoteUpdatedAt
         )
     }
 
@@ -227,13 +259,31 @@ public struct ConversationSummary: Codable, Hashable, Sendable, Identifiable {
     public var updatedAt: Date
     public var isPinned: Bool
     public var preview: String
+    public var remoteID: String?
+    public var projectID: String?
+    public var remoteUpdatedAt: Date?
 
-    public init(id: UUID, title: String, createdAt: Date, updatedAt: Date, isPinned: Bool, preview: String) {
+    public init(
+        id: UUID,
+        title: String,
+        createdAt: Date,
+        updatedAt: Date,
+        isPinned: Bool,
+        preview: String,
+        remoteID: String? = nil,
+        projectID: String? = nil,
+        remoteUpdatedAt: Date? = nil
+    ) {
         self.id = id
         self.title = title
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.isPinned = isPinned
         self.preview = preview
+        self.remoteID = remoteID
+        self.projectID = projectID
+        self.remoteUpdatedAt = remoteUpdatedAt
     }
+
+    public var isAccountChat: Bool { remoteID != nil }
 }

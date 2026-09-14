@@ -17,3 +17,6 @@ Package.resolved
 
 # macOS
 .DS_Store
+
+# Browser network captures contain session cookies and tokens
+*.har

@@ -91,6 +91,13 @@ enum AppInfo {
         Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
     }
 
+    /// The app's language with the device region (e.g. "fr-FR"), for labels sent by ChatGPT.
+    static var languageTag: String {
+        let language = Bundle.main.preferredLocalizations.first ?? "en"
+        guard let region = Locale.current.region?.identifier else { return language }
+        return "\(language)-\(region)"
+    }
+
     static let userAgent: String = {
         let os = ProcessInfo.processInfo.operatingSystemVersion
         #if arch(arm64)

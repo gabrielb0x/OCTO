@@ -2,7 +2,8 @@ import OCTOCore
 import SwiftUI
 import UIKit
 
-/// Settings sheet organized like the ChatGPT app: account, chats, app and about.
+/// Settings sheet organized like the ChatGPT app. The account sections show the ChatGPT account;
+/// the others are preferences of this device.
 struct SettingsView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
@@ -16,12 +17,12 @@ struct SettingsView: View {
             Form {
                 Section {
                     VStack(spacing: 10) {
-                        AccountAvatar(account: app.auth.account, size: 72)
+                        AccountAvatar(name: app.account.profile?.name, email: app.accountEmail, image: app.account.avatar, size: 76)
                         VStack(spacing: 3) {
-                            Text(verbatim: app.auth.account?.displayTitle ?? "OCTO")
+                            Text(verbatim: app.accountName)
                                 .font(.title3.weight(.semibold))
                                 .lineLimit(1)
-                            Text(verbatim: app.auth.account?.displaySubtitle ?? "")
+                            Text(verbatim: app.planName)
                                 .font(.subheadline)
                                 .foregroundStyle(Theme.secondaryText)
                         }
@@ -30,8 +31,18 @@ struct SettingsView: View {
                     .listRowBackground(Color.clear)
                 }
 
+                accountStatus
+
                 Section("Account") {
-                    if let email = app.auth.account?.email {
+                    if let name = app.account.profile?.name {
+                        LabeledContent {
+                            Text(verbatim: name)
+                                .lineLimit(1)
+                        } label: {
+                            Label("Name", systemImage: "person")
+                        }
+                    }
+                    if let email = app.accountEmail {
                         LabeledContent {
                             Text(verbatim: email)
                                 .lineLimit(1)
@@ -40,16 +51,14 @@ struct SettingsView: View {
                         }
                     }
                     LabeledContent {
-                        Text(verbatim: app.auth.account?.displaySubtitle ?? "")
+                        Text(verbatim: app.planName)
                     } label: {
                         Label("Subscription", systemImage: "plus.circle")
                     }
-                    if app.authMethod == .chatGPT {
-                        NavigationLink {
-                            UsageView()
-                        } label: {
-                            Label("Usage limits", systemImage: "chart.bar")
-                        }
+                    NavigationLink {
+                        UsageView()
+                    } label: {
+                        Label("Usage limits", systemImage: "chart.bar")
                     }
                     NavigationLink {
                         PersonalizationView()
@@ -63,7 +72,7 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Chats") {
+                Section {
                     Picker(selection: defaultModelBinding) {
                         ForEach(app.models) { model in
                             Text(verbatim: model.displayName).tag(model.id)
@@ -80,6 +89,10 @@ struct SettingsView: View {
                     Toggle(isOn: $settings.autoGenerateTitles) {
                         Label("Generate chat titles", systemImage: "character.cursor.ibeam")
                     }
+                } header: {
+                    Text("Chats")
+                } footer: {
+                    Text("Used for the messages you write in OCTO.")
                 }
 
                 Section("App") {
@@ -142,12 +155,53 @@ struct SettingsView: View {
                     }
                 }
             }
-            .confirmationDialog("Sign out of OCTO?", isPresented: $confirmSignOut, titleVisibility: .visible) {
+            .refreshable {
+                await app.account.refresh()
+            }
+            .task {
+                await app.account.refresh(ifOlderThan: 120)
+            }
+            .confirmationDialog("Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
                 Button("Sign out", role: .destructive) {
                     dismiss()
                     Task { await app.signOut() }
                 }
+            } message: {
+                Text("The chats of your ChatGPT account will be removed from this device.")
             }
+        }
+    }
+
+    @ViewBuilder
+    private var accountStatus: some View {
+        switch app.account.state {
+        case .failed(let message):
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Couldn't load your ChatGPT settings", systemImage: "exclamationmark.triangle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.orange)
+                    Text(verbatim: message)
+                        .font(.footnote)
+                        .foregroundStyle(Theme.secondaryText)
+                    Button("Try again") {
+                        Task { await app.account.refresh() }
+                    }
+                    .buttonStyle(.glass)
+                    .controlSize(.small)
+                }
+                .padding(.vertical, 4)
+            }
+        case .loading where app.account.profile == nil:
+            Section {
+                HStack(spacing: 10) {
+                    ProgressView()
+                    Text("Loading your ChatGPT account…")
+                        .foregroundStyle(Theme.secondaryText)
+                }
+            }
+        default:
+            EmptyView()
         }
     }
 
@@ -164,56 +218,6 @@ struct SettingsView: View {
     private func openSystemSettings() {
         if let url = URL(string: UIApplication.openSettingsURLString) {
             openURL(url)
-        }
-    }
-}
-
-extension Account {
-    var displayTitle: String {
-        switch method {
-        case .apiKey: return String(localized: "OpenAI API key")
-        case .chatGPT: return email ?? String(localized: "ChatGPT account")
-        }
-    }
-
-    var displaySubtitle: String {
-        switch method {
-        case .apiKey:
-            return String(localized: "Pay as you go")
-        case .chatGPT:
-            if let plan = ChatGPTPlan.displayName(for: planType) {
-                return String(localized: "ChatGPT \(plan)")
-            }
-            return "ChatGPT"
-        }
-    }
-}
-
-struct DataControlsView: View {
-    @Environment(AppModel.self) private var app
-    @State private var confirmDeleteAll = false
-
-    var body: some View {
-        Form {
-            Section {
-                Button(role: .destructive) {
-                    confirmDeleteAll = true
-                } label: {
-                    Label("Delete all chats", systemImage: "trash")
-                }
-                .disabled(app.store.summaries.isEmpty)
-            } footer: {
-                Text("Chats are stored only on this device. Messages go straight to OpenAI when you send them, with server-side storage turned off.")
-            }
-        }
-        .navigationTitle("Data controls")
-        .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog("Delete all chats?", isPresented: $confirmDeleteAll, titleVisibility: .visible) {
-            Button("Delete all", role: .destructive) {
-                app.store.deleteAll()
-            }
-        } message: {
-            Text("Every chat and attachment will be removed from this device.")
         }
     }
 }
@@ -313,35 +317,5 @@ struct UsageWindowRow: View {
         case ..<85: return .orange
         default: return Theme.danger
         }
-    }
-}
-
-struct PersonalizationView: View {
-    @Environment(AppModel.self) private var app
-
-    var body: some View {
-        @Bindable var settings = app.settings
-
-        Form {
-            Section {
-                TextEditor(text: $settings.aboutUser)
-                    .frame(minHeight: 120)
-            } header: {
-                Text("What should OCTO know about you?")
-            } footer: {
-                Text("For example your job, your interests or the languages you speak.")
-            }
-
-            Section {
-                TextEditor(text: $settings.responseStyle)
-                    .frame(minHeight: 120)
-            } header: {
-                Text("How should OCTO respond?")
-            } footer: {
-                Text("For example: concise, friendly, with examples, always in French.")
-            }
-        }
-        .navigationTitle("Personalization")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }

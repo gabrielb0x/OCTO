@@ -31,6 +31,16 @@
         }
       }
     },
+    "About you": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À propos de toi"
+          }
+        }
+      }
+    },
     "Account": {
       "localizations": {
         "fr": {
@@ -111,12 +121,32 @@
         }
       }
     },
+    "Archived chats": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chats archivés"
+          }
+        }
+      }
+    },
     "Ask anything": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Pose ta question"
+          }
+        }
+      }
+    },
+    "Base style and tone": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Style et ton de base"
           }
         }
       }
@@ -171,6 +201,16 @@
         }
       }
     },
+    "Characteristics": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caractéristiques"
+          }
+        }
+      }
+    },
     "ChatGPT %@": {
       "localizations": {
         "fr": {
@@ -181,12 +221,52 @@
         }
       }
     },
-    "ChatGPT account": {
+    "ChatGPT blocked the request for your account data. Try again later.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compte ChatGPT"
+            "value": "ChatGPT a bloqué la requête pour les données de ton compte. Réessaie plus tard."
+          }
+        }
+      }
+    },
+    "ChatGPT is having trouble right now. Try again in a moment.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT rencontre des difficultés. Réessaie dans un instant."
+          }
+        }
+      }
+    },
+    "ChatGPT refused access to your account data. Try signing out and in again.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT a refusé l'accès aux données de ton compte. Essaie de te déconnecter puis de te reconnecter."
+          }
+        }
+      }
+    },
+    "ChatGPT returned an error (HTTP %lld).": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT a renvoyé une erreur (HTTP %lld)."
+          }
+        }
+      }
+    },
+    "ChatGPT returned an unexpected response.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT a renvoyé une réponse inattendue."
           }
         }
       }
@@ -197,16 +277,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chats"
-          }
-        }
-      }
-    },
-    "Chats are stored only on this device. Messages go straight to OpenAI when you send them, with server-side storage turned off.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les chats sont stockés uniquement sur cet appareil. Les messages partent directement chez OpenAI quand tu les envoies, avec le stockage côté serveur désactivé."
           }
         }
       }
@@ -237,6 +307,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Coder"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer"
           }
         }
       }
@@ -321,12 +401,62 @@
         }
       }
     },
-    "Create an API key": {
+    "Couldn't delete your chats": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Créer une clé API"
+            "value": "Impossible de supprimer tes chats"
+          }
+        }
+      }
+    },
+    "Couldn't load your ChatGPT chats": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de charger tes chats ChatGPT"
+          }
+        }
+      }
+    },
+    "Couldn't load your ChatGPT settings": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de charger tes réglages ChatGPT"
+          }
+        }
+      }
+    },
+    "Couldn't save": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d'enregistrer"
+          }
+        }
+      }
+    },
+    "Couldn't update your ChatGPT account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de mettre à jour ton compte ChatGPT"
+          }
+        }
+      }
+    },
+    "Custom instructions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instructions personnalisées"
           }
         }
       }
@@ -337,6 +467,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gestion des données"
+          }
+        }
+      }
+    },
+    "Default": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Par défaut"
           }
         }
       }
@@ -451,6 +591,16 @@
         }
       }
     },
+    "Enable customization": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activer la personnalisation"
+          }
+        }
+      }
+    },
     "End voice mode": {
       "localizations": {
         "fr": {
@@ -461,12 +611,12 @@
         }
       }
     },
-    "Every chat and attachment will be removed from this device.": {
+    "Every chat of your ChatGPT account and of this device will be deleted. This can't be undone.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tous les chats et pièces jointes seront supprimés de cet appareil."
+            "value": "Tous les chats de ton compte ChatGPT et de cet appareil seront supprimés. Cette action est irréversible."
           }
         }
       }
@@ -497,16 +647,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fichiers"
-          }
-        }
-      }
-    },
-    "For example your job, your interests or the languages you speak.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Par exemple ton métier, tes centres d'intérêt ou les langues que tu parles."
           }
         }
       }
@@ -581,16 +721,6 @@
         }
       }
     },
-    "How should OCTO respond?": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Comment OCTO doit-il répondre ?"
-          }
-        }
-      }
-    },
     "If the page says codes are disabled, turn on device code authorization for Codex in ChatGPT → Settings → Security.": {
       "localizations": {
         "fr": {
@@ -607,6 +737,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Image"
+          }
+        }
+      }
+    },
+    "Improve the model for everyone": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Améliorer le modèle pour tous"
           }
         }
       }
@@ -681,12 +821,42 @@
         }
       }
     },
+    "Liquid Glass message bar": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barre de saisie en Liquid Glass"
+          }
+        }
+      }
+    },
     "Listening": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "À l'écoute"
+          }
+        }
+      }
+    },
+    "Loading chat…": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chargement du chat…"
+          }
+        }
+      }
+    },
+    "Loading your ChatGPT account…": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chargement de ton compte ChatGPT…"
           }
         }
       }
@@ -701,12 +871,42 @@
         }
       }
     },
+    "Managed in ChatGPT. The messages you write in OCTO are sent with server-side storage turned off.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Géré dans ChatGPT. Les messages que tu écris dans OCTO sont envoyés avec le stockage côté serveur désactivé."
+          }
+        }
+      }
+    },
     "Max": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Max"
+          }
+        }
+      }
+    },
+    "Memories are managed in ChatGPT.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les souvenirs se gèrent dans ChatGPT."
+          }
+        }
+      }
+    },
+    "Memory": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mémoire"
           }
         }
       }
@@ -751,6 +951,16 @@
         }
       }
     },
+    "More about you": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus d'infos sur toi"
+          }
+        }
+      }
+    },
     "More options": {
       "localizations": {
         "fr": {
@@ -771,12 +981,52 @@
         }
       }
     },
+    "Name": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom"
+          }
+        }
+      }
+    },
     "New chat": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Nouveau chat"
+          }
+        }
+      }
+    },
+    "Nickname": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Surnom"
+          }
+        }
+      }
+    },
+    "No archived chats.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun chat archivé."
+          }
+        }
+      }
+    },
+    "No chats in this project": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun chat dans ce projet"
           }
         }
       }
@@ -801,12 +1051,32 @@
         }
       }
     },
+    "No more API keys": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fini les clés API"
+          }
+        }
+      }
+    },
     "No results": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Aucun résultat"
+          }
+        }
+      }
+    },
+    "No saved memories.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun souvenir enregistré."
           }
         }
       }
@@ -821,12 +1091,12 @@
         }
       }
     },
-    "Not affiliated with OpenAI. Your chats stay on this device.": {
+    "Occupation": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non affilié à OpenAI. Tes chats restent sur cet appareil."
+            "value": "Profession"
           }
         }
       }
@@ -851,12 +1121,32 @@
         }
       }
     },
+    "Off": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactivé"
+          }
+        }
+      }
+    },
     "OK": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "OK"
+          }
+        }
+      }
+    },
+    "On": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activé"
           }
         }
       }
@@ -887,26 +1177,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ouvre la page ci-dessous sur n'importe quel appareil, connecte-toi à ChatGPT et saisis ce code."
-          }
-        }
-      }
-    },
-    "OpenAI API key": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clé API OpenAI"
-          }
-        }
-      }
-    },
-    "OpenAI could not be reached (HTTP %lld).": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossible de joindre OpenAI (HTTP %lld)."
           }
         }
       }
@@ -947,16 +1217,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "OpenAI a renvoyé une réponse inattendue."
-          }
-        }
-      }
-    },
-    "Pay as you go": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Paiement à l'usage"
           }
         }
       }
@@ -1051,6 +1311,26 @@
         }
       }
     },
+    "Project": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projet"
+          }
+        }
+      }
+    },
+    "Projects": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projets"
+          }
+        }
+      }
+    },
     "Read aloud": {
       "localizations": {
         "fr": {
@@ -1067,6 +1347,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vitesse de lecture"
+          }
+        }
+      }
+    },
+    "Reference chat history": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consulter l'historique des chats"
+          }
+        }
+      }
+    },
+    "Reference saved memories": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consulter les souvenirs enregistrés"
           }
         }
       }
@@ -1111,6 +1411,16 @@
         }
       }
     },
+    "Replies flow in smoothly, and the chat no longer scrolls by itself while ChatGPT writes.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les réponses s'affichent de façon fluide et le chat ne défile plus tout seul pendant que ChatGPT écrit."
+          }
+        }
+      }
+    },
     "Resets %@": {
       "localizations": {
         "fr": {
@@ -1147,6 +1457,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Enregistrer"
+          }
+        }
+      }
+    },
+    "Saved in your ChatGPT account and sent with the messages you write in OCTO.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistré dans ton compte ChatGPT et envoyé avec les messages que tu écris dans OCTO."
+          }
+        }
+      }
+    },
+    "Saved memories": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Souvenirs enregistrés"
           }
         }
       }
@@ -1281,12 +1611,12 @@
         }
       }
     },
-    "Sign out of OCTO?": {
+    "Sign out?": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se déconnecter d'OCTO ?"
+            "value": "Se déconnecter ?"
           }
         }
       }
@@ -1327,6 +1657,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "La connexion avec un code n'est pas disponible pour le moment."
+          }
+        }
+      }
+    },
+    "Signing in with an OpenAI API key isn't offered anymore for now.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La connexion avec une clé API OpenAI n'est plus proposée pour le moment."
+          }
+        }
+      }
+    },
+    "Simply ChatGPT": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout simplement ChatGPT"
+          }
+        }
+      }
+    },
+    "Smoother replies": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Des réponses plus fluides"
+          }
+        }
+      }
+    },
+    "Smoother welcome screen": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écran d'accueil plus fluide"
           }
         }
       }
@@ -1451,6 +1821,16 @@
         }
       }
     },
+    "Swipe a chat to put it back in your history.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balaie un chat pour le remettre dans ton historique."
+          }
+        }
+      }
+    },
     "Tap to interrupt": {
       "localizations": {
         "fr": {
@@ -1481,6 +1861,26 @@
         }
       }
     },
+    "The assistant now presents itself as ChatGPT.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'assistant se présente maintenant comme ChatGPT."
+          }
+        }
+      }
+    },
+    "The chats of your ChatGPT account will be removed from this device.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les chats de ton compte ChatGPT seront retirés de cet appareil."
+          }
+        }
+      }
+    },
     "The code expired. Request a new one.": {
       "localizations": {
         "fr": {
@@ -1491,12 +1891,22 @@
         }
       }
     },
-    "The key is stored in the iOS Keychain and only sent to api.openai.com. API usage is billed by OpenAI, separately from ChatGPT plans.": {
+    "The message bar and its + button are now made of Liquid Glass.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La clé est stockée dans le trousseau iOS et envoyée uniquement à api.openai.com. L'utilisation de l'API est facturée par OpenAI, séparément des forfaits ChatGPT."
+            "value": "La barre de saisie et son bouton + sont maintenant en Liquid Glass."
+          }
+        }
+      }
+    },
+    "The messages below are only on this device": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les messages ci-dessous sont uniquement sur cet appareil"
           }
         }
       }
@@ -1507,6 +1917,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "La requête a expiré."
+          }
+        }
+      }
+    },
+    "The typing animation on the sign-in screen is smoother.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'animation du texte sur l'écran de connexion est plus fluide."
           }
         }
       }
@@ -1531,22 +1951,32 @@
         }
       }
     },
-    "This API key was rejected by OpenAI.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cette clé API a été refusée par OpenAI."
-          }
-        }
-      }
-    },
     "This can't be undone.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Cette action est irréversible."
+          }
+        }
+      }
+    },
+    "This chat has no messages to show.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce chat n'a aucun message à afficher."
+          }
+        }
+      }
+    },
+    "This chat no longer exists in your ChatGPT account.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce chat n'existe plus dans ton compte ChatGPT."
           }
         }
       }
@@ -1661,6 +2091,16 @@
         }
       }
     },
+    "Unarchive": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désarchiver"
+          }
+        }
+      }
+    },
     "Unmute": {
       "localizations": {
         "fr": {
@@ -1701,16 +2141,6 @@
         }
       }
     },
-    "Use an OpenAI API key": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Utiliser une clé API OpenAI"
-          }
-        }
-      }
-    },
     "Used %@": {
       "localizations": {
         "fr": {
@@ -1721,12 +2151,32 @@
         }
       }
     },
+    "Used for the messages you write in OCTO.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisé pour les messages que tu écris dans OCTO."
+          }
+        }
+      }
+    },
     "Version": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Version"
+          }
+        }
+      }
+    },
+    "Version %@": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@"
           }
         }
       }
@@ -1791,12 +2241,22 @@
         }
       }
     },
-    "What should OCTO know about you?": {
+    "What's new in OCTO": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Que doit savoir OCTO sur toi ?"
+            "value": "Nouveautés d'OCTO"
+          }
+        }
+      }
+    },
+    "When “Reference saved memories” is on, your saved memories are sent with the messages you write in OCTO. OCTO can't reference your chat history.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quand « Consulter les souvenirs enregistrés » est activé, tes souvenirs sont envoyés avec les messages que tu écris dans OCTO. OCTO ne peut pas consulter l'historique de tes chats."
           }
         }
       }
@@ -1861,12 +2321,42 @@
         }
       }
     },
-    "Your ChatGPT plan doesn't include this. Upgrade your plan or use an API key.": {
+    "Your ChatGPT account": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ton forfait ChatGPT n'inclut pas cette fonctionnalité. Change de forfait ou utilise une clé API."
+            "value": "Ton compte ChatGPT"
+          }
+        }
+      }
+    },
+    "Your ChatGPT plan doesn't include this. Upgrade your plan to continue.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton forfait ChatGPT n'inclut pas cette fonctionnalité. Change de forfait pour continuer."
+          }
+        }
+      }
+    },
+    "Your chats and settings come from your ChatGPT account. Not affiliated with OpenAI.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tes chats et tes réglages viennent de ton compte ChatGPT. Non affilié à OpenAI."
+          }
+        }
+      }
+    },
+    "Your chats come from your ChatGPT account and are kept on this device so they open instantly.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tes chats viennent de ton compte ChatGPT et sont gardés sur cet appareil pour s'ouvrir instantanément."
           }
         }
       }
@@ -1881,12 +2371,22 @@
         }
       }
     },
-    "Your OpenAI API quota is used up. Check your billing settings.": {
+    "Your chats, projects, custom instructions, personality, memory and profile picture now come from your ChatGPT account.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ton quota d'API OpenAI est épuisé. Vérifie tes paramètres de facturation."
+            "value": "Tes chats, projets, instructions personnalisées, personnalité, mémoire et photo de profil viennent maintenant de ton compte ChatGPT."
+          }
+        }
+      }
+    },
+    "Your OpenAI quota is used up.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton quota OpenAI est épuisé."
           }
         }
       }

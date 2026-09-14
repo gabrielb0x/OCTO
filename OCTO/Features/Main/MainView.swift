@@ -5,6 +5,7 @@ import UIKit
 /// ChatGPT-style layout: the chat slides aside to reveal the sidebar underneath.
 struct MainView: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.scenePhase) private var scenePhase
     @State private var session: ChatSession
     @State private var isSidebarOpen = false
     @State private var isDragging = false
@@ -83,8 +84,13 @@ struct MainView: View {
         .sheet(isPresented: $showSettings) {
             SettingsView()
         }
+        .alert("Couldn't update your ChatGPT account", isPresented: syncErrorIsPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(app.store.syncError ?? "")
+        }
         .task {
-            await app.refreshModels()
+            await app.refreshAccount()
             #if OCTO_DEMO
             switch app.demoScene {
             case .sidebar?:
@@ -98,9 +104,18 @@ struct MainView: View {
             }
             #endif
         }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                Task { await app.refreshAccount() }
+            }
+        }
         .sensoryFeedback(.selection, trigger: isSidebarOpen) { _, _ in
             app.settings.hapticsEnabled
         }
+    }
+
+    private var syncErrorIsPresented: Binding<Bool> {
+        Binding(get: { app.store.syncError != nil }, set: { if !$0 { app.store.syncError = nil } })
     }
 
     // MARK: Navigation
@@ -114,7 +129,7 @@ struct MainView: View {
     }
 
     private func startNewChat(temporary: Bool) {
-        if session.messages.isEmpty, session.isTemporary == temporary {
+        if session.isBlank, session.isTemporary == temporary {
             setSidebar(open: false)
             return
         }

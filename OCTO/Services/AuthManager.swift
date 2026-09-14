@@ -4,15 +4,10 @@ import Observation
 import OCTOCore
 import UIKit
 
-enum AuthMethod: String, Codable, Sendable {
-    case chatGPT
-    case apiKey
-}
-
 struct Account: Equatable, Sendable {
-    var method: AuthMethod
     var email: String?
     var planType: String?
+    var userID: String?
 }
 
 struct StoredChatGPTCredentials: Codable, Equatable, Sendable {
@@ -27,7 +22,6 @@ enum AuthError: LocalizedError, Equatable {
     case cancelled
     case notSignedIn
     case sessionExpired
-    case invalidAPIKey
     case loopbackUnavailable
     case deviceCodeUnavailable
     case deviceCodeExpired
@@ -43,8 +37,6 @@ enum AuthError: LocalizedError, Equatable {
             return String(localized: "You are not signed in.")
         case .sessionExpired:
             return String(localized: "Your session has expired. Please sign in again.")
-        case .invalidAPIKey:
-            return String(localized: "This API key was rejected by OpenAI.")
         case .loopbackUnavailable:
             return String(localized: "OCTO could not receive the sign-in response. Try signing in with a code instead.")
         case .deviceCodeUnavailable:
@@ -57,55 +49,42 @@ enum AuthError: LocalizedError, Equatable {
     }
 }
 
-/// Owns the credentials and refreshes ChatGPT tokens, coalescing concurrent refreshes.
+/// Owns the ChatGPT credentials and refreshes them, coalescing concurrent refreshes.
 actor CredentialVault {
-    enum Credential: Sendable {
-        case chatGPT(accessToken: String, accountID: String?)
-        case apiKey(String)
+    struct Credential: Sendable {
+        let accessToken: String
+        let accountID: String?
     }
 
     static let chatGPTAccount = "chatgpt.credentials"
-    static let apiKeyAccount = "openai.apikey"
+    /// Written by OCTO 1.0 when signed in with an OpenAI API key, which is no longer offered.
+    static let legacyAPIKeyAccount = "openai.apikey"
 
     private let session: URLSession
     private var chatGPT: StoredChatGPTCredentials?
-    private var apiKey: String?
     private var refreshTask: Task<StoredChatGPTCredentials, Error>?
 
     init(session: URLSession) {
         self.session = session
         chatGPT = Keychain.value(StoredChatGPTCredentials.self, for: Self.chatGPTAccount)
-        apiKey = Keychain.data(for: Self.apiKeyAccount).map { String(decoding: $0, as: UTF8.self) }
     }
 
     func credential(forceRefresh: Bool = false) async throws -> Credential {
-        if let apiKey {
-            return .apiKey(apiKey)
-        }
         guard let current = chatGPT else { throw AuthError.notSignedIn }
 
         let expiresAt = JWT.expirationDate(of: current.accessToken)
         let expiresSoon = expiresAt.map { $0.timeIntervalSinceNow < 5 * 60 } ?? false
         let isStale = Date().timeIntervalSince(current.lastRefresh) > 7 * 24 * 3600
         guard forceRefresh || expiresSoon || isStale else {
-            return .chatGPT(accessToken: current.accessToken, accountID: current.accountID)
+            return Credential(accessToken: current.accessToken, accountID: current.accountID)
         }
         let refreshed = try await refresh()
-        return .chatGPT(accessToken: refreshed.accessToken, accountID: refreshed.accountID)
+        return Credential(accessToken: refreshed.accessToken, accountID: refreshed.accountID)
     }
 
-    func storeChatGPT(_ credentials: StoredChatGPTCredentials) {
+    func store(_ credentials: StoredChatGPTCredentials) {
         chatGPT = credentials
-        apiKey = nil
-        Keychain.remove(Self.apiKeyAccount)
         Keychain.setValue(credentials, for: Self.chatGPTAccount)
-    }
-
-    func storeAPIKey(_ key: String) {
-        apiKey = key
-        chatGPT = nil
-        Keychain.remove(Self.chatGPTAccount)
-        Keychain.set(Data(key.utf8), for: Self.apiKeyAccount)
     }
 
     /// Clears everything and returns the refresh token so it can be revoked.
@@ -114,9 +93,7 @@ actor CredentialVault {
         refreshTask?.cancel()
         refreshTask = nil
         chatGPT = nil
-        apiKey = nil
         Keychain.remove(Self.chatGPTAccount)
-        Keychain.remove(Self.apiKeyAccount)
         return refreshToken
     }
 
@@ -190,12 +167,11 @@ final class AuthManager {
     init(session: URLSession) {
         self.session = session
         vault = CredentialVault(session: session)
+        // Signing in with an API key was removed: forget a key saved by an earlier version.
+        Keychain.remove(CredentialVault.legacyAPIKeyAccount)
 
         if let credentials = Keychain.value(StoredChatGPTCredentials.self, for: CredentialVault.chatGPTAccount) {
-            let claims = ChatGPTAccountClaims(idToken: credentials.idToken, accessToken: credentials.accessToken)
-            state = .signedIn(Account(method: .chatGPT, email: claims.email, planType: claims.planType))
-        } else if Keychain.data(for: CredentialVault.apiKeyAccount) != nil {
-            state = .signedIn(Account(method: .apiKey))
+            state = .signedIn(Self.account(idToken: credentials.idToken, accessToken: credentials.accessToken))
         } else {
             state = .signedOut
         }
@@ -337,26 +313,6 @@ final class AuthManager {
         throw AuthError.deviceCodeExpired
     }
 
-    // MARK: API key
-
-    func signIn(apiKey rawKey: String) async throws {
-        let key = rawKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !key.isEmpty else { throw AuthError.invalidAPIKey }
-
-        var request = URLRequest(url: OpenAIPlatform.modelsURL)
-        for (name, value) in OpenAIPlatform.headers(apiKey: key, userAgent: AppInfo.userAgent) {
-            request.setValue(value, forHTTPHeaderField: name)
-        }
-        let (data, response) = try await session.data(for: request)
-        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-        if status == 401 || status == 403 { throw AuthError.invalidAPIKey }
-        guard (200..<300).contains(status) else {
-            throw AuthError.network(APIErrorPayload.parse(data).message ?? String(localized: "OpenAI could not be reached (HTTP \(status))."))
-        }
-        await vault.storeAPIKey(key)
-        state = .signedIn(Account(method: .apiKey))
-    }
-
     // MARK: Session
 
     func signOut() async {
@@ -396,14 +352,19 @@ final class AuthManager {
         guard let accessToken = tokens.accessToken, let refreshToken = tokens.refreshToken else { return }
         let idToken = tokens.idToken ?? ""
         let claims = ChatGPTAccountClaims(idToken: idToken, accessToken: accessToken)
-        await vault.storeChatGPT(StoredChatGPTCredentials(
+        await vault.store(StoredChatGPTCredentials(
             idToken: idToken,
             accessToken: accessToken,
             refreshToken: refreshToken,
             accountID: claims.accountID,
             lastRefresh: Date()
         ))
-        state = .signedIn(Account(method: .chatGPT, email: claims.email, planType: claims.planType))
+        state = .signedIn(Self.account(idToken: idToken, accessToken: accessToken))
+    }
+
+    private static func account(idToken: String?, accessToken: String?) -> Account {
+        let claims = ChatGPTAccountClaims(idToken: idToken, accessToken: accessToken)
+        return Account(email: claims.email, planType: claims.planType, userID: claims.userID)
     }
 }
 

@@ -9,7 +9,6 @@ struct WelcomeView: View {
     @State private var isSigningIn = false
     @State private var errorMessage: String?
     @State private var showDeviceCode = false
-    @State private var showAPIKey = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -18,7 +17,7 @@ struct WelcomeView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 30, height: 30)
-                Text(verbatim: "OCTO")
+                Text(verbatim: "ChatGPT")
                     .font(.title3.weight(.bold))
             }
             .foregroundStyle(Theme.primaryText)
@@ -62,21 +61,11 @@ struct WelcomeView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.glass)
-
-                    Button {
-                        showAPIKey = true
-                    } label: {
-                        Label("Use an OpenAI API key", systemImage: "key")
-                            .font(.headline)
-                            .foregroundStyle(Theme.primaryText)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.glass)
                 }
                 .controlSize(.extraLarge)
             }
 
-            Text("Not affiliated with OpenAI. Your chats stay on this device.")
+            Text("Your chats and settings come from your ChatGPT account. Not affiliated with OpenAI.")
                 .font(.caption)
                 .foregroundStyle(Theme.tertiaryText)
                 .multilineTextAlignment(.center)
@@ -95,9 +84,6 @@ struct WelcomeView: View {
         }
         .sheet(isPresented: $showDeviceCode) {
             DeviceCodeSheet()
-        }
-        .sheet(isPresented: $showAPIKey) {
-            APIKeySheet()
         }
     }
 
@@ -132,48 +118,88 @@ struct WelcomeView: View {
 }
 
 /// Large headline typed and erased letter by letter, ending with ChatGPT's white dot.
+/// The text is laid out once per phrase: every frame only changes which letters are drawn,
+/// so letters fade in and the dot glides along at the display's refresh rate.
 struct TypingHeadline: View {
     let phrases: [String]
     let animated: Bool
-    @State private var phraseIndex = 0
-    @State private var typedCount = Int.max
+    @State private var start = Date()
 
     var body: some View {
-        let phrase = phrases.isEmpty ? "" : phrases[phraseIndex % phrases.count]
-        Text(headline(String(phrase.prefix(typedCount))))
+        Group {
+            if animated, !phrases.isEmpty {
+                TimelineView(.animation) { context in
+                    let schedule = TypingSchedule(lengths: phrases.map(\.count))
+                    let frame = schedule.frame(at: context.date.timeIntervalSince(start))
+                    headline(phrases[frame.phraseIndex], visibleCharacters: frame.visibleCharacters)
+                }
+            } else {
+                headline(phrases.first ?? "", visibleCharacters: .infinity)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 110, alignment: .leading)
+    }
+
+    private func headline(_ phrase: String, visibleCharacters: Double) -> some View {
+        // A no-break space keeps the dot on the same line as the last word.
+        let dot = Text(verbatim: "\u{00A0}●")
+            .font(.system(size: 30))
+            .customAttribute(TypingCursor())
+        return (Text(verbatim: phrase) + dot)
             .font(.system(size: 40, weight: .semibold))
             .foregroundStyle(Theme.primaryText)
-            .frame(maxWidth: .infinity, minHeight: 110, alignment: .leading)
+            .textRenderer(TypewriterRenderer(visibleCharacters: visibleCharacters))
             .accessibilityLabel(Text(verbatim: phrase))
-            .task(id: animated) {
-                guard animated, !phrases.isEmpty else { return }
-                await typeForever()
-            }
     }
+}
 
-    private func headline(_ typed: String) -> AttributedString {
-        var text = AttributedString(typed)
-        // A no-break space keeps the dot on the same line as the last word.
-        var dot = AttributedString("\u{00A0}●")
-        dot.font = .system(size: 30)
-        text.append(dot)
-        return text
-    }
+/// Marks the dot that follows the typed headline.
+struct TypingCursor: TextAttribute {}
 
-    private func typeForever() async {
-        while !Task.isCancelled {
-            let phrase = phrases[phraseIndex % phrases.count]
-            for count in 0...phrase.count {
-                typedCount = count
-                try? await Task.sleep(for: .milliseconds(55))
+/// Draws the letters typed so far, each fading in, and moves the dot right after the last one.
+struct TypewriterRenderer: TextRenderer {
+    /// Letters shown; the fractional part is how far the next letter has appeared.
+    var visibleCharacters: Double
+    /// Letters over which a new letter fades in.
+    var fadeLength = 1.5
+
+    func draw(layout: Text.Layout, in context: inout GraphicsContext) {
+        var index = 0
+        var caret: CGPoint?
+        var start: CGPoint?
+        var cursorRuns: [Text.Layout.Run] = []
+
+        for line in layout {
+            for run in line {
+                if run[TypingCursor.self] != nil {
+                    cursorRuns.append(run)
+                    continue
+                }
+                for slice in run {
+                    let bounds = slice.typographicBounds
+                    if start == nil {
+                        start = CGPoint(x: bounds.rect.minX, y: bounds.origin.y)
+                    }
+                    let shown = visibleCharacters - Double(index)
+                    if shown > 0 {
+                        var letter = context
+                        letter.opacity = min(shown / fadeLength, 1)
+                        letter.draw(slice)
+                        caret = CGPoint(x: bounds.rect.minX + bounds.width * min(shown, 1), y: bounds.origin.y)
+                    }
+                    index += 1
+                }
             }
-            try? await Task.sleep(for: .seconds(1.6))
-            for count in stride(from: phrase.count, through: 0, by: -1) {
-                typedCount = count
-                try? await Task.sleep(for: .milliseconds(22))
+        }
+
+        let target = caret ?? start
+        for run in cursorRuns {
+            let bounds = run.typographicBounds
+            var cursor = context
+            if let target {
+                cursor.translateBy(x: target.x - bounds.rect.minX, y: target.y - bounds.origin.y)
             }
-            phraseIndex += 1
-            try? await Task.sleep(for: .milliseconds(250))
+            cursor.draw(run)
         }
     }
 }
@@ -299,93 +325,6 @@ struct DeviceCodeSheet: View {
         } catch {
             self.challenge = nil
             errorMessage = ChatSession.describe(error)
-        }
-    }
-}
-
-struct APIKeySheet: View {
-    @Environment(AppModel.self) private var app
-    @Environment(\.dismiss) private var dismiss
-    @State private var key = ""
-    @State private var isValidating = false
-    @State private var errorMessage: String?
-    @FocusState private var isFocused: Bool
-
-    private var hasKey: Bool {
-        !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    SecureField(text: $key) {
-                        Text(verbatim: "sk-…")
-                    }
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .font(.body.monospaced())
-                    .focused($isFocused)
-                    .submitLabel(.done)
-                    .onSubmit(save)
-                } footer: {
-                    Text("The key is stored in the iOS Keychain and only sent to api.openai.com. API usage is billed by OpenAI, separately from ChatGPT plans.")
-                }
-
-                if let errorMessage {
-                    Section {
-                        Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
-                            .foregroundStyle(Theme.danger)
-                    }
-                }
-
-                Section {
-                    Link(destination: URL(string: "https://platform.openai.com/api-keys")!) {
-                        Label("Create an API key", systemImage: "arrow.up.right.square")
-                    }
-                    .foregroundStyle(Theme.primaryText)
-                }
-            }
-            .navigationTitle("OpenAI API key")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .close) {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    if isValidating {
-                        ProgressView()
-                    } else {
-                        Button(action: save) {
-                            Text("Save")
-                                .foregroundStyle(.black)
-                        }
-                        .buttonStyle(.glassProminent)
-                        .tint(.white)
-                        .disabled(!hasKey)
-                    }
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
-        .onAppear { isFocused = true }
-    }
-
-    private func save() {
-        guard !isValidating, hasKey else { return }
-        isValidating = true
-        errorMessage = nil
-        Task {
-            defer { isValidating = false }
-            do {
-                try await app.auth.signIn(apiKey: key)
-                await app.didSignIn()
-                dismiss()
-            } catch {
-                errorMessage = ChatSession.describe(error)
-            }
         }
     }
 }
