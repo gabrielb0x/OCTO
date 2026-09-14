@@ -40,7 +40,11 @@ final class AppModel {
         self.isDemo = isDemo
 
         // Decided before the first launch is recorded below, so a fresh install shows no notes.
+        #if OCTO_DEMO
         let notes = isDemo ? nil : ReleaseNotes.notesToShowAfterUpdate()
+        #else
+        let notes = ReleaseNotes.notesToShowAfterUpdate()
+        #endif
 
         // Keychain items survive app deletion: start clean on a fresh install.
         if !isDemo, !UserDefaults.standard.bool(forKey: ReleaseNotes.launchedBeforeKey) {
@@ -62,20 +66,19 @@ final class AppModel {
         let folderName = isDemo ? "Demo" : "OCTO"
         let files = ConversationFiles(folderName: folderName, startEmpty: isDemo)
         let accountCache = AccountCache(folderName: folderName)
+        let accountService: AccountService? = isDemo ? nil : AccountService(vault: auth.vault, session: session)
         #else
         let files = ConversationFiles()
         let accountCache = AccountCache()
+        let accountService: AccountService? = AccountService(vault: auth.vault, session: session)
         #endif
-        let accountService = AccountService(vault: auth.vault, session: session)
         store = ConversationStore(files: files)
-        account = AccountStore(service: isDemo ? nil : accountService, cache: accountCache)
+        account = AccountStore(service: accountService, cache: accountCache)
         backend = ChatBackend(vault: auth.vault, session: session)
         speech = SpeechPlayer()
         models = Self.cachedModels()
         whatsNew = notes
-        if !isDemo {
-            store.service = accountService
-        }
+        store.service = accountService
 
         #if OCTO_DEMO
         if let demoScene {

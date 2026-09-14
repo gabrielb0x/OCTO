@@ -145,7 +145,11 @@ struct TypingHeadline: View {
         let dot = Text(verbatim: "\u{00A0}●")
             .font(.system(size: 30))
             .customAttribute(TypingCursor())
-        return (Text(verbatim: phrase) + dot)
+        // Interpolated without a string literal, so no "%@%@" key lands in the string catalog.
+        var content = LocalizedStringKey.StringInterpolation(literalCapacity: 0, interpolationCount: 2)
+        content.appendInterpolation(Text(verbatim: phrase))
+        content.appendInterpolation(dot)
+        return Text(LocalizedStringKey(stringInterpolation: content))
             .font(.system(size: 40, weight: .semibold))
             .foregroundStyle(Theme.primaryText)
             .textRenderer(TypewriterRenderer(visibleCharacters: visibleCharacters))
