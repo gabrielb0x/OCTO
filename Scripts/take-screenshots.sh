@@ -11,21 +11,41 @@ LOCALE_ID="${SCREENSHOT_LOCALE:-fr_FR}"
 BUNDLE_ID="com.gabrielb0x.octo"
 SCENES=(welcome home chat sidebar voice settings)
 
-UDID=$(xcrun simctl list devices available --json | python3 -c '
-import json, re, sys
-name = sys.argv[1]
-matches = []
-for runtime, devices in json.load(sys.stdin)["devices"].items():
-    if ".iOS-" not in runtime:
-        continue
-    version = tuple(int(part) for part in re.findall(r"\d+", runtime.split(".iOS-")[-1]))
-    matches += [(version, device["udid"]) for device in devices if device["name"] == name]
-if not matches:
-    sys.exit("No available simulator named " + name)
-print(max(matches)[1])
-' "$DEVICE_NAME")
+xcrun simctl list runtimes available | sed 's/^/::notice title=Simulator runtimes::/'
 
-echo "Using $DEVICE_NAME ($UDID)"
+# Uses the device on the newest installed iOS runtime, creating it when the image doesn't ship one.
+UDID=$(python3 - "$DEVICE_NAME" <<'PY'
+import json, re, subprocess, sys
+
+name = sys.argv[1]
+simctl = json.loads(subprocess.run(["xcrun", "simctl", "list", "--json"], check=True, capture_output=True, text=True).stdout)
+
+def version(identifier):
+    return tuple(int(part) for part in re.findall(r"\d+", identifier.split(".iOS-")[-1]))
+
+runtimes = sorted(
+    (runtime["identifier"] for runtime in simctl["runtimes"] if runtime.get("isAvailable") and ".iOS-" in runtime["identifier"]),
+    key=version,
+)
+if not runtimes:
+    sys.exit("No iOS simulator runtime is installed")
+runtime = runtimes[-1]
+
+for device in simctl["devices"].get(runtime, []):
+    if device["name"] == name and device.get("isAvailable"):
+        print(device["udid"])
+        sys.exit()
+
+device_types = [kind for kind in simctl["devicetypes"] if kind["name"] == name]
+device_types = device_types or [kind for kind in simctl["devicetypes"] if kind["name"].startswith("iPhone") and kind["name"].endswith(" Pro")]
+if not device_types:
+    sys.exit("No iPhone simulator type is available")
+created = subprocess.run(["xcrun", "simctl", "create", "OCTO " + device_types[-1]["name"], device_types[-1]["identifier"], runtime], check=True, capture_output=True, text=True)
+print(created.stdout.strip())
+PY
+) || { echo "::error title=Screenshots::Could not find or create a $DEVICE_NAME simulator"; exit 1; }
+
+echo "::notice title=Simulator::$(xcrun simctl list devices | grep "$UDID" | sed -E 's/^ +//')"
 xcrun simctl boot "$UDID" 2>/dev/null || true
 xcrun simctl bootstatus "$UDID" -b
 xcrun simctl ui "$UDID" appearance dark

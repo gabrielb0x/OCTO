@@ -47,8 +47,9 @@ jobs:
             -project OCTO.xcodeproj \
             -scheme OCTO \
             -configuration Debug \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
+            -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build/DerivedData \
+            ARCHS=arm64 \
             CODE_SIGNING_ALLOWED=NO \
             SWIFT_ACTIVE_COMPILATION_CONDITIONS='DEBUG OCTO_DEMO' \
             2>&1 | tee build/xcodebuild-simulator.log | xcbeautify --renderer github-actions
