@@ -14,28 +14,6 @@ struct PluginsView: View {
     }
 }
 
-struct AgeVerificationView: View {
-    var body: some View {
-        ChatGPTOnlyPage(
-            title: "Age verification",
-            systemImage: "checkmark.shield",
-            summary: "ChatGPT can ask you to confirm your age for some content and features.",
-            details: "Age verification is done by OpenAI in ChatGPT. OCTO never asks for an ID and doesn't receive any verification data."
-        )
-    }
-}
-
-struct ParentalControlsView: View {
-    var body: some View {
-        ChatGPTOnlyPage(
-            title: "Parental controls",
-            systemImage: "person.2",
-            summary: "Parents can link their account to a teen's account to adjust how ChatGPT works for them.",
-            details: "Parental controls are set up and managed in ChatGPT. OCTO doesn't change them."
-        )
-    }
-}
-
 struct RemoteControlView: View {
     var body: some View {
         ChatGPTOnlyPage(

@@ -83,7 +83,7 @@ struct ReportProblemView: View {
     }
 
     private func copyReport() {
-        UIPasteboard.general.string = "# \(issueTitle)\n\n\(reportText)"
+        Clipboard.copy("# \(issueTitle)\n\n\(reportText)", settings: app.settings, cleansLinks: false)
         app.toasts.show(String(localized: "Report copied"))
     }
 }
@@ -107,7 +107,11 @@ struct HelpCenterView: View {
                 )
                 QuestionRow(
                     question: "Does OCTO collect my data?",
-                    answer: "No. OCTO has no telemetry, analytics or third-party SDK. Requests go straight from your device to OpenAI, and your sign-in tokens stay in the iOS keychain."
+                    answer: "No. OCTO has no telemetry, analytics or third-party SDK. Requests go straight from your device to OpenAI, and to GitHub to look for updates if you allow it. Your sign-in tokens stay in the iOS keychain, and Settings → Privacy lists every server OCTO contacted."
+                )
+                QuestionRow(
+                    question: "How do I update OCTO?",
+                    answer: "OCTO tells you when a new version is published on GitHub. Install its IPA with AltStore, SideStore or Sideloadly over the current app: your chats and settings stay."
                 )
                 QuestionRow(
                     question: "My chats don't load",
@@ -145,7 +149,8 @@ private struct QuestionRow: View {
     }
 }
 
-private struct LinkRow: View {
+/// A link that opens in the browser, with an arrow.
+struct LinkRow: View {
     let title: LocalizedStringKey
     let systemImage: String
     let url: URL
@@ -224,6 +229,8 @@ struct AboutView: View {
                 Text("Tap the version to see what's new.")
             }
             .foregroundStyle(Theme.primaryText)
+
+            UpdateStatusSection()
 
             Section {
                 LinkRow(title: "Source code on GitHub", systemImage: "chevron.left.forwardslash.chevron.right", url: AppInfo.repositoryURL)

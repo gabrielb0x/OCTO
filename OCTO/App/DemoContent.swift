@@ -20,6 +20,11 @@ enum DemoScene: String, CaseIterable {
     case lightChat
     case messageDetails
     case whatsNew
+    case appearance
+    case privacy
+    case dataControls
+    case ageVerification
+    case update
 
     static var current: DemoScene? {
         UserDefaults.standard.string(forKey: "OCTODemoScene").flatMap(DemoScene.init(rawValue:))
@@ -35,7 +40,15 @@ enum DemoContent {
     static func prepare(_ scene: DemoScene, app: AppModel) {
         // Preferences are saved in the simulator: every scene starts from the same ones.
         app.settings.theme = scene == .lightChat ? .light : .system
-        app.settings.accent = scene == .lightChat ? .blue : .default
+        switch scene {
+        case .lightChat: app.settings.accent = .blue
+        case .appearance: app.settings.accent = .purple
+        default: app.settings.accent = .default
+        }
+        app.settings.chatTextSize = .standard
+        app.settings.chatFont = .system
+        app.settings.revealSpeed = .normal
+        app.settings.temporaryChatsByDefault = false
         app.developer.isEnabled = [.developer, .network, .messageDetails].contains(scene)
         app.developer.showsMessageDetails = scene == .messageDetails
         app.developer.showsPerformanceOverlay = scene == .messageDetails
@@ -49,7 +62,7 @@ enum DemoContent {
         app.auth.useDemoAccount(Account(email: "gabriel@example.com", planType: planType, userID: "user-demo"))
         app.account.useDemo(AccountSnapshot(
             profile: AccountProfile(userID: "user-demo", name: "Gabriel", email: "gabriel@example.com", phoneNumber: "+33 6 00 00 00 00", mfaEnabled: true),
-            settings: AccountSettings(referencesSavedMemories: true, referencesChatHistory: true, trainingAllowed: false, voiceName: "ember"),
+            settings: AccountSettings(referencesSavedMemories: true, referencesChatHistory: true, trainingAllowed: false, voiceTrainingAllowed: false, videoTrainingAllowed: false, codexTrainingAllowed: false, voiceName: "ember"),
             instructions: CustomInstructions(
                 nickname: "Gabriel",
                 occupation: localized("Student", "Étudiant"),
@@ -63,11 +76,12 @@ enum DemoContent {
             ],
             traits: [],
             memories: MemoriesSnapshot(memories: [SavedMemory(id: "demo-memory", content: localized("Is learning Swift", "Apprend Swift"))], usedTokens: 120, maxTokens: 2_000),
-            trainingAllowed: false,
+            dataUsagePermitted: true,
             subscription: AccountSubscription(
                 planType: planType,
                 hasActiveSubscription: planType != "free",
                 expiresAt: planType == "free" ? nil : Date().addingTimeInterval(20 * 86_400),
+                renewsAt: planType == "free" ? nil : Date().addingTimeInterval(20 * 86_400),
                 willRenew: planType != "free",
                 billingPeriod: planType == "free" ? nil : "monthly",
                 purchasePlatform: planType == "free" ? nil : "chatgpt_web"
@@ -81,7 +95,8 @@ enum DemoContent {
                     FeatureLimit(feature: "reason", remaining: 0, resetsAt: Date().addingTimeInterval(6 * 3_600), isBlocked: true),
                 ],
                 maxAttachmentMB: 512
-            )
+            ),
+            ageStatus: AgeStatus(isAdult: false, hasVerifiedAge: false, isAgeKnown: true, underEighteenPolicyEnabled: true, offersVerification: true, status: "under_18")
         ))
         if scene == .subscription {
             app.useDemoUsage(UsageSnapshot.parse(Data(demoUsageJSON.utf8)))
@@ -97,8 +112,29 @@ enum DemoContent {
                 app.developer.console.record(entry)
             }
         }
+        if scene == .privacy {
+            let requests = [("https://chatgpt.com/backend-api/me", 14), ("https://auth.openai.com/oauth/token", 1), ("https://api.github.com/repos/gabrielb0x/OCTO/releases/latest", 1)]
+            for (address, count) in requests {
+                for _ in 0..<count {
+                    NetworkActivity.shared.record(URL(string: address))
+                }
+            }
+        }
         if scene == .whatsNew {
             app.whatsNew = ReleaseNotes.current
+        }
+        if scene == .update {
+            let release = AppRelease(
+                version: "1.5.0",
+                title: "OCTO v1.5.0",
+                notes: localized(demoUpdateNotesEnglish, demoUpdateNotesFrench),
+                pageURL: URL(string: "https://github.com/gabrielb0x/OCTO/releases/tag/v1.5.0")!,
+                ipaURL: URL(string: "https://github.com/gabrielb0x/OCTO/releases/download/v1.5.0/OCTO-1.5.0.ipa"),
+                ipaSize: 3_412_000,
+                publishedAt: Date()
+            )
+            app.updates.useDemo(release)
+            app.updatePrompt = release
         }
     }
 
@@ -109,6 +145,10 @@ enum DemoContent {
         case .about?: return [.about]
         case .developer?: return [.developer]
         case .network?: return [.developer, .developerNetwork]
+        case .appearance?: return [.appearance]
+        case .privacy?: return [.privacy]
+        case .dataControls?: return [.dataControls]
+        case .ageVerification?: return [.ageVerification]
         default: return []
         }
     }
@@ -123,7 +163,7 @@ enum DemoContent {
         case .sidebar?:
             try? await Task.sleep(for: .milliseconds(500))
             openSidebar()
-        case .settings?, .settingsApp?, .subscription?, .about?, .developer?, .network?:
+        case .settings?, .settingsApp?, .subscription?, .about?, .developer?, .network?, .appearance?, .privacy?, .dataControls?, .ageVerification?:
             try? await Task.sleep(for: .milliseconds(500))
             openSettings()
         case .deleteToast?:
@@ -282,6 +322,26 @@ enum DemoContent {
     private static let demoUsageJSON = #"""
     {"plan_type":"free","rate_limit":{"allowed":true,"limit_reached":false,"primary_window":{"used_percent":18,"limit_window_seconds":2592000,"reset_after_seconds":1728000},"secondary_window":null},"credits":{"has_credits":false,"unlimited":false,"balance":null}}
     """#
+
+    private static let demoUpdateNotesFrench = """
+    ### Ajouté
+
+    - Des améliorations et des corrections pour une app plus fluide.
+
+    ### Corrigé
+
+    - Divers petits problèmes d'affichage.
+    """
+
+    private static let demoUpdateNotesEnglish = """
+    ### Added
+
+    - Improvements and fixes for a smoother app.
+
+    ### Fixed
+
+    - Various small display issues.
+    """
 
     private static let featuredAnswerFrench = #"""
     Avec **async/await**, une requête réseau tient en quelques lignes grâce à `URLSession` :

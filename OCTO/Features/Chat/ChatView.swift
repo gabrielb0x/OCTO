@@ -117,6 +117,8 @@ struct ChatView: View {
             .padding(.horizontal, Theme.horizontalPadding)
             .padding(.top, 16)
             .padding(.bottom, 24)
+            .chatTextStyle(size: app.settings.chatTextSize, font: app.settings.chatFont)
+            .environment(\.wrapsCodeLines, app.settings.wrapsCodeLines)
         }
         .scrollPosition($scrollPosition)
         .defaultScrollAnchor(.bottom, for: .initialOffset)
@@ -214,7 +216,7 @@ struct ChatView: View {
                     )
                 }
             }
-            ShareLink(item: session.markdownExport) {
+            ShareLink(item: app.settings.shareableText(session.markdownExport)) {
                 Label("Share chat", systemImage: "square.and.arrow.up")
             }
             .disabled(session.isStreaming || session.messages.isEmpty)

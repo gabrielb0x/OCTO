@@ -12,7 +12,14 @@ public enum ChatGPTAccountAPI {
     public static var customInstructionsURL: URL { url("user_system_messages") }
     public static var personalityTypesURL: URL { url("personality_types") }
     public static var personalityTraitsURL: URL { url("personality_trait_types") }
-    public static var trainingPreferenceURL: URL { url("accounts/data_usage_for_training") }
+    public static var dataUsagePolicyURL: URL { url("accounts/data_usage_for_training") }
+    public static var ageStatusURL: URL { url("settings/is_adult") }
+
+    /// `PATCH`, without a body, saves one setting of the account the way ChatGPT's settings do,
+    /// e.g. `settings/account_user_setting?feature=training_allowed&value=false`.
+    public static func accountUserSettingURL(_ feature: AccountSettingFeature, value: Bool) -> URL {
+        url("settings/account_user_setting", query: [("feature", feature.rawValue), ("value", value ? "true" : "false")])
+    }
     public static var memoriesURL: URL { url("memories", query: [("include_memory_entries", "true")]) }
     public static var accountCheckURL: URL { url("accounts/check/v4-2023-04-27") }
 

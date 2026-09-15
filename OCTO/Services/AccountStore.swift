@@ -11,10 +11,12 @@ struct AccountSnapshot: Codable {
     var personalities: [PersonalityOption]?
     var traits: [PersonalityTrait]?
     var memories: MemoriesSnapshot?
-    var trainingAllowed: Bool?
+    /// Whether the account's policy lets its data be used for training at all.
+    var dataUsagePermitted: Bool?
     var avatarURL: URL?
     var subscription: AccountSubscription?
     var featureLimits: FeatureLimits?
+    var ageStatus: AgeStatus?
 }
 
 /// The account snapshot and profile picture, in Application Support.
@@ -41,7 +43,7 @@ final class AccountCache: @unchecked Sendable {
 
     func save(_ snapshot: AccountSnapshot) {
         guard let data = try? JSONEncoder().encode(snapshot) else { return }
-        try? data.write(to: snapshotURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        try? data.write(to: snapshotURL, options: [.atomic, .completeFileProtectionUnlessOpen])
     }
 
     func loadAvatar() -> Data? {
@@ -50,7 +52,7 @@ final class AccountCache: @unchecked Sendable {
 
     func saveAvatar(_ data: Data?) {
         if let data {
-            try? data.write(to: avatarURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            try? data.write(to: avatarURL, options: [.atomic, .completeFileProtectionUnlessOpen])
         } else {
             try? FileManager.default.removeItem(at: avatarURL)
         }
@@ -63,7 +65,7 @@ final class AccountCache: @unchecked Sendable {
 }
 
 /// The signed-in ChatGPT account: profile and picture, subscription, custom instructions,
-/// personality, memory and data settings, as shown in Settings and sent along with messages.
+/// personality, memory, data settings and age status, as shown in Settings and sent along with messages.
 @MainActor
 @Observable
 final class AccountStore {
@@ -82,9 +84,12 @@ final class AccountStore {
     private(set) var personalities: [PersonalityOption] = []
     private(set) var traits: [PersonalityTrait] = []
     private(set) var memories: MemoriesSnapshot?
-    private(set) var trainingAllowed: Bool?
+    private(set) var dataUsagePermitted: Bool?
+    private(set) var ageStatus: AgeStatus?
     /// Live usage limits of the ChatGPT account (Deep Research, image generation, file uploads…).
     private(set) var featureLimits: FeatureLimits?
+    /// Settings being saved to the account right now.
+    private(set) var savingSettings: Set<AccountSettingFeature> = []
     private(set) var state: LoadState = .idle
     private(set) var lastRefresh: Date?
 
@@ -140,8 +145,9 @@ final class AccountStore {
         async let personalitiesResult = capture { try await service.personalityTypes() }
         async let traitsResult = capture { try await service.personalityTraits() }
         async let memoriesResult = capture { try await service.memories() }
-        async let trainingResult = capture { try await service.trainingPreference() }
+        async let dataUsageResult = capture { try await service.dataUsagePolicy() }
         async let featureLimitsResult = capture { try await service.featureLimits() }
+        async let ageStatusResult = capture { try await service.ageStatus() }
 
         let profileOutcome = await profileResult
         let settingsOutcome = await settingsResult
@@ -150,19 +156,22 @@ final class AccountStore {
         let personalitiesOutcome = await personalitiesResult
         let traitsOutcome = await traitsResult
         let memoriesOutcome = await memoriesResult
-        let trainingOutcome = await trainingResult
+        let dataUsageOutcome = await dataUsageResult
         let featureLimitsOutcome = await featureLimitsResult
+        let ageStatusOutcome = await ageStatusResult
         guard generation == self.generation else { return }
 
         if case .success(let value) = profileOutcome { profile = value }
-        if case .success(let value) = settingsOutcome { settings = value }
+        // A setting being saved keeps the value shown until the account confirms it.
+        if case .success(let value) = settingsOutcome, savingSettings.isEmpty { settings = value }
         if case .success(let value) = subscriptionOutcome { subscription = value }
         if case .success(let value) = instructionsOutcome { instructions = value }
         if case .success(let value) = personalitiesOutcome { personalities = value }
         if case .success(let value) = traitsOutcome { traits = value }
         if case .success(let value) = memoriesOutcome { memories = value }
-        if case .success(let value) = trainingOutcome { trainingAllowed = value }
+        if case .success(let value) = dataUsageOutcome { dataUsagePermitted = value }
         if case .success(let value) = featureLimitsOutcome { featureLimits = value }
+        if case .success(let value) = ageStatusOutcome { ageStatus = value }
 
         let failures: [(String, Error?)] = [
             ("profile", profileOutcome.failure),
@@ -172,8 +181,9 @@ final class AccountStore {
             ("personalities", personalitiesOutcome.failure),
             ("traits", traitsOutcome.failure),
             ("memories", memoriesOutcome.failure),
-            ("training", trainingOutcome.failure),
+            ("dataUsage", dataUsageOutcome.failure),
             ("featureLimits", featureLimitsOutcome.failure),
+            ("ageStatus", ageStatusOutcome.failure),
         ]
         for case let (name, error?) in failures {
             DevLog.log("account", "\(name) failed: \(DevLog.describe(error))", level: error.isCancellation ? .debug : .warning)
@@ -198,6 +208,42 @@ final class AccountStore {
         saveSnapshot()
     }
 
+    /// Changes a setting of the account like ChatGPT's own settings, then reads the settings back
+    /// so the switch shows what the account really kept.
+    func setSetting(_ feature: AccountSettingFeature, to value: Bool) async throws {
+        guard let service else {
+            var updated = settings ?? AccountSettings()
+            updated[feature] = value
+            settings = updated
+            return
+        }
+        guard !savingSettings.contains(feature) else { return }
+        let generation = self.generation
+        let previous = settings?[feature]
+        var updated = settings ?? AccountSettings()
+        updated[feature] = value
+        settings = updated
+        savingSettings.insert(feature)
+        defer { savingSettings.remove(feature) }
+        DevLog.log("account", "Setting \(feature.rawValue) to \(value)")
+
+        do {
+            try await service.updateSetting(feature, value: value)
+        } catch {
+            if generation == self.generation {
+                settings?[feature] = previous
+            }
+            throw error
+        }
+        guard let saved = try? await service.settings(), generation == self.generation else { return }
+        settings = saved
+        saveSnapshot()
+        if saved[feature] != value {
+            DevLog.log("account", "\(feature.rawValue) wasn't kept by the account", level: .warning)
+            throw AccountAPIError.settingNotSaved
+        }
+    }
+
     /// Forgets the account on sign-out.
     func clear() {
         generation += 1
@@ -209,8 +255,10 @@ final class AccountStore {
         personalities = []
         traits = []
         memories = nil
-        trainingAllowed = nil
+        dataUsagePermitted = nil
+        ageStatus = nil
         featureLimits = nil
+        savingSettings = []
         avatarURL = nil
         lastRefresh = nil
         state = .idle
@@ -257,8 +305,9 @@ final class AccountStore {
         personalities = snapshot.personalities ?? []
         traits = snapshot.traits ?? []
         memories = snapshot.memories
-        trainingAllowed = snapshot.trainingAllowed
+        dataUsagePermitted = snapshot.dataUsagePermitted
         featureLimits = snapshot.featureLimits
+        ageStatus = snapshot.ageStatus
         avatarURL = snapshot.avatarURL
     }
 
@@ -270,10 +319,11 @@ final class AccountStore {
             personalities: personalities,
             traits: traits,
             memories: memories,
-            trainingAllowed: trainingAllowed,
+            dataUsagePermitted: dataUsagePermitted,
             avatarURL: avatarURL,
             subscription: subscription,
-            featureLimits: featureLimits
+            featureLimits: featureLimits,
+            ageStatus: ageStatus
         ))
     }
 }

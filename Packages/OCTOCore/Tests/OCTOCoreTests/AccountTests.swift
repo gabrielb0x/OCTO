@@ -47,11 +47,22 @@ import Testing
         #expect(withPhone.mfaEnabled == false)
         #expect(AccountProfile.parse(Data(#"{"id":"user-3","phone_number":""}"#.utf8))?.phoneNumber == nil)
 
-        let settings = try #require(AccountSettings.parse(Data(#"{"settings":{"sunshine":true,"moonshine":false,"training_allowed":false,"voice_name":"ember","voice_main_language":"fr"}}"#.utf8)))
+        let settings = try #require(AccountSettings.parse(Data(#"{"settings":{"sunshine":true,"moonshine":false,"training_allowed":false,"voice_training_allowed":true,"video_training_allowed":false,"codex_training_allowed":true,"codex_training_allowed_v2":false,"voice_name":"ember","voice_main_language":"fr"}}"#.utf8)))
         #expect(settings.referencesSavedMemories == true)
         #expect(settings.referencesChatHistory == false)
+        #expect(settings.trainingAllowed == false)
+        #expect(settings.voiceTrainingAllowed == true)
+        #expect(settings.videoTrainingAllowed == false)
+        #expect(settings.codexTrainingAllowed == false)
         #expect(settings.voiceName == "ember")
-        #expect(TrainingPreference.parse(Data(#"{"auth_user_id":"user-1","data_usage_for_training":"permitted"}"#.utf8)) == true)
+        var changed = settings
+        changed[.voiceTrainingAllowed] = false
+        #expect(changed.voiceTrainingAllowed == false)
+        #expect(changed[.trainingAllowed] == false)
+        #expect(ChatGPTAccountAPI.accountUserSettingURL(.trainingAllowed, value: false).absoluteString == "https://chatgpt.com/backend-api/settings/account_user_setting?feature=training_allowed&value=false")
+        #expect(ChatGPTAccountAPI.accountUserSettingURL(.codexTrainingAllowed, value: true).absoluteString == "https://chatgpt.com/backend-api/settings/account_user_setting?feature=codex_training_allowed_v2&value=true")
+        // "permitted" is the account's policy, not the choice made in Data controls.
+        #expect(TrainingPolicy.parse(Data(#"{"auth_user_id":"user-1","data_usage_for_training":"permitted"}"#.utf8)) == true)
 
         let json = #"{"object":"user_system_message_detail","about_user_message":"I study networks","about_model_message":"Be concise","name_user_message":"Gabriel","role_user_message":"Student","traits_model_message":"Be concise","other_user_message":"I study networks","personality_type_selection":"cynic","disabled_tools":[],"enabled":true,"traits_enabled":true,"personality_traits":{"emoji":"more","warm":"less"}}"#
         let instructions = try #require(CustomInstructions.parse(Data(json.utf8)))
@@ -109,6 +120,38 @@ import Testing
         #expect(JSONValue.int(body["timezone_offset_min"]) == -120)
         #expect(body["conversation_id"] is NSNull)
         #expect(ChatGPTAccountAPI.conversationInitURL.absoluteString == "https://chatgpt.com/backend-api/conversation/init")
+    }
+
+    @Test func showsSubscriptionDatesOnlyWhileActive() throws {
+        // A Plus subscription that ended: the free account still carries its dates.
+        let json = #"{"accounts":{"acc":{"account":{"plan_type":"free","structure":"personal"},"entitlement":{"has_active_subscription":false,"subscription_plan":"chatgptplusplan","expires_at":"2026-08-12T22:18:08+00:00","renews_at":null,"cancels_at":"2026-08-12T16:18:08+00:00","billing_period":"monthly"},"last_active_subscription":{"purchase_origin_platform":"chatgpt_web","will_renew":false}}},"account_ordering":["acc"]}"#
+        let ended = try #require(AccountSubscription.parse(Data(json.utf8), accountID: "acc"))
+        #expect(ended.planType == "free")
+        #expect(ended.hasActiveSubscription == false)
+        #expect(ended.expiresAt != nil)
+        #expect(ended.cancelsAt != nil)
+        #expect(ended.renewalDate == nil)
+        #expect(ended.endDate == nil)
+
+        let renewing = AccountSubscription(planType: "plus", hasActiveSubscription: true, expiresAt: Date(timeIntervalSince1970: 100), renewsAt: Date(timeIntervalSince1970: 200), willRenew: true)
+        #expect(renewing.renewalDate == Date(timeIntervalSince1970: 200))
+        #expect(renewing.endDate == nil)
+
+        let cancelled = AccountSubscription(planType: "plus", hasActiveSubscription: true, expiresAt: Date(timeIntervalSince1970: 300), cancelsAt: Date(timeIntervalSince1970: 250), willRenew: false)
+        #expect(cancelled.renewalDate == nil)
+        #expect(cancelled.endDate == Date(timeIntervalSince1970: 300))
+    }
+
+    @Test func readsTheAgeStatus() throws {
+        let teen = try #require(AgeStatus.parse(Data(#"{"is_adult":false,"has_verified_age_or_dob":false,"age_is_known":true,"is_u18_model_policy_enabled":true,"show_age_verification_setting":true,"age_status":"under_18"}"#.utf8)))
+        #expect(teen.standing == .underEighteen)
+        #expect(teen.offersVerification == true)
+        #expect(teen.status == "under_18")
+        #expect(AgeStatus.parse(Data(#"{"is_adult":true,"has_verified_age_or_dob":true}"#.utf8))?.standing == .verifiedAdult)
+        #expect(AgeStatus.parse(Data(#"{"is_adult":true,"has_verified_age_or_dob":false}"#.utf8))?.standing == .adult)
+        #expect(AgeStatus.parse(Data(#"{"age_status":null}"#.utf8))?.standing == .unknown)
+        #expect(AgeStatus.parse(Data(#"{"foo":1}"#.utf8)) == nil)
+        #expect(ChatGPTAccountAPI.ageStatusURL.absoluteString == "https://chatgpt.com/backend-api/settings/is_adult")
     }
 
     @Test func parsesPersonalityCatalogAndMemories() throws {

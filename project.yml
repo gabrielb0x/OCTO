@@ -14,8 +14,8 @@ packages:
 
 settings:
   base:
-    MARKETING_VERSION: "1.3.0"
-    CURRENT_PROJECT_VERSION: "4"
+    MARKETING_VERSION: "1.4.0"
+    CURRENT_PROJECT_VERSION: "5"
     SWIFT_VERSION: "5.0"
     IPHONEOS_DEPLOYMENT_TARGET: "26.0"
     CODE_SIGN_STYLE: Automatic
@@ -59,9 +59,11 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         NSCameraUsageDescription: OCTO uses the camera so you can send photos in a chat.
         NSFaceIDUsageDescription: OCTO uses Face ID to lock the app so only you can open your chats.
-        NSMicrophoneUsageDescription: OCTO uses the microphone to dictate your messages.
+        NSMicrophoneUsageDescription: OCTO uses the microphone for dictation and voice mode.
         NSSpeechRecognitionUsageDescription: OCTO transcribes your voice on your device to write your message.
         NSLocalNetworkUsageDescription: OCTO briefly listens on this device (localhost) to receive the ChatGPT sign-in response.
+        # Lets the update sheet offer AltStore and SideStore when they're installed.
+        LSApplicationQueriesSchemes: [altstore, sidestore]
         CFBundleURLTypes:
           - CFBundleURLName: com.gabrielb0x.octo.auth
             CFBundleURLSchemes: [octo]

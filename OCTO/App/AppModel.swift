@@ -17,6 +17,7 @@ final class AppModel {
     let protection: AppProtection
     let notifications: ReplyNotifications
     let overlays: OverlayWindows
+    let updates: UpdateChecker
     /// Set when a screenshot build is launched with a demo scene: no network, no keychain.
     let isDemo: Bool
     #if OCTO_DEMO
@@ -31,10 +32,13 @@ final class AppModel {
     private(set) var usageError: String?
     /// Release notes presented once after an update.
     var whatsNew: ReleaseNotes?
+    /// A newer version found on GitHub, offered once.
+    var updatePrompt: AppRelease?
 
     /// Chats that are still generating keep running when you switch to another chat.
     @ObservationIgnored private var liveSessions: [UUID: ChatSession] = [:]
     @ObservationIgnored private var lastAccountRefresh: Date?
+    @ObservationIgnored private let session: URLSession
 
     init() {
         #if OCTO_DEMO
@@ -64,11 +68,13 @@ final class AppModel {
             UserDefaults.standard.set(true, forKey: ReleaseNotes.launchedBeforeKey)
         }
 
-        let configuration = URLSessionConfiguration.default
+        // Ephemeral: cookies live in memory for this launch only and nothing is cached on disk.
+        let configuration = URLSessionConfiguration.ephemeral
         configuration.urlCache = nil
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         configuration.timeoutIntervalForRequest = 300
         let session = URLSession(configuration: configuration)
+        self.session = session
 
         let auth = AuthManager(session: session)
         self.auth = auth
@@ -76,6 +82,7 @@ final class AppModel {
         self.settings = settings
         protection = AppProtection(settings: settings, isDemo: isDemo)
         notifications = ReplyNotifications(isDemo: isDemo)
+        updates = UpdateChecker(isDemo: isDemo)
         #if OCTO_DEMO
         let folderName = isDemo ? "Demo" : "OCTO"
         let files = ConversationFiles(folderName: folderName, startEmpty: isDemo)
@@ -93,6 +100,11 @@ final class AppModel {
         models = Self.cachedModels()
         whatsNew = notes
         store.service = accountService
+
+        // Chats older than the time chosen in Privacy leave the device.
+        if !isDemo, let interval = settings.localRetention.interval {
+            store.removeChats(before: Date().addingTimeInterval(-interval))
+        }
 
         #if OCTO_DEMO
         if let demoScene {
@@ -115,6 +127,11 @@ final class AppModel {
 
     var accountEmail: String? {
         account.profile?.email ?? auth.account?.email
+    }
+
+    /// The session to the ChatGPT account; nil in screenshot builds.
+    var accountService: AccountService? {
+        store.service
     }
 
     /// The plan, from the subscription check or else the sign-in tokens. Developer mode can override it.
@@ -179,6 +196,17 @@ final class AppModel {
         } catch {
             toasts.show(ChatSession.describe(error), style: .failure)
         }
+    }
+
+    // MARK: Updates
+
+    /// Looks for a new version when automatic checks are on, and offers it once.
+    func checkForUpdatesIfDue() async {
+        guard settings.checksForUpdates else { return }
+        await updates.checkIfDue()
+        guard let release = updates.available, whatsNew == nil, updatePrompt == nil, !updates.wasAnnounced(release) else { return }
+        updates.markAnnounced(release)
+        updatePrompt = release
     }
 
     // MARK: Models
@@ -258,11 +286,14 @@ final class AppModel {
         developer.console.clearNetwork()
         DevLog.log("auth", "Signed out")
         await auth.signOut()
+        // Cookies and connections of the old session go too.
+        await session.reset()
     }
 
     // MARK: Sessions
 
-    func makeSession(conversationID: UUID? = nil, temporary: Bool = false) -> ChatSession {
+    /// A chat to show. New chats are temporary when Privacy asks for it, unless `temporary` says otherwise.
+    func makeSession(conversationID: UUID? = nil, temporary: Bool? = nil) -> ChatSession {
         if let conversationID {
             if let live = liveSessions[conversationID] {
                 return live
@@ -291,7 +322,7 @@ final class AppModel {
             reasoningEffort: model.resolvedEffort(preferred: settings.defaultReasoningEffort),
             webSearchEnabled: settings.webSearchByDefault
         )
-        return ChatSession(conversation: conversation, isTemporary: temporary, app: self)
+        return ChatSession(conversation: conversation, isTemporary: temporary ?? settings.temporaryChatsByDefault, app: self)
     }
 
     /// A chat that is still generating in the background, if any.

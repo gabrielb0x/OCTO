@@ -110,19 +110,32 @@ extension AccentChoice {
         case .yellow: return String(localized: "Yellow")
         case .pink: return String(localized: "Pink")
         case .orange: return String(localized: "Orange")
+        case .purple: return String(localized: "Purple")
+        case .red: return String(localized: "Red")
+        case .mint: return String(localized: "Mint")
+        case .custom: return String(localized: "Custom")
         }
     }
 
-    var uiColor: UIColor? {
+    /// The color of a preset; nil for the default look and for the custom color, kept in the settings.
+    var presetColor: UIColor? {
         switch self {
-        case .default: return nil
+        case .default, .custom: return nil
         case .blue: return UIColor(red: 0.01, green: 0.52, blue: 1.0, alpha: 1)
         case .green: return UIColor(red: 0.0, green: 0.7, blue: 0.33, alpha: 1)
         case .yellow: return UIColor(red: 0.96, green: 0.74, blue: 0.0, alpha: 1)
         case .pink: return UIColor(red: 1.0, green: 0.38, blue: 0.66, alpha: 1)
         case .orange: return UIColor(red: 1.0, green: 0.53, blue: 0.0, alpha: 1)
+        case .purple: return UIColor(red: 0.56, green: 0.36, blue: 0.97, alpha: 1)
+        case .red: return UIColor(red: 0.96, green: 0.26, blue: 0.24, alpha: 1)
+        case .mint: return UIColor(red: 0.0, green: 0.76, blue: 0.64, alpha: 1)
         }
     }
+}
+
+/// The accent in use and the colors drawn from it: your messages, the send button and links.
+struct AccentStyle: Equatable {
+    let uiColor: UIColor?
 
     var color: Color? {
         uiColor.map { Color(uiColor: $0) }
@@ -140,11 +153,8 @@ extension AccentChoice {
 
     /// Icon drawn on `fill`.
     var onFill: Color {
-        switch self {
-        case .default: return Theme.onProminent
-        case .yellow: return .black
-        default: return .white
-        }
+        guard let uiColor else { return Theme.onProminent }
+        return uiColor.isLight ? .black : .white
     }
 
     var link: Color {
@@ -153,24 +163,78 @@ extension AccentChoice {
 
     /// A round swatch for menus, which only keep the colors of images drawn in their own colors.
     var swatch: UIImage? {
-        let name = self == .default ? "circle.lefthalf.filled" : "circle.fill"
+        let name = uiColor == nil ? "circle.lefthalf.filled" : "circle.fill"
         return UIImage(systemName: name)?.withTintColor(uiColor ?? .label, renderingMode: .alwaysOriginal)
+    }
+}
+
+extension AppSettings {
+    var accentStyle: AccentStyle {
+        accentStyle(for: accent)
+    }
+
+    func accentStyle(for choice: AccentChoice) -> AccentStyle {
+        AccentStyle(uiColor: choice == .custom ? UIColor(hex: customAccentHex) : choice.presetColor)
+    }
+}
+
+extension ChatFont {
+    var design: Font.Design? {
+        switch self {
+        case .system: return nil
+        case .rounded: return .rounded
+        case .serif: return .serif
+        case .monospaced: return .monospaced
+        }
     }
 }
 
 extension Color {
     /// A color from a "#RRGGBB" string, such as the color of a ChatGPT project.
     init?(hex: String) {
+        guard let color = UIColor(hex: hex) else { return nil }
+        self.init(uiColor: color)
+    }
+}
+
+extension UIColor {
+    /// A color from a "#RRGGBB" string.
+    convenience init?(hex: String) {
         var digits = hex.trimmingCharacters(in: .whitespacesAndNewlines)
         if digits.hasPrefix("#") {
             digits.removeFirst()
         }
         guard digits.count == 6, let value = UInt32(digits, radix: 16) else { return nil }
         self.init(
-            red: Double((value >> 16) & 0xFF) / 255,
-            green: Double((value >> 8) & 0xFF) / 255,
-            blue: Double(value & 0xFF) / 255
+            red: CGFloat((value >> 16) & 0xFF) / 255,
+            green: CGFloat((value >> 8) & 0xFF) / 255,
+            blue: CGFloat(value & 0xFF) / 255,
+            alpha: 1
         )
+    }
+
+    /// "#RRGGBB".
+    var hexString: String {
+        let (red, green, blue) = clampedComponents
+        return String(format: "#%02X%02X%02X", Int((red * 255).rounded()), Int((green * 255).rounded()), Int((blue * 255).rounded()))
+    }
+
+    /// True when dark content reads better than white on this color.
+    var isLight: Bool {
+        let (red, green, blue) = clampedComponents
+        func linear(_ value: CGFloat) -> CGFloat {
+            value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue) > 0.5
+    }
+
+    private var clampedComponents: (CGFloat, CGFloat, CGFloat) {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        return (min(max(red, 0), 1), min(max(green, 0), 1), min(max(blue, 0), 1))
     }
 }
 
@@ -179,6 +243,12 @@ extension View {
     func readableWidth() -> some View {
         frame(maxWidth: Theme.contentMaxWidth)
             .frame(maxWidth: .infinity)
+    }
+
+    /// The text size and font chosen for chats. The size moves from the one chosen in iOS, so
+    /// the larger accessibility sizes keep working.
+    func chatTextStyle(size: ChatTextSize, font: ChatFont) -> some View {
+        modifier(ChatTextStyle(size: size, font: font))
     }
 
     /// Pull to refresh whose work isn't cancelled when the view updates while it runs.
@@ -190,6 +260,24 @@ extension View {
                 await action()
             }.value
         }
+    }
+}
+
+private struct ChatTextStyle: ViewModifier {
+    let size: ChatTextSize
+    let font: ChatFont
+    @Environment(\.dynamicTypeSize) private var systemSize
+
+    func body(content: Content) -> some View {
+        content
+            .dynamicTypeSize(adjustedSize)
+            .fontDesign(font.design)
+    }
+
+    private var adjustedSize: DynamicTypeSize {
+        let sizes = DynamicTypeSize.allCases
+        guard size.steps != 0, let index = sizes.firstIndex(of: systemSize) else { return systemSize }
+        return sizes[min(max(index + size.steps, 0), sizes.count - 1)]
     }
 }
 

@@ -3,13 +3,16 @@ import Observation
 import OCTOCore
 import SwiftUI
 
-/// Locks OCTO behind Face ID (or the passcode) and hides its content in the app switcher.
+/// Locks OCTO behind Face ID (or the passcode), hides its content in the app switcher and while
+/// the screen is recorded or shared.
 @MainActor
 @Observable
 final class AppProtection {
     private(set) var isLocked: Bool
     private(set) var isObscured = false
     private(set) var isAuthenticating = false
+    /// The screen is being recorded, mirrored or shared.
+    private(set) var isScreenCaptured = false
     private(set) var lastError: String?
 
     @ObservationIgnored private let settings: AppSettings
@@ -21,7 +24,11 @@ final class AppProtection {
     }
 
     var showsCover: Bool {
-        isLocked || isObscured
+        isLocked || isObscured || hidesForScreenCapture
+    }
+
+    var hidesForScreenCapture: Bool {
+        isScreenCaptured && settings.hidesWhenScreenCaptured
     }
 
     /// Face ID, Touch ID or Optic ID, with its symbol, or the passcode on devices without biometrics.
@@ -60,6 +67,13 @@ final class AppProtection {
         @unknown default:
             break
         }
+    }
+
+    /// The screen started or stopped being recorded, mirrored or shared.
+    func screenCaptureChanged(isCaptured: Bool) {
+        guard isCaptured != isScreenCaptured else { return }
+        isScreenCaptured = isCaptured
+        DevLog.log("protection", isCaptured ? "The screen is being captured" : "Screen capture ended")
     }
 
     func unlock() async {
@@ -107,7 +121,7 @@ final class AppProtection {
     }
 }
 
-/// Covers the app while it's locked or shown in the app switcher.
+/// Covers the app while it's locked, shown in the app switcher or while the screen is captured.
 struct ProtectionCover: View {
     @Environment(AppModel.self) private var app
 
@@ -144,6 +158,17 @@ struct ProtectionCover: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 40)
                     }
+                } else if app.protection.hidesForScreenCapture {
+                    VStack(spacing: 6) {
+                        Text("Hidden while the screen is recorded")
+                            .font(.headline)
+                            .foregroundStyle(Theme.primaryText)
+                        Text("Your chats show again once the recording or sharing stops.")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
                 }
             }
         }

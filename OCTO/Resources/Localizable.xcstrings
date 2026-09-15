@@ -421,16 +421,6 @@
         }
       }
     },
-    "Age verification is done by OpenAI in ChatGPT. OCTO never asks for an ID and doesn't receive any verification data.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La vérification de l'âge est faite par OpenAI dans ChatGPT. OCTO ne demande jamais de pièce d'identité et ne reçoit aucune donnée de vérification."
-          }
-        }
-      }
-    },
     "All": {
       "localizations": {
         "fr": {
@@ -757,16 +747,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "ChatGPT a bloqué la requête pour les données de ton compte. Réessaie plus tard."
-          }
-        }
-      }
-    },
-    "ChatGPT can ask you to confirm your age for some content and features.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ChatGPT peut te demander de confirmer ton âge pour certains contenus et fonctionnalités."
           }
         }
       }
@@ -2121,16 +2101,6 @@
         }
       }
     },
-    "Managed in ChatGPT. The messages you write in OCTO are sent with server-side storage turned off.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Géré dans ChatGPT. Les messages que tu écris dans OCTO sont envoyés avec le stockage côté serveur désactivé."
-          }
-        }
-      }
-    },
     "Max": {
       "localizations": {
         "fr": {
@@ -2511,16 +2481,6 @@
         }
       }
     },
-    "No. OCTO has no telemetry, analytics or third-party SDK. Requests go straight from your device to OpenAI, and your sign-in tokens stay in the iOS keychain.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Non. OCTO n'a ni télémétrie, ni outil d'analyse, ni SDK tiers. Les requêtes partent directement de ton appareil vers OpenAI, et tes jetons de connexion restent dans le trousseau iOS."
-          }
-        }
-      }
-    },
     "None": {
       "localizations": {
         "fr": {
@@ -2847,36 +2807,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Orange"
-          }
-        }
-      }
-    },
-    "Parental controls": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Contrôle parental"
-          }
-        }
-      }
-    },
-    "Parental controls are set up and managed in ChatGPT. OCTO doesn't change them.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le contrôle parental se configure et se gère dans ChatGPT. OCTO ne le modifie pas."
-          }
-        }
-      }
-    },
-    "Parents can link their account to a teen's account to adjust how ChatGPT works for them.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les parents peuvent associer leur compte à celui d'un ado pour adapter ChatGPT à son âge."
           }
         }
       }
@@ -5339,22 +5269,1468 @@
         }
       }
     },
-    "Your ChatGPT limits": {
+    "Our advice: don't verify your age": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tes limites ChatGPT"
+            "value": "Notre conseil : ne vérifie pas ton âge"
           }
         }
       }
     },
-    "See how many Deep Research, image generations and file uploads your ChatGPT account has left, read live like on the website.": {
+    "OCTO never asks for your face or an ID, and never starts a verification.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vois combien de Deep Research, de générations d'images et d'envois de fichiers il te reste sur ton compte ChatGPT, lus en direct comme sur le site."
+            "value": "OCTO ne te demande jamais ton visage ni une pièce d'identité, et ne lance jamais de vérification."
+          }
+        }
+      }
+    },
+    "If ChatGPT thinks you're under 18, it answers some sensitive topics more carefully and limits a few features. That's the trade-off for keeping your face and your papers to yourself. And if you are under 18, these protections are there for you.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si ChatGPT pense que tu as moins de 18 ans, il répond avec plus de prudence sur certains sujets sensibles et limite quelques fonctionnalités. C'est le prix à payer pour garder ton visage et tes papiers pour toi. Et si tu as vraiment moins de 18 ans, ces protections sont là pour toi."
+          }
+        }
+      }
+    },
+    "Without verification": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sans vérification"
+          }
+        }
+      }
+    },
+    "OpenAI: age prediction in ChatGPT": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenAI : la prédiction de l'âge dans ChatGPT"
+          }
+        }
+      }
+    },
+    "Proton: ChatGPT for Teens and age verification": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proton : ChatGPT pour les ados et la vérification de l'âge"
+          }
+        }
+      }
+    },
+    "TechCrunch: 70,000 ID photos stolen after Discord's age checks": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TechCrunch : 70 000 photos de pièces d'identité volées après les vérifications d'âge de Discord"
+          }
+        }
+      }
+    },
+    "TechCrunch: the Tea app leaks 13,000 selfies and IDs": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TechCrunch : l'app Tea laisse fuiter 13 000 selfies et pièces d'identité"
+          }
+        }
+      }
+    },
+    "Your age is verified": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton âge est vérifié"
+          }
+        }
+      }
+    },
+    "ChatGPT treats you as an adult": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT te considère comme majeur"
+          }
+        }
+      }
+    },
+    "ChatGPT treats you as under 18": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT te considère comme mineur"
+          }
+        }
+      }
+    },
+    "ChatGPT doesn't say how it treats your age": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT n'indique pas comment il considère ton âge"
+          }
+        }
+      }
+    },
+    "Checking your account…": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérification de ton compte…"
+          }
+        }
+      }
+    },
+    "Your age status isn't loaded": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton statut d'âge n'est pas chargé"
+          }
+        }
+      }
+    },
+    "The verification is already done: there's nothing more to send.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La vérification est déjà faite : tu n'as plus rien à envoyer."
+          }
+        }
+      }
+    },
+    "No verification is needed for your account.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune vérification n'est nécessaire pour ton compte."
+          }
+        }
+      }
+    },
+    "Your account has ChatGPT's protections for teens. To lift them, ChatGPT asks you to verify your age with a selfie or an ID.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton compte a les protections de ChatGPT pour les ados. Pour les lever, ChatGPT te demande de vérifier ton âge avec un selfie ou une pièce d'identité."
+          }
+        }
+      }
+    },
+    "Pull down to try again.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tire vers le bas pour réessayer."
+          }
+        }
+      }
+    },
+    "Pull down to load it from your ChatGPT account.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tire vers le bas pour le charger depuis ton compte ChatGPT."
+          }
+        }
+      }
+    },
+    "Your face and your ID go to another company": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton visage et tes papiers partent chez une autre entreprise"
+          }
+        }
+      }
+    },
+    "ChatGPT has the check done by Persona, a verification company. Depending on the country, it asks for a live selfie, a photo of a government ID, or both.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT confie la vérification à Persona, une entreprise spécialisée. Selon le pays, elle demande un selfie en direct, la photo d'une pièce d'identité, ou les deux."
+          }
+        }
+      }
+    },
+    "Verification data leaks": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les données de vérification fuient"
+          }
+        }
+      }
+    },
+    "In October 2025, about 70,000 ID photos sent to Discord to check users' age were stolen from one of its providers. In July 2025, the Tea app leaked 13,000 selfies and IDs it had promised to delete right after checking them.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En octobre 2025, environ 70 000 photos de pièces d'identité envoyées à Discord pour vérifier l'âge de ses utilisateurs ont été volées chez l'un de ses prestataires. En juillet 2025, l'app Tea a laissé fuiter 13 000 selfies et pièces d'identité qu'elle promettait de supprimer juste après la vérification."
+          }
+        }
+      }
+    },
+    "Your identity tied to every chat": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton identité liée à chacun de tes chats"
+          }
+        }
+      }
+    },
+    "Once verified, your account is linked to your face, your date of birth and your papers. Your chats, often very personal, no longer belong to an anonymous account.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une fois vérifié, ton compte est lié à ton visage, à ta date de naissance et à tes papiers. Tes chats, souvent très personnels, n'appartiennent plus à un compte anonyme."
+          }
+        }
+      }
+    },
+    "A face can't be changed": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un visage, ça ne se change pas"
+          }
+        }
+      }
+    },
+    "A leaked password can be replaced. Your face and your identity can't: a leak is for good.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un mot de passe qui a fuité se remplace. Ton visage et ton identité, non : une fuite, c'est pour toujours."
+          }
+        }
+      }
+    },
+    "You have to take their word for it": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu dois les croire sur parole"
+          }
+        }
+      }
+    },
+    "OpenAI says it doesn't receive the selfie or the ID, and that Persona deletes them within seven days. Nothing lets you check it, and nothing you send can be taken back.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenAI affirme ne recevoir ni le selfie ni la pièce d'identité, et que Persona les supprime sous sept jours. Rien ne te permet de le vérifier, et ce que tu envoies ne peut pas être repris."
+          }
+        }
+      }
+    },
+    "An age guessed from your habits": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un âge deviné d'après tes habitudes"
+          }
+        }
+      }
+    },
+    "ChatGPT estimates your age from the topics you talk about, the hours you use it and how old your account is. Verifying answers that guess with even more personal data.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT estime ton âge d'après les sujets que tu abordes, les heures où tu l'utilises et l'ancienneté de ton compte. Faire la vérification répond à cette supposition avec encore plus de données personnelles."
+          }
+        }
+      }
+    },
+    "It's optional": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "C'est facultatif"
+          }
+        }
+      }
+    },
+    "Nothing forces you to verify: without it, you keep using ChatGPT, with its protections for teens.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien ne t'oblige à la faire : sans vérification, tu continues d'utiliser ChatGPT, avec ses protections pour les ados."
+          }
+        }
+      }
+    },
+    "Include your audio recordings": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inclure tes enregistrements audio"
+          }
+        }
+      }
+    },
+    "Include your video recordings": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inclure tes enregistrements vidéo"
+          }
+        }
+      }
+    },
+    "Lets OpenAI use your chats in ChatGPT to train its models. The switches show what your account has saved and change it right away.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permet à OpenAI d'utiliser tes chats dans ChatGPT pour entraîner ses modèles. Les interrupteurs montrent ce qui est enregistré dans ton compte et le modifient aussitôt."
+          }
+        }
+      }
+    },
+    "Improve Codex for everyone": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Améliorer Codex pour tout le monde"
+          }
+        }
+      }
+    },
+    "Messages written in OCTO": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages écrits dans OCTO"
+          }
+        }
+      }
+    },
+    "Replies to the messages you write in OCTO come from Codex, with server-side storage turned off. This is Codex's own training setting.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les réponses aux messages que tu écris dans OCTO viennent de Codex, avec le stockage côté serveur désactivé. Ce réglage est celui de l'entraînement de Codex."
+          }
+        }
+      }
+    },
+    "The policy of your account doesn't allow its data to be used for training.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La politique de ton compte n'autorise pas l'utilisation de ses données pour l'entraînement."
+          }
+        }
+      }
+    },
+    "Couldn't change this setting": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de modifier ce réglage"
+          }
+        }
+      }
+    },
+    "Turned on in your ChatGPT account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activé dans ton compte ChatGPT"
+          }
+        }
+      }
+    },
+    "Turned off in your ChatGPT account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactivé dans ton compte ChatGPT"
+          }
+        }
+      }
+    },
+    "ChatGPT didn't keep this change. Try again, or change it in ChatGPT.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT n'a pas gardé ce changement. Réessaie, ou modifie-le dans ChatGPT."
+          }
+        }
+      }
+    },
+    "No tracking in OCTO": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun pistage dans OCTO"
+          }
+        }
+      }
+    },
+    "No analytics, no ads, no third-party code. OCTO only talks to OpenAI for your account and, if you let it, to GitHub for updates.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun outil d'analyse, aucune publicité, aucun code tiers. OCTO ne parle qu'à OpenAI pour ton compte et, si tu le permets, à GitHub pour les mises à jour."
+          }
+        }
+      }
+    },
+    "Temporary chats by default": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chats temporaires par défaut"
+          }
+        }
+      }
+    },
+    "Keep chats on this device": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garder les chats sur l'appareil"
+          }
+        }
+      }
+    },
+    "Temporary chats leave nothing on the device. When OCTO opens, chats older than the chosen time leave the device, except pinned ones: those of your account stay in your account, those written in OCTO are deleted.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les chats temporaires ne laissent rien sur l'appareil. À l'ouverture d'OCTO, les chats plus anciens que la durée choisie sont retirés de l'appareil, sauf ceux épinglés : ceux de ton compte restent dans ton compte, ceux écrits dans OCTO sont supprimés."
+          }
+        }
+      }
+    },
+    "Hide chats during screen recording": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masquer les chats pendant l'enregistrement de l'écran"
+          }
+        }
+      }
+    },
+    "Screen": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écran"
+          }
+        }
+      }
+    },
+    "OCTO covers your chats while the screen is recorded, mirrored or shared, and when it shows in the app switcher.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO masque tes chats pendant que l'écran est enregistré, recopié ou partagé, et quand il apparaît dans le sélecteur d'apps."
+          }
+        }
+      }
+    },
+    "Copy only on this device": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier seulement sur cet appareil"
+          }
+        }
+      }
+    },
+    "Clear copied text": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effacer le texte copié"
+          }
+        }
+      }
+    },
+    "Block third-party keyboards": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquer les claviers tiers"
+          }
+        }
+      }
+    },
+    "Clipboard and keyboard": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presse-papiers et clavier"
+          }
+        }
+      }
+    },
+    "Text copied from OCTO doesn't reach your other Apple devices. A third-party keyboard can send what you type to its developer: blocking them takes effect the next time OCTO opens.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le texte copié dans OCTO ne va pas sur tes autres appareils Apple. Un clavier tiers peut envoyer ce que tu tapes à son développeur : le blocage s'applique à la prochaine ouverture d'OCTO."
+          }
+        }
+      }
+    },
+    "Remove trackers from links": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer les traceurs des liens"
+          }
+        }
+      }
+    },
+    "Check for updates": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher des mises à jour"
+          }
+        }
+      }
+    },
+    "Dictation": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictée"
+          }
+        }
+      }
+    },
+    "Links of replies open, copy and share without their tracking parameters, such as utm_source=chatgpt.com. The update check asks GitHub for the latest release, without any identifier. Dictation with ChatGPT sends your recording to OpenAI; dictation on the device sends nothing.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les liens des réponses s'ouvrent, se copient et se partagent sans leurs paramètres de pistage, comme utm_source=chatgpt.com. La recherche de mises à jour demande à GitHub la dernière version, sans aucun identifiant. La dictée par ChatGPT envoie ton enregistrement à OpenAI ; la dictée sur l'appareil n'envoie rien."
+          }
+        }
+      }
+    },
+    "No request yet.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune requête pour l'instant."
+          }
+        }
+      }
+    },
+    "Since OCTO opened": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Depuis l'ouverture d'OCTO"
+          }
+        }
+      }
+    },
+    "Every server OCTO has contacted since it opened. Counted on the device, never sent anywhere.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque serveur contacté par OCTO depuis son ouverture. Compté sur l'appareil, jamais envoyé nulle part."
+          }
+        }
+      }
+    },
+    "Privacy": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confidentialité"
+          }
+        }
+      }
+    },
+    "Always": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toujours"
+          }
+        }
+      }
+    },
+    "1 day": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 jour"
+          }
+        }
+      }
+    },
+    "1 week": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 semaine"
+          }
+        }
+      }
+    },
+    "1 month": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 mois"
+          }
+        }
+      }
+    },
+    "Never": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jamais"
+          }
+        }
+      }
+    },
+    "On this device": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sur l'appareil"
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apparence"
+          }
+        }
+      }
+    },
+    "Preview": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aperçu"
+          }
+        }
+      }
+    },
+    "Your color": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta couleur"
+          }
+        }
+      }
+    },
+    "Colors": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couleurs"
+          }
+        }
+      }
+    },
+    "Colors your messages, the send button and the controls of the message bar.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colore tes messages, le bouton d'envoi et les commandes de la barre de saisie."
+          }
+        }
+      }
+    },
+    "Text size": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taille du texte"
+          }
+        }
+      }
+    },
+    "Font": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Police"
+          }
+        }
+      }
+    },
+    "Wrap code lines": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retour à la ligne dans le code"
+          }
+        }
+      }
+    },
+    "The size moves from the text size chosen in iOS, so accessibility sizes still apply.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La taille part de celle choisie dans iOS : les tailles d'accessibilité s'appliquent toujours."
+          }
+        }
+      }
+    },
+    "Reply animation": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Animation des réponses"
+          }
+        }
+      }
+    },
+    "Vibrate while ChatGPT writes": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibrer pendant que ChatGPT écrit"
+          }
+        }
+      }
+    },
+    "The words of a reply appear one by one and fade in. Instant shows the text as soon as it arrives.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les mots d'une réponse apparaissent un par un, en fondu. Instantanée affiche le texte dès qu'il arrive."
+          }
+        }
+      }
+    },
+    "What is a black hole?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "C'est quoi, un trou noir ?"
+          }
+        }
+      }
+    },
+    "Replay": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rejouer"
+          }
+        }
+      }
+    },
+    "A **black hole** is a region of space where gravity is so strong that nothing can escape it, not even light. It forms when a very massive star collapses on itself.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un **trou noir** est une région de l'espace où la gravité est si forte que rien ne peut s'en échapper, pas même la lumière. Il se forme quand une étoile très massive s'effondre sur elle-même."
+          }
+        }
+      }
+    },
+    "Small": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Petite"
+          }
+        }
+      }
+    },
+    "Large": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grande"
+          }
+        }
+      }
+    },
+    "Extra large": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Très grande"
+          }
+        }
+      }
+    },
+    "Rounded": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrondie"
+          }
+        }
+      }
+    },
+    "Serif": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serif"
+          }
+        }
+      }
+    },
+    "Monospaced": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monospace"
+          }
+        }
+      }
+    },
+    "Slow": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lente"
+          }
+        }
+      }
+    },
+    "Normal": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normale"
+          }
+        }
+      }
+    },
+    "Fast": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rapide"
+          }
+        }
+      }
+    },
+    "Purple": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Violet"
+          }
+        }
+      }
+    },
+    "Red": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rouge"
+          }
+        }
+      }
+    },
+    "Mint": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menthe"
+          }
+        }
+      }
+    },
+    "Custom": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personnalisée"
+          }
+        }
+      }
+    },
+    "Send with Return": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer avec la touche Retour"
+          }
+        }
+      }
+    },
+    "Update available": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mise à jour disponible"
+          }
+        }
+      }
+    },
+    "OCTO %@ is ready to install": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La version %@ est prête à être installée"
+          }
+        }
+      }
+    },
+    "Install with %@": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installer avec %@"
+          }
+        }
+      }
+    },
+    "Download the IPA": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Télécharger l'IPA"
+          }
+        }
+      }
+    },
+    "View on GitHub": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir sur GitHub"
+          }
+        }
+      }
+    },
+    "Later": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus tard"
+          }
+        }
+      }
+    },
+    "OCTO %@ is available": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO %@ est disponible"
+          }
+        }
+      }
+    },
+    "You have version %@": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu as la version %@"
+          }
+        }
+      }
+    },
+    "OCTO is up to date": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO est à jour"
+          }
+        }
+      }
+    },
+    "Updates": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mises à jour"
+          }
+        }
+      }
+    },
+    "Last checked on GitHub %@ ago.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dernière vérification sur GitHub il y a %@."
+          }
+        }
+      }
+    },
+    "OCTO looks for new versions on GitHub Releases.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO cherche les nouvelles versions sur GitHub Releases."
+          }
+        }
+      }
+    },
+    "GitHub is limiting requests right now. Try again later.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub limite les requêtes pour le moment. Réessaie plus tard."
+          }
+        }
+      }
+    },
+    "GitHub returned an error (HTTP %lld).": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub a renvoyé une erreur (HTTP %lld)."
+          }
+        }
+      }
+    },
+    "GitHub returned an unexpected response.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub a renvoyé une réponse inattendue."
+          }
+        }
+      }
+    },
+    "Check for updates now": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher des mises à jour maintenant"
+          }
+        }
+      }
+    },
+    "Cancel dictation": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler la dictée"
+          }
+        }
+      }
+    },
+    "Transcribing…": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcription…"
+          }
+        }
+      }
+    },
+    "Transcribe": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcrire"
+          }
+        }
+      }
+    },
+    "Transcribed on this device: ChatGPT couldn't do it": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcrit sur l'appareil : ChatGPT n'a pas pu le faire"
+          }
+        }
+      }
+    },
+    "Nothing was heard": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien n'a été entendu"
+          }
+        }
+      }
+    },
+    "The microphone couldn't start recording.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le micro n'a pas pu démarrer l'enregistrement."
+          }
+        }
+      }
+    },
+    "ChatGPT didn't quite catch that. Try again and speak a little longer.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT n'a pas bien compris. Réessaie en parlant un peu plus longtemps."
+          }
+        }
+      }
+    },
+    "Your recording is sent to ChatGPT, which writes it down like in its apps, then deleted from the device. If ChatGPT can't, the device transcribes it.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton enregistrement est envoyé à ChatGPT, qui l'écrit comme dans ses apps, puis il est effacé de l'appareil. Si ChatGPT n'y arrive pas, l'appareil le transcrit."
+          }
+        }
+      }
+    },
+    "Apple's speech recognition writes as you speak, on the device, without sending anything.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La reconnaissance vocale d'Apple écrit pendant que tu parles, sur l'appareil, sans rien envoyer."
+          }
+        }
+      }
+    },
+    "Hidden while the screen is recorded": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masqué pendant l'enregistrement de l'écran"
+          }
+        }
+      }
+    },
+    "Your chats show again once the recording or sharing stops.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tes chats réapparaissent dès que l'enregistrement ou le partage s'arrête."
+          }
+        }
+      }
+    },
+    "No. OCTO has no telemetry, analytics or third-party SDK. Requests go straight from your device to OpenAI, and to GitHub to look for updates if you allow it. Your sign-in tokens stay in the iOS keychain, and Settings → Privacy lists every server OCTO contacted.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non. OCTO n'a ni télémétrie, ni outil d'analyse, ni SDK tiers. Les requêtes partent directement de ton appareil vers OpenAI, et vers GitHub pour chercher les mises à jour si tu le permets. Tes jetons de connexion restent dans le trousseau iOS, et Réglages → Confidentialité liste chaque serveur contacté par OCTO."
+          }
+        }
+      }
+    },
+    "How do I update OCTO?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment mettre à jour OCTO ?"
+          }
+        }
+      }
+    },
+    "OCTO tells you when a new version is published on GitHub. Install its IPA with AltStore, SideStore or Sideloadly over the current app: your chats and settings stay.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO te prévient quand une nouvelle version est publiée sur GitHub. Installe son IPA avec AltStore, SideStore ou Sideloadly par-dessus l'app actuelle : tes chats et tes réglages restent."
+          }
+        }
+      }
+    },
+    "Calmer replies": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Des réponses plus douces"
+          }
+        }
+      }
+    },
+    "Replies now appear word by word, each word fading in. Pick the pace in Appearance.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les réponses arrivent maintenant mot par mot, chaque mot en fondu. Choisis le rythme dans Apparence."
+          }
+        }
+      }
+    },
+    "Much more private": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beaucoup plus privé"
+          }
+        }
+      }
+    },
+    "Links without trackers, copies that stay on your iPhone, no third-party keyboards, chats hidden during screen recording and more, in Privacy.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Des liens sans traceurs, des copies qui restent sur ton iPhone, pas de claviers tiers, des chats masqués pendant l'enregistrement de l'écran et plus encore, dans Confidentialité."
+          }
+        }
+      }
+    },
+    "Make it yours": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À ton image"
+          }
+        }
+      }
+    },
+    "New accent colors and one of your own, text size, font and code wrapping.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De nouvelles couleurs d'accentuation et la tienne, la taille du texte, la police et le retour à la ligne du code."
+          }
+        }
+      }
+    },
+    "Dictation by ChatGPT": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La dictée par ChatGPT"
+          }
+        }
+      }
+    },
+    "Your voice is recorded, then written down by ChatGPT, like in its apps.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta voix est enregistrée, puis écrite par ChatGPT, comme dans ses apps."
+          }
+        }
+      }
+    },
+    "Your real data controls": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tes vrais réglages de données"
+          }
+        }
+      }
+    },
+    "Improve the model for everyone shows the setting saved in your account, and turns off from OCTO.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "« Améliorer le modèle pour tout le monde » affiche le réglage de ton compte et se désactive depuis OCTO."
+          }
+        }
+      }
+    },
+    "OCTO tells you when a new version is out and installs it with AltStore or SideStore.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO te prévient quand une nouvelle version sort et l'installe avec AltStore ou SideStore."
+          }
+        }
+      }
+    },
+    "speed.instant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instant"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instantanée"
+          }
+        }
+      }
+    },
+    "%lld requests": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld request"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld requests"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld requête"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld requêtes"
+                }
+              }
+            }
           }
         }
       }

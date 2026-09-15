@@ -2,6 +2,39 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [1.4.0] – 2026-09-15
+
+### Ajouté
+
+- **Des réponses qui arrivent mot par mot, en fondu** : chaque mot de ChatGPT apparaît à son tour et se révèle en douceur, à un rythme plus calme qu'avant. La vitesse (lente, normale, rapide ou instantanée) se choisit dans Réglages → Apparence, avec un aperçu en direct.
+- **Détection des mises à jour** : OCTO regarde sur GitHub Releases s'il existe une version plus récente (au plus toutes les 6 heures, sans aucun identifiant) et te la propose avec ses nouveautés, un bouton « Installer avec AltStore » ou « SideStore » et le téléchargement de l'IPA. La vérification se lance aussi à la main dans À propos et se coupe dans Confidentialité.
+- **Page Confidentialité** :
+  - les liens des réponses et des sources s'ouvrent, se copient et se partagent **sans traceurs** (`utm_source=chatgpt.com`, `fbclid`, `gclid`…) ;
+  - le texte copié **reste sur l'iPhone** (pas de presse-papiers universel) et peut s'effacer tout seul après 1, 5 ou 15 minutes ;
+  - les **claviers tiers sont bloqués** dans OCTO ;
+  - les chats sont **masqués pendant l'enregistrement, la recopie ou le partage de l'écran**, et dans le sélecteur d'apps par défaut ;
+  - **chats temporaires par défaut** au choix, et chats retirés de l'iPhone après 1 jour, 1 semaine ou 1 mois (sauf les chats épinglés) ;
+  - la liste des **serveurs contactés** depuis l'ouverture d'OCTO, comptés sur l'appareil.
+- **Page Apparence** : couleurs d'accentuation violet, rouge et menthe, plus **une couleur de ton choix** ; taille du texte des chats ; police (système, arrondie, serif ou monospace) ; retour à la ligne dans les blocs de code ; vibrations pendant que ChatGPT écrit. Et dans Général : **envoyer avec la touche Retour**.
+- **Dictée par ChatGPT** : le micro enregistre ta voix, puis `backend-api/transcribe` l'écrit, comme la dictée de l'app ChatGPT (niveau du micro, minuteur, annuler ou valider). L'enregistrement est effacé de l'iPhone juste après. Si ChatGPT n'y arrive pas, l'iPhone la transcrit lui-même. La dictée entièrement sur l'appareil reste au choix dans Voix.
+- **Gestion des données** : « Améliorer le modèle pour tout le monde » affiche **le vrai réglage de ton compte** et **se désactive depuis OCTO**, avec la même requête que le site (`settings/account_user_setting`), tout comme l'inclusion des enregistrements audio et vidéo et le réglage équivalent de Codex. OCTO relit le compte après chaque changement pour montrer ce qui a vraiment été enregistré.
+- **Vérification de l'âge** : la page montre comment ChatGPT traite l'âge de ton compte (`settings/is_adult`) et explique, sources à l'appui, pourquoi il vaut mieux **ne pas faire la vérification**.
+
+### Modifié
+
+- **Abonnement** : sans abonnement actif, plus de date d'expiration, de facturation ni de lieu d'achat. ChatGPT garde les dates d'un ancien abonnement terminé, qui s'affichaient à tort.
+- Les chats, pièces jointes et données du compte enregistrés sur l'iPhone sont **illisibles tant que l'appareil est verrouillé**, fichiers existants compris.
+- La session réseau ne garde plus rien sur le disque : les cookies ne vivent que le temps d'un lancement et sont effacés à la déconnexion.
+- Les envois de fichiers, comme les enregistrements de dictée, n'apparaissent pas dans le journal réseau du mode développeur.
+
+### Corrigé
+
+- « Améliorer le modèle pour tout le monde » pouvait s'afficher activé alors qu'il était désactivé dans le compte : OCTO lisait la politique du compte (`data_usage_for_training`) au lieu de ton choix (`training_allowed`).
+
+### Retiré
+
+- La page Contrôle parental.
+
 ## [1.3.0] – 2026-09-15
 
 ### Ajouté

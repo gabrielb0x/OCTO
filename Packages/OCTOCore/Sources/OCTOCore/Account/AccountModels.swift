@@ -54,16 +54,54 @@ public struct AccountSettings: Codable, Equatable, Sendable {
     public var referencesSavedMemories: Bool?
     /// "Reference chat history".
     public var referencesChatHistory: Bool?
+    /// "Improve the model for everyone", the choice made in ChatGPT's Data controls.
     public var trainingAllowed: Bool?
+    /// Audio recordings of voice chats are included in training.
+    public var voiceTrainingAllowed: Bool?
+    /// Video recordings are included in training.
+    public var videoTrainingAllowed: Bool?
+    /// The same choice for Codex, which generates the replies to messages written in OCTO.
+    public var codexTrainingAllowed: Bool?
     public var voiceName: String?
     public var voiceLanguage: String?
 
-    public init(referencesSavedMemories: Bool? = nil, referencesChatHistory: Bool? = nil, trainingAllowed: Bool? = nil, voiceName: String? = nil, voiceLanguage: String? = nil) {
+    public init(
+        referencesSavedMemories: Bool? = nil,
+        referencesChatHistory: Bool? = nil,
+        trainingAllowed: Bool? = nil,
+        voiceTrainingAllowed: Bool? = nil,
+        videoTrainingAllowed: Bool? = nil,
+        codexTrainingAllowed: Bool? = nil,
+        voiceName: String? = nil,
+        voiceLanguage: String? = nil
+    ) {
         self.referencesSavedMemories = referencesSavedMemories
         self.referencesChatHistory = referencesChatHistory
         self.trainingAllowed = trainingAllowed
+        self.voiceTrainingAllowed = voiceTrainingAllowed
+        self.videoTrainingAllowed = videoTrainingAllowed
+        self.codexTrainingAllowed = codexTrainingAllowed
         self.voiceName = voiceName
         self.voiceLanguage = voiceLanguage
+    }
+
+    public subscript(feature: AccountSettingFeature) -> Bool? {
+        get {
+            switch feature {
+            case .trainingAllowed: return trainingAllowed
+            case .voiceTrainingAllowed: return voiceTrainingAllowed
+            case .videoTrainingAllowed: return videoTrainingAllowed
+            case .codexTrainingAllowed: return codexTrainingAllowed
+            }
+        }
+        set {
+            switch feature {
+            case .trainingAllowed: trainingAllowed = newValue
+            case .voiceTrainingAllowed: voiceTrainingAllowed = newValue
+            case .videoTrainingAllowed: videoTrainingAllowed = newValue
+            case .codexTrainingAllowed: codexTrainingAllowed = newValue
+            }
+        }
     }
 
     public static func parse(_ data: Data) -> AccountSettings? {
@@ -72,14 +110,29 @@ public struct AccountSettings: Codable, Equatable, Sendable {
             referencesSavedMemories: JSONValue.bool(settings["sunshine"]),
             referencesChatHistory: JSONValue.bool(settings["moonshine"]),
             trainingAllowed: JSONValue.bool(settings["training_allowed"]),
+            voiceTrainingAllowed: JSONValue.bool(settings["voice_training_allowed"]),
+            videoTrainingAllowed: JSONValue.bool(settings["video_training_allowed"]),
+            codexTrainingAllowed: JSONValue.bool(settings["codex_training_allowed_v2"]) ?? JSONValue.bool(settings["codex_training_allowed"]),
             voiceName: JSONValue.string(settings["voice_name"]),
             voiceLanguage: JSONValue.string(settings["voice_main_language"])
         )
     }
 }
 
-/// "Improve the model for everyone" (`GET /accounts/data_usage_for_training`).
-public enum TrainingPreference {
+/// Settings of the account OCTO changes, by their key in `settings/user`, as ChatGPT's web app names them.
+public enum AccountSettingFeature: String, CaseIterable, Sendable {
+    /// "Improve the model for everyone".
+    case trainingAllowed = "training_allowed"
+    case voiceTrainingAllowed = "voice_training_allowed"
+    case videoTrainingAllowed = "video_training_allowed"
+    /// Codex's "Improve the model for everyone".
+    case codexTrainingAllowed = "codex_training_allowed_v2"
+}
+
+/// Whether the account's policy lets its data be used for training at all
+/// (`GET /accounts/data_usage_for_training`, "permitted" for personal accounts). It says nothing
+/// about the user's own choice, which is `AccountSettings.trainingAllowed`.
+public enum TrainingPolicy {
     public static func parse(_ data: Data) -> Bool? {
         guard let object = JSONValue.object(data),
               let value = JSONValue.string(object["data_usage_for_training"])?.lowercased()

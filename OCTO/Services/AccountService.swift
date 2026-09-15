@@ -9,6 +9,8 @@ enum AccountAPIError: LocalizedError, Equatable {
     case server(Int)
     case http(Int, String?)
     case invalidResponse
+    /// The account accepted a change, but reading it back shows it wasn't kept.
+    case settingNotSaved
 
     var errorDescription: String? {
         switch self {
@@ -24,7 +26,18 @@ enum AccountAPIError: LocalizedError, Equatable {
             return message ?? String(localized: "ChatGPT returned an error (HTTP \(status)).")
         case .invalidResponse:
             return String(localized: "ChatGPT returned an unexpected response.")
+        case .settingNotSaved:
+            return String(localized: "ChatGPT didn't keep this change. Try again, or change it in ChatGPT.")
         }
+    }
+}
+
+enum TranscriptionError: LocalizedError, Equatable {
+    /// ChatGPT heard nothing it could write down.
+    case tooShort
+
+    var errorDescription: String? {
+        String(localized: "ChatGPT didn't quite catch that. Try again and speak a little longer.")
     }
 }
 
@@ -59,9 +72,18 @@ final class AccountService: Sendable {
         try await fetch(ChatGPTAccountAPI.settingsURL, parse: AccountSettings.parse)
     }
 
+    /// Saves one setting of the account, the way ChatGPT's own settings do.
+    func updateSetting(_ feature: AccountSettingFeature, value: Bool) async throws {
+        _ = try await send(ChatGPTAccountAPI.accountUserSettingURL(feature, value: value), method: "PATCH")
+    }
+
     func subscription() async throws -> AccountSubscription {
         let accountID = try await vault.credential().accountID
         return try await fetch(ChatGPTAccountAPI.accountCheckURL) { AccountSubscription.parse($0, accountID: accountID) }
+    }
+
+    func ageStatus() async throws -> AgeStatus {
+        try await fetch(ChatGPTAccountAPI.ageStatusURL, parse: AgeStatus.parse)
     }
 
     func customInstructions() async throws -> CustomInstructions {
@@ -91,8 +113,9 @@ final class AccountService: Sendable {
         try await fetch(ChatGPTAccountAPI.memoriesURL, parse: MemoriesSnapshot.parse)
     }
 
-    func trainingPreference() async throws -> Bool {
-        try await fetch(ChatGPTAccountAPI.trainingPreferenceURL, parse: TrainingPreference.parse)
+    /// Whether the account's policy lets its data be used for training at all.
+    func dataUsagePolicy() async throws -> Bool {
+        try await fetch(ChatGPTAccountAPI.dataUsagePolicyURL, parse: TrainingPolicy.parse)
     }
 
     /// The account's live feature limits, read from `POST /conversation/init` like the website does.
@@ -108,6 +131,30 @@ final class AccountService: Sendable {
             throw AccountAPIError.invalidResponse
         }
         return value
+    }
+
+    // MARK: Dictation
+
+    /// Has ChatGPT write down a dictation recording, like the dictation of its apps (`POST /transcribe`).
+    func transcribe(audio: Data, durationMilliseconds: Int) async throws -> String {
+        let form = ChatGPTTranscription.form(audio: audio, durationMilliseconds: durationMilliseconds)
+        var request = try await makeRequest(ChatGPTTranscription.url, method: "POST", body: form.encoded(), contentType: form.contentType)
+        request.timeoutInterval = 120
+        let (data, response) = try await session.recordedData(for: request)
+        guard let http = response as? HTTPURLResponse else { throw AccountAPIError.invalidResponse }
+        guard (200..<300).contains(http.statusCode) else {
+            DevLog.log("dictation", "POST /transcribe → HTTP \(http.statusCode)", level: .warning)
+            let payload = APIErrorPayload.parse(data)
+            if payload.code == "audio_too_short" || payload.message?.lowercased() == "audio too short" {
+                throw TranscriptionError.tooShort
+            }
+            throw Self.error(for: http, data: data)
+        }
+        guard let text = ChatGPTTranscription.parse(data) else {
+            DevLog.log("dictation", "Unexpected response from /transcribe", level: .warning)
+            throw AccountAPIError.invalidResponse
+        }
+        return text
     }
 
     // MARK: Chats
@@ -191,7 +238,7 @@ final class AccountService: Sendable {
         return value
     }
 
-    private func makeRequest(_ url: URL, method: String = "GET", body: Data? = nil, accept: String? = nil) async throws -> URLRequest {
+    private func makeRequest(_ url: URL, method: String = "GET", body: Data? = nil, contentType: String? = nil, accept: String? = nil) async throws -> URLRequest {
         let credential = try await vault.credential()
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -210,7 +257,7 @@ final class AccountService: Sendable {
         }
         if let body {
             request.httpBody = body
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(contentType ?? "application/json", forHTTPHeaderField: "Content-Type")
         }
         return request
     }
@@ -219,22 +266,25 @@ final class AccountService: Sendable {
         let request = try await makeRequest(url, method: method, body: body, accept: accept)
         let (data, response) = try await session.recordedData(for: request)
         guard let http = response as? HTTPURLResponse else { throw AccountAPIError.invalidResponse }
-        if !(200..<300).contains(http.statusCode) {
+        guard (200..<300).contains(http.statusCode) else {
             DevLog.log("account", "\(method) \(url.path) → HTTP \(http.statusCode)", level: .warning)
+            throw Self.error(for: http, data: data)
         }
-        switch http.statusCode {
-        case 200..<300:
-            return data
+        return data
+    }
+
+    private static func error(for response: HTTPURLResponse, data: Data) -> AccountAPIError {
+        switch response.statusCode {
         case 401:
-            throw AccountAPIError.unauthorized
-        case 403 where http.value(forHTTPHeaderField: "cf-mitigated") != nil || Self.isHTML(http):
-            throw AccountAPIError.blocked
+            return .unauthorized
+        case 403 where response.value(forHTTPHeaderField: "cf-mitigated") != nil || isHTML(response):
+            return .blocked
         case 404:
-            throw AccountAPIError.notFound
+            return .notFound
         case 500...599:
-            throw AccountAPIError.server(http.statusCode)
+            return .server(response.statusCode)
         default:
-            throw AccountAPIError.http(http.statusCode, APIErrorPayload.parse(data).message)
+            return .http(response.statusCode, APIErrorPayload.parse(data).message)
         }
     }
 

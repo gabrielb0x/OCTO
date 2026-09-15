@@ -102,10 +102,10 @@ final class ConversationFiles: @unchecked Sendable {
         queue.async { [self] in
             let encoder = JSONEncoder()
             if let conversation, let data = try? encoder.encode(conversation) {
-                try? data.write(to: fileURL(for: conversation.id), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+                try? data.write(to: fileURL(for: conversation.id), options: [.atomic, .completeFileProtectionUnlessOpen])
             }
             if let data = try? encoder.encode(index) {
-                try? data.write(to: indexURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+                try? data.write(to: indexURL, options: [.atomic, .completeFileProtectionUnlessOpen])
             }
         }
     }
@@ -113,7 +113,7 @@ final class ConversationFiles: @unchecked Sendable {
     func writeProjects(_ projects: [ChatProject]) {
         queue.async { [self] in
             if let data = try? JSONEncoder().encode(projects) {
-                try? data.write(to: projectsURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+                try? data.write(to: projectsURL, options: [.atomic, .completeFileProtectionUnlessOpen])
             }
         }
     }
@@ -129,7 +129,7 @@ final class ConversationFiles: @unchecked Sendable {
                 }
             }
             if let data = try? JSONEncoder().encode(index) {
-                try? data.write(to: indexURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+                try? data.write(to: indexURL, options: [.atomic, .completeFileProtectionUnlessOpen])
             }
         }
     }
@@ -157,7 +157,7 @@ final class ConversationFiles: @unchecked Sendable {
     func saveAttachment(_ data: Data, fileExtension: String) -> String? {
         let name = "\(UUID().uuidString).\(fileExtension)"
         do {
-            try data.write(to: attachmentsDirectory.appendingPathComponent(name), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            try data.write(to: attachmentsDirectory.appendingPathComponent(name), options: [.atomic, .completeFileProtectionUnlessOpen])
             return name
         } catch {
             return nil
@@ -230,6 +230,44 @@ final class ConversationStore {
         }
         projects = files.loadProjects()
         sortSummaries()
+        Self.protectExistingFiles(in: files.rootDirectory)
+    }
+
+    /// Removes from the device the chats last updated before `date`, except pinned ones. Chats
+    /// written in OCTO are deleted; chats of the account stay listed and download again when opened.
+    @discardableResult
+    func removeChats(before date: Date) -> Int {
+        let old = summaries.filter { $0.updatedAt < date && !$0.isPinned }
+        guard !old.isEmpty else { return 0 }
+        removeLocally(old.filter { !$0.isAccountChat }.map(\.id))
+        let downloaded = old.filter(\.isAccountChat).map(\.id)
+        var attachments: [String] = []
+        for id in downloaded {
+            let conversation = cache[id] ?? files.loadConversation(id)
+            attachments += conversation?.messages.flatMap { $0.attachments.filter(\.isStoredOnDevice).map(\.storedFileName) } ?? []
+            cache[id] = nil
+            searchCorpus[id] = nil
+        }
+        files.delete(downloaded, attachmentNames: attachments, index: summaries)
+        DevLog.log("storage", "Removed \(old.count) chats last updated before \(date.formatted(.iso8601)) from the device")
+        return old.count
+    }
+
+    /// Files written before 1.4 stayed readable once the device had been unlocked. They're now
+    /// protected like new files: unreadable while the device is locked, unless OCTO has them open.
+    private static func protectExistingFiles(in directory: URL) {
+        let key = "app.filesProtectedUnlessOpen"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        DispatchQueue.global(qos: .utility).async {
+            let fileManager = FileManager.default
+            let protection: [FileAttributeKey: Any] = [.protectionKey: FileProtectionType.completeUnlessOpen]
+            try? fileManager.setAttributes(protection, ofItemAtPath: directory.path)
+            let urls = fileManager.enumerator(at: directory, includingPropertiesForKeys: nil)?.allObjects.compactMap { $0 as? URL } ?? []
+            for url in urls {
+                try? fileManager.setAttributes(protection, ofItemAtPath: url.path)
+            }
+        }
     }
 
     /// Chats outside projects, as listed under the sidebar's date sections.

@@ -92,6 +92,7 @@ final class NetworkRecorder: @unchecked Sendable {
     }
 
     func begin(_ request: URLRequest) -> NetworkRecording? {
+        NetworkActivity.shared.record(request.url)
         let sink: (@Sendable (NetworkEntry) -> Void)? = lock.withLock { isRecording ? self.sink : nil }
         guard let sink, let url = request.url else { return nil }
         let headers = request.allHTTPHeaderFields ?? [:]

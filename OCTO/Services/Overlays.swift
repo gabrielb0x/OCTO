@@ -55,6 +55,7 @@ final class ToastCenter {
 final class OverlayWindows {
     private var overlayWindow: UIWindow?
     private var coverWindow: UIWindow?
+    private var captureRegistration: (any UITraitChangeRegistration)?
 
     func install(app: AppModel) {
         guard overlayWindow == nil, let scene = Self.activeScene else { return }
@@ -77,6 +78,12 @@ final class OverlayWindows {
         cover.rootViewController = coverHost
         cover.isHidden = true
         coverWindow = cover
+
+        // Recording, mirroring and sharing the screen change the capture state of the scene.
+        app.protection.screenCaptureChanged(isCaptured: overlay.traitCollection.sceneCaptureState == .active)
+        captureRegistration = overlay.registerForTraitChanges([UITraitSceneCaptureState.self]) { [weak app] (window: UIWindow, _: UITraitCollection) in
+            app?.protection.screenCaptureChanged(isCaptured: window.traitCollection.sceneCaptureState == .active)
+        }
 
         app.settings.theme.apply()
         app.developer.applyAnimationSpeed()

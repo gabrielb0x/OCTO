@@ -1,23 +1,41 @@
 import OCTOCore
 import SwiftUI
 
-/// Data settings of the ChatGPT account and the chats kept on this device.
+/// Data settings of the ChatGPT account, read from and saved to the account, and the chats kept on this device.
 struct DataControlsView: View {
     @Environment(AppModel.self) private var app
     @State private var confirmDeleteAll = false
     @State private var isDeleting = false
     @State private var errorMessage: String?
+    @State private var settingError: String?
 
     var body: some View {
         Form {
             Section {
-                LabeledContent {
-                    trainingValue
-                } label: {
-                    Label("Improve the model for everyone", systemImage: "sparkles")
+                settingToggle(.trainingAllowed, title: "Improve the model for everyone", systemImage: "sparkles")
+                if app.account.settings?.trainingAllowed == true {
+                    settingToggle(.voiceTrainingAllowed, title: "Include your audio recordings", systemImage: "waveform")
+                    settingToggle(.videoTrainingAllowed, title: "Include your video recordings", systemImage: "video")
                 }
+            } header: {
+                Text(verbatim: "ChatGPT")
             } footer: {
-                Text("Managed in ChatGPT. The messages you write in OCTO are sent with server-side storage turned off.")
+                Text("Lets OpenAI use your chats in ChatGPT to train its models. The switches show what your account has saved and change it right away.")
+            }
+
+            Section {
+                settingToggle(.codexTrainingAllowed, title: "Improve Codex for everyone", systemImage: "chevron.left.forwardslash.chevron.right")
+            } header: {
+                Text("Messages written in OCTO")
+            } footer: {
+                Text("Replies to the messages you write in OCTO come from Codex, with server-side storage turned off. This is Codex's own training setting.")
+            }
+
+            if app.account.dataUsagePermitted == false {
+                Section {
+                    Label("The policy of your account doesn't allow its data to be used for training.", systemImage: "building.2")
+                        .foregroundStyle(Theme.secondaryText)
+                }
             }
 
             Section {
@@ -44,6 +62,12 @@ struct DataControlsView: View {
         }
         .navigationTitle("Data controls")
         .navigationBarTitleDisplayMode(.inline)
+        .detachedRefreshable {
+            await app.account.refresh()
+        }
+        .task {
+            await app.account.refresh(ifOlderThan: 30)
+        }
         .confirmationDialog("Delete all chats?", isPresented: $confirmDeleteAll, titleVisibility: .visible) {
             Button("Delete all", role: .destructive, action: deleteAll)
         } message: {
@@ -54,13 +78,39 @@ struct DataControlsView: View {
         } message: {
             Text(errorMessage ?? "")
         }
+        .alert("Couldn't change this setting", isPresented: settingErrorIsPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(settingError ?? "")
+        }
     }
 
-    private var trainingValue: Text {
-        switch app.account.trainingAllowed ?? app.account.settings?.trainingAllowed {
-        case true?: return Text("On")
-        case false?: return Text("Off")
-        case nil: return Text(verbatim: "–")
+    /// A switch showing the value saved in the account; nothing to change until it's known.
+    private func settingToggle(_ feature: AccountSettingFeature, title: LocalizedStringKey, systemImage: String) -> some View {
+        let value = app.account.settings?[feature]
+        let isSaving = app.account.savingSettings.contains(feature)
+        return Toggle(isOn: Binding(get: { value ?? false }, set: { change(feature, to: $0) })) {
+            HStack(spacing: 10) {
+                Label(title, systemImage: systemImage)
+                if isSaving {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+            }
+        }
+        .disabled(value == nil || isSaving)
+    }
+
+    private func change(_ feature: AccountSettingFeature, to value: Bool) {
+        Task {
+            do {
+                try await app.account.setSetting(feature, to: value)
+                app.toasts.show(value ? String(localized: "Turned on in your ChatGPT account") : String(localized: "Turned off in your ChatGPT account"))
+            } catch let error where !error.isCancellation {
+                settingError = ChatSession.describe(error)
+            } catch {
+                // Leaving the page cancels nothing: the account keeps what was sent.
+            }
         }
     }
 
@@ -78,6 +128,10 @@ struct DataControlsView: View {
 
     private var errorIsPresented: Binding<Bool> {
         Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })
+    }
+
+    private var settingErrorIsPresented: Binding<Bool> {
+        Binding(get: { settingError != nil }, set: { if !$0 { settingError = nil } })
     }
 }
 

@@ -278,7 +278,13 @@ final class ChatSession: Identifiable {
         let history = conversation.messages
         let assistant = ChatMessage(role: .assistant, modelID: model.id, status: .streaming)
         conversation.messages.append(assistant)
-        let reply = LiveReply(messageID: assistant.id, paced: !(app.developer.isEnabled && app.developer.disablesTextPacing))
+        let speed = app.developer.isEnabled && app.developer.disablesTextPacing ? RevealSpeed.instant : app.settings.revealSpeed
+        var onWordsRevealed: (@MainActor (Int) -> Void)?
+        if app.settings.hapticsEnabled, app.settings.streamingHaptics, speed != .instant {
+            let haptics = StreamingHaptics()
+            onWordsRevealed = { haptics.wordsRevealed($0) }
+        }
+        let reply = LiveReply(messageID: assistant.id, speed: speed, onWordsRevealed: onWordsRevealed)
         live = reply
         activity = .waiting
         persist()

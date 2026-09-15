@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import OCTOCore
 
 enum AppTheme: String, CaseIterable, Identifiable {
     case system
@@ -9,7 +10,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-/// The accent colors of ChatGPT. The default keeps the monochrome look.
+/// The accent colors of ChatGPT, a few more and a color of your own. The default keeps the monochrome look.
 enum AccentChoice: String, CaseIterable, Identifiable {
     case `default`
     case blue
@@ -17,8 +18,75 @@ enum AccentChoice: String, CaseIterable, Identifiable {
     case yellow
     case pink
     case orange
+    case purple
+    case red
+    case mint
+    case custom
 
     var id: String { rawValue }
+}
+
+/// Size of the text of chats, a step or two away from the size chosen in iOS.
+enum ChatTextSize: String, CaseIterable, Identifiable {
+    case small
+    case standard
+    case large
+    case extraLarge
+
+    var id: String { rawValue }
+
+    /// Steps along iOS's text sizes.
+    var steps: Int {
+        switch self {
+        case .small: return -1
+        case .standard: return 0
+        case .large: return 1
+        case .extraLarge: return 2
+        }
+    }
+}
+
+enum ChatFont: String, CaseIterable, Identifiable {
+    case system
+    case rounded
+    case serif
+    case monospaced
+
+    var id: String { rawValue }
+}
+
+/// How dictation turns your voice into text.
+enum TranscriptionEngine: String, CaseIterable, Identifiable {
+    /// Recorded, then written down by ChatGPT like in its apps.
+    case chatGPT
+    /// Apple's speech recognition, on the device.
+    case onDevice
+
+    var id: String { rawValue }
+}
+
+/// How long text copied from OCTO stays in the clipboard.
+enum ClipboardExpiry: Int, CaseIterable, Identifiable {
+    case never = 0
+    case oneMinute = 60
+    case fiveMinutes = 300
+    case fifteenMinutes = 900
+
+    var id: Int { rawValue }
+}
+
+/// How long chats stay on this device.
+enum LocalRetention: Int, CaseIterable, Identifiable {
+    case forever = 0
+    case oneDay = 86_400
+    case oneWeek = 604_800
+    case oneMonth = 2_592_000
+
+    var id: Int { rawValue }
+
+    var interval: TimeInterval? {
+        self == .forever ? nil : TimeInterval(rawValue)
+    }
 }
 
 /// How long OCTO can stay in the background before it asks for Face ID again.
@@ -92,6 +160,37 @@ final class AppSettings {
         didSet { defaults.set(accent.rawValue, forKey: Keys.accent) }
     }
 
+    /// "#RRGGBB" of the custom accent color.
+    var customAccentHex: String {
+        didSet { defaults.set(customAccentHex, forKey: Keys.customAccentHex) }
+    }
+
+    var chatTextSize: ChatTextSize {
+        didSet { defaults.set(chatTextSize.rawValue, forKey: Keys.chatTextSize) }
+    }
+
+    var chatFont: ChatFont {
+        didSet { defaults.set(chatFont.rawValue, forKey: Keys.chatFont) }
+    }
+
+    /// How fast the words of a reply appear.
+    var revealSpeed: RevealSpeed {
+        didSet { defaults.set(revealSpeed.rawValue, forKey: Keys.revealSpeed) }
+    }
+
+    var wrapsCodeLines: Bool {
+        didSet { defaults.set(wrapsCodeLines, forKey: Keys.wrapsCodeLines) }
+    }
+
+    /// Light taps while a reply is written.
+    var streamingHaptics: Bool {
+        didSet { defaults.set(streamingHaptics, forKey: Keys.streamingHaptics) }
+    }
+
+    var sendsWithReturn: Bool {
+        didSet { defaults.set(sendsWithReturn, forKey: Keys.sendsWithReturn) }
+    }
+
     var correctsSpelling: Bool {
         didSet { defaults.set(correctsSpelling, forKey: Keys.correctsSpelling) }
     }
@@ -107,6 +206,10 @@ final class AppSettings {
 
     var voicePause: VoicePause {
         didSet { defaults.set(voicePause.rawValue, forKey: Keys.voicePause) }
+    }
+
+    var transcriptionEngine: TranscriptionEngine {
+        didSet { defaults.set(transcriptionEngine.rawValue, forKey: Keys.transcriptionEngine) }
     }
 
     var notifiesReplies: Bool {
@@ -129,6 +232,42 @@ final class AppSettings {
         didSet { defaults.set(hidesContentInAppSwitcher, forKey: Keys.hidesContentInAppSwitcher) }
     }
 
+    // MARK: Privacy
+
+    var temporaryChatsByDefault: Bool {
+        didSet { defaults.set(temporaryChatsByDefault, forKey: Keys.temporaryChatsByDefault) }
+    }
+
+    var localRetention: LocalRetention {
+        didSet { defaults.set(localRetention.rawValue, forKey: Keys.localRetention) }
+    }
+
+    /// Covers the chats while the screen is recorded, mirrored or shared.
+    var hidesWhenScreenCaptured: Bool {
+        didSet { defaults.set(hidesWhenScreenCaptured, forKey: Keys.hidesWhenScreenCaptured) }
+    }
+
+    /// Copied text stays off Universal Clipboard.
+    var copiesOnlyOnThisDevice: Bool {
+        didSet { defaults.set(copiesOnlyOnThisDevice, forKey: Keys.copiesOnlyOnThisDevice) }
+    }
+
+    var clipboardExpiry: ClipboardExpiry {
+        didSet { defaults.set(clipboardExpiry.rawValue, forKey: Keys.clipboardExpiry) }
+    }
+
+    var blocksThirdPartyKeyboards: Bool {
+        didSet { defaults.set(blocksThirdPartyKeyboards, forKey: Keys.blocksThirdPartyKeyboards) }
+    }
+
+    var removesLinkTrackers: Bool {
+        didSet { defaults.set(removesLinkTrackers, forKey: Keys.removesLinkTrackers) }
+    }
+
+    var checksForUpdates: Bool {
+        didSet { defaults.set(checksForUpdates, forKey: Keys.checksForUpdates) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaultModelID = defaults.string(forKey: Keys.defaultModelID)
@@ -140,15 +279,36 @@ final class AppSettings {
         speechRate = defaults.object(forKey: Keys.speechRate) as? Double ?? 0.5
         theme = defaults.string(forKey: Keys.theme).flatMap(AppTheme.init(rawValue:)) ?? .system
         accent = defaults.string(forKey: Keys.accent).flatMap(AccentChoice.init(rawValue:)) ?? .default
+        customAccentHex = defaults.string(forKey: Keys.customAccentHex) ?? "#8E5CF7"
+        chatTextSize = defaults.string(forKey: Keys.chatTextSize).flatMap(ChatTextSize.init(rawValue:)) ?? .standard
+        chatFont = defaults.string(forKey: Keys.chatFont).flatMap(ChatFont.init(rawValue:)) ?? .system
+        revealSpeed = defaults.string(forKey: Keys.revealSpeed).flatMap(RevealSpeed.init(rawValue:)) ?? .normal
+        wrapsCodeLines = defaults.bool(forKey: Keys.wrapsCodeLines)
+        streamingHaptics = defaults.bool(forKey: Keys.streamingHaptics)
+        sendsWithReturn = defaults.bool(forKey: Keys.sendsWithReturn)
         correctsSpelling = defaults.object(forKey: Keys.correctsSpelling) as? Bool ?? true
         showsSuggestions = defaults.object(forKey: Keys.showsSuggestions) as? Bool ?? true
         voiceIdentifier = defaults.string(forKey: Keys.voiceIdentifier)
         voicePause = defaults.string(forKey: Keys.voicePause).flatMap(VoicePause.init(rawValue:)) ?? .normal
+        transcriptionEngine = defaults.string(forKey: Keys.transcriptionEngine).flatMap(TranscriptionEngine.init(rawValue:)) ?? .chatGPT
         notifiesReplies = defaults.bool(forKey: Keys.notifiesReplies)
         showsNotificationPreviews = defaults.object(forKey: Keys.showsNotificationPreviews) as? Bool ?? true
         locksWithFaceID = defaults.bool(forKey: Keys.locksWithFaceID)
         lockTimeout = LockTimeout(rawValue: defaults.integer(forKey: Keys.lockTimeout)) ?? .immediately
-        hidesContentInAppSwitcher = defaults.bool(forKey: Keys.hidesContentInAppSwitcher)
+        hidesContentInAppSwitcher = defaults.object(forKey: Keys.hidesContentInAppSwitcher) as? Bool ?? true
+        temporaryChatsByDefault = defaults.bool(forKey: Keys.temporaryChatsByDefault)
+        localRetention = LocalRetention(rawValue: defaults.integer(forKey: Keys.localRetention)) ?? .forever
+        hidesWhenScreenCaptured = defaults.object(forKey: Keys.hidesWhenScreenCaptured) as? Bool ?? true
+        copiesOnlyOnThisDevice = defaults.object(forKey: Keys.copiesOnlyOnThisDevice) as? Bool ?? true
+        clipboardExpiry = ClipboardExpiry(rawValue: defaults.integer(forKey: Keys.clipboardExpiry)) ?? .never
+        blocksThirdPartyKeyboards = Self.blocksThirdPartyKeyboards(defaults: defaults)
+        removesLinkTrackers = defaults.object(forKey: Keys.removesLinkTrackers) as? Bool ?? true
+        checksForUpdates = defaults.object(forKey: Keys.checksForUpdates) as? Bool ?? true
+    }
+
+    /// Read before the settings exist, when iOS asks whether third-party keyboards may be used.
+    nonisolated static func blocksThirdPartyKeyboards(defaults: UserDefaults = .standard) -> Bool {
+        defaults.object(forKey: Keys.blocksThirdPartyKeyboards) as? Bool ?? true
     }
 
     /// Every key OCTO writes, for the developer tools.
@@ -164,14 +324,30 @@ final class AppSettings {
         static let speechRate = "settings.speechRate"
         static let theme = "settings.theme"
         static let accent = "settings.accent"
+        static let customAccentHex = "settings.customAccentHex"
+        static let chatTextSize = "settings.chatTextSize"
+        static let chatFont = "settings.chatFont"
+        static let revealSpeed = "settings.revealSpeed"
+        static let wrapsCodeLines = "settings.wrapsCodeLines"
+        static let streamingHaptics = "settings.streamingHaptics"
+        static let sendsWithReturn = "settings.sendsWithReturn"
         static let correctsSpelling = "settings.correctsSpelling"
         static let showsSuggestions = "settings.showsSuggestions"
         static let voiceIdentifier = "settings.voiceIdentifier"
         static let voicePause = "settings.voicePause"
+        static let transcriptionEngine = "settings.transcriptionEngine"
         static let notifiesReplies = "settings.notifiesReplies"
         static let showsNotificationPreviews = "settings.showsNotificationPreviews"
         static let locksWithFaceID = "settings.locksWithFaceID"
         static let lockTimeout = "settings.lockTimeout"
         static let hidesContentInAppSwitcher = "settings.hidesContentInAppSwitcher"
+        static let temporaryChatsByDefault = "settings.temporaryChatsByDefault"
+        static let localRetention = "settings.localRetention"
+        static let hidesWhenScreenCaptured = "settings.hidesWhenScreenCaptured"
+        static let copiesOnlyOnThisDevice = "settings.copiesOnlyOnThisDevice"
+        static let clipboardExpiry = "settings.clipboardExpiry"
+        static let blocksThirdPartyKeyboards = "settings.blocksThirdPartyKeyboards"
+        static let removesLinkTrackers = "settings.removesLinkTrackers"
+        static let checksForUpdates = "settings.checksForUpdates"
     }
 }

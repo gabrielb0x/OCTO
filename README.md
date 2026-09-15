@@ -22,8 +22,10 @@
 | <img src="docs/screenshots/settings.png" width="250" alt="Réglages"> | <img src="docs/screenshots/settingsApp.png" width="250" alt="Paramètres de l'application"> | <img src="docs/screenshots/about.png" width="250" alt="À propos"> |
 | **Forfait Free** | **Thème clair** | **Nouveautés** |
 | <img src="docs/screenshots/freePlan.png" width="250" alt="Nouveau chat sans sélecteur de modèle"> | <img src="docs/screenshots/lightChat.png" width="250" alt="Conversation en thème clair avec accent bleu"> | <img src="docs/screenshots/whatsNew.png" width="250" alt="Écran des nouveautés"> |
-| **Abonnement** | | |
-| <img src="docs/screenshots/subscription.png" width="250" alt="Abonnement avec les limites d'utilisation du compte"> | | |
+| **Abonnement** | **Apparence** | **Confidentialité** |
+| <img src="docs/screenshots/subscription.png" width="250" alt="Abonnement avec les limites d'utilisation du compte"> | <img src="docs/screenshots/appearance.png" width="250" alt="Apparence : couleurs, texte et animation des réponses"> | <img src="docs/screenshots/privacy.png" width="250" alt="Réglages de confidentialité"> |
+| **Gestion des données** | **Vérification de l'âge** | **Mise à jour disponible** |
+| <img src="docs/screenshots/dataControls.png" width="250" alt="Réglages d'entraînement lus depuis le compte"> | <img src="docs/screenshots/ageVerification.png" width="250" alt="Statut de l'âge et raisons de ne pas le vérifier"> | <img src="docs/screenshots/update.png" width="250" alt="Nouvelle version proposée"> |
 | **Mode développeur** | **Inspecteur réseau** | **Détails des messages** |
 | <img src="docs/screenshots/developer.png" width="250" alt="Mode développeur"> | <img src="docs/screenshots/network.png" width="250" alt="Inspecteur réseau"> | <img src="docs/screenshots/messageDetails.png" width="250" alt="Détails techniques sous les messages"> |
 
@@ -34,26 +36,31 @@ Ces captures sont prises automatiquement sur un simulateur iPhone 17 Pro par le 
 - **Connexion avec ton compte ChatGPT** (Free, Plus, Pro, Business…) via OAuth, comme la CLI officielle et open source [Codex](https://github.com/openai/codex), ou avec un code d'appareil.
 - **Tes chats et tes projets viennent de ton compte** : chaque chat s'ouvre avec ses messages, sa réflexion et ses sources. Renommer ou supprimer un chat le fait aussi dans ton compte, avec une confirmation, et les chats archivés restent consultables.
 - **Interface calquée sur l'app ChatGPT**, construite avec les composants **Liquid Glass** natifs d'iOS 26 : barres d'outils en verre, barre de saisie en capsule de verre avec bouton + séparé, menus, boutons `.glass` et feuilles système.
-- **Réglages organisés comme ChatGPT** : Personnalisation, Mémoire, Plugins, compte (e-mail, téléphone, abonnement, restaurer les achats), thème et couleur d'accentuation, Général, Notifications, Voix, Protection, Sécurité et connexion, Stockage, Gestion des données et Aide.
-- **Thème Système, Clair ou Sombre** et couleurs d'accentuation de ChatGPT.
-- **Réponses en streaming fluides** : le texte s'affiche à un rythme régulier avec un léger fondu, sans que le chat défile tout seul. Rendu Markdown (titres, listes, tableaux, citations) et blocs de code colorés avec bouton « Copier ».
+- **Réglages organisés comme ChatGPT** : Personnalisation, Mémoire, Plugins, compte (e-mail, téléphone, abonnement, restaurer les achats, vérification de l'âge), thème et apparence, Général, Notifications, Voix, Confidentialité, Protection, Sécurité et connexion, Stockage, Gestion des données et Aide.
+- **Réponses qui arrivent mot par mot, en fondu**, à la vitesse de ton choix (lente, normale, rapide ou instantanée), sans que le chat défile tout seul. Rendu Markdown (titres, listes, tableaux, citations) et blocs de code colorés avec bouton « Copier ».
+- **Personnalisable** : thème Système, Clair ou Sombre, couleurs d'accentuation de ChatGPT et couleur de ton choix, taille du texte et police des chats, retour à la ligne dans le code, vibrations pendant que ChatGPT écrit, envoi avec la touche Retour.
 - **Choix du modèle et du niveau de réflexion** depuis le titre du chat, avec le catalogue de modèles de ton compte. Comme dans ChatGPT, le sélecteur n'apparaît qu'avec un abonnement.
-- **Mode vocal** : parle à ChatGPT et écoute sa réponse, lue à voix haute phrase par phrase avec la voix de ton choix. La reconnaissance vocale se fait sur l'appareil.
-- **Protection** : verrouillage par Face ID et contenu masqué dans le sélecteur d'apps.
+- **Dictée par ChatGPT** (`backend-api/transcribe`, comme la dictée de ses apps) ou entièrement sur l'appareil, et **mode vocal** : parle à ChatGPT et écoute sa réponse, lue à voix haute phrase par phrase avec la voix de ton choix.
+- **Gestion des données** : « Améliorer le modèle pour tout le monde », l'inclusion de l'audio et de la vidéo et le réglage équivalent de Codex sont lus et modifiés **directement dans ton compte**.
+- **Vérification de l'âge** : ce que ChatGPT pense de ton âge (`settings/is_adult`), et pourquoi ne pas lui confier ton visage ni tes papiers.
+- **Protection** : verrouillage par Face ID, contenu masqué dans le sélecteur d'apps et pendant l'enregistrement de l'écran.
 - **Notifications** quand une réponse se termine alors qu'OCTO est en arrière-plan.
-- **Résumé de la réflexion**, **recherche web** avec sources, **pièces jointes** (photos, appareil photo, fichiers texte), **dictée** et **lecture à voix haute**.
+- **Résumé de la réflexion**, **recherche web** avec sources, **pièces jointes** (photos, appareil photo, fichiers texte) et **lecture à voix haute**.
 - **Limites d'utilisation lues en direct depuis ton compte** : comme sur le site (`conversation/init`), l'écran Abonnement montre ce qu'il te reste de Deep Research, de générations d'images, d'envois de fichiers et de réflexion avancée, avec leur date de réinitialisation.
-- **Chats temporaires** qui ne laissent aucune trace, et suivi des **limites d'utilisation** de ton forfait.
+- **Chats temporaires**, au choix par défaut, qui ne laissent aucune trace, et suivi des **limites d'utilisation** de ton forfait.
+- **Mises à jour détectées** sur GitHub Releases, avec les nouveautés et l'installation par AltStore ou SideStore.
 - **Mode développeur** complet (voir plus bas) et **écran « Nouveautés »** après chaque mise à jour (voir le [CHANGELOG](CHANGELOG.md)).
 - Interface en français et en anglais.
 
 ## 🔒 Confidentialité
 
 - **Aucune télémétrie**, aucun outil d'analyse, **aucune dépendance tierce**.
-- Les requêtes partent **directement de ton iPhone vers OpenAI** (`auth.openai.com` et `chatgpt.com`). Aucun serveur intermédiaire.
-- Les jetons de connexion sont stockés dans le **trousseau iOS**. Ta photo de profil n'est demandée avec ta session que si elle est hébergée sur `chatgpt.com`.
-- Les chats de ton compte sont téléchargés et gardés **sur l'appareil**. Les messages que tu écris dans OCTO sont envoyés avec `store: false` et restent sur l'appareil.
-- Le mode vocal et la dictée utilisent la reconnaissance vocale d'Apple **sur l'appareil** quand elle est disponible.
+- Les requêtes partent **directement de ton iPhone vers OpenAI** (`auth.openai.com` et `chatgpt.com`), et vers `api.github.com` pour chercher les mises à jour si tu le laisses activé, sans cookie ni identifiant. Réglages → Confidentialité liste chaque serveur contacté depuis l'ouverture de l'app.
+- Les jetons de connexion sont stockés dans le **trousseau iOS**. La session réseau est éphémère : rien n'est mis en cache sur le disque et les cookies disparaissent à la fermeture et à la déconnexion. Ta photo de profil n'est demandée avec ta session que si elle est hébergée sur `chatgpt.com`.
+- Les chats de ton compte sont gardés **sur l'appareil**, dans des fichiers **illisibles tant que l'iPhone est verrouillé**, et peuvent en être retirés au bout d'un jour, d'une semaine ou d'un mois. Les messages que tu écris dans OCTO sont envoyés avec `store: false`.
+- Les liens des réponses s'ouvrent, se copient et se partagent **sans traceurs** (`utm_source=chatgpt.com`, `fbclid`…). Le texte copié **reste sur l'iPhone** et peut s'effacer tout seul.
+- Les **claviers tiers sont bloqués**, et les chats sont **masqués pendant l'enregistrement ou le partage de l'écran**.
+- La dictée par ChatGPT envoie l'enregistrement à OpenAI, puis l'efface de l'iPhone. La dictée sur l'appareil et le mode vocal utilisent la reconnaissance vocale d'Apple **sur l'appareil** quand elle est disponible.
 - « Signaler un problème » ne joint que les versions d'OCTO et d'iOS, le modèle de l'appareil et la langue, et seulement si tu le laisses activé.
 
 ## 📲 Installation
@@ -63,7 +70,7 @@ OCTO n'est pas sur l'App Store. Chaque version est publiée dans les [Releases](
 1. Télécharge l'IPA de la dernière release. Les builds de chaque commit sont aussi dans l'onglet [Actions](https://github.com/gabrielb0x/OCTO/actions) (artefact `OCTO-unsigned-ipa`).
 2. Installe-le avec un outil de sideloading qui signe l'app avec ton identifiant Apple, par exemple [AltStore](https://altstore.io), [SideStore](https://sidestore.io) ou [Sideloadly](https://sideloadly.io).
 
-OCTO nécessite **iOS 26** ou une version plus récente.
+OCTO nécessite **iOS 26** ou une version plus récente. Quand une nouvelle version sort, OCTO te la propose et peut l'ouvrir directement dans AltStore ou SideStore.
 
 ## 🔑 Connexion et compte
 
@@ -71,7 +78,7 @@ OCTO nécessite **iOS 26** ou une version plus récente.
 - **Se connecter avec un code** : saisis le code affiché sur `auth.openai.com/codex/device` depuis n'importe quel appareil. Si besoin, active l'autorisation par code d'appareil pour Codex dans les paramètres de sécurité de ChatGPT.
 - La connexion avec une clé API OpenAI n'est plus proposée pour l'instant.
 
-Avec la même session, OCTO lit ton compte sur `chatgpt.com/backend-api` : profil, abonnement, réglages, instructions personnalisées, personnalité, mémoire, chats et projets. Tes instructions et ta personnalité peuvent être modifiées depuis Réglages → Personnalisation. Les réglages propres aux apps officielles (plugins, contrôle parental, vérification de l'âge, contrôle à distance, publicités) expliquent ce qu'ils font et ouvrent ChatGPT.
+Avec la même session, OCTO lit ton compte sur `chatgpt.com/backend-api` : profil, abonnement, réglages, instructions personnalisées, personnalité, mémoire, chats, projets, statut de l'âge et réglages d'entraînement. Tes instructions, ta personnalité et « Améliorer le modèle pour tout le monde » peuvent être modifiés depuis l'app, avec les mêmes requêtes que le site. Les réglages propres aux apps officielles (plugins, contrôle à distance, publicités) expliquent ce qu'ils font et ouvrent ChatGPT.
 
 Les réponses sont générées par le backend Codex de ton forfait et décomptées de ses **limites d'utilisation Codex** (visibles dans Réglages → Abonnement). Les messages écrits dans OCTO ne sont donc pas ajoutés à tes chats sur chatgpt.com : ils restent sur l'appareil, et une mention l'indique dans les chats venant du compte.
 
@@ -79,13 +86,13 @@ Les réponses sont générées par le backend Codex de ton forfait et décompté
 
 Dans Réglages → Aide → À propos, **touche 8 fois de suite le numéro de build**. Une section « Développeur » apparaît alors dans les réglages :
 
-- **Inspecteur réseau** : chaque requête avec son statut, sa durée, sa taille, ses en-têtes, ses corps (JSON indenté), les événements du streaming et une commande cURL. Les jetons, cookies et codes OAuth sont masqués, et rien n'est enregistré sur le disque ni envoyé.
-- **Journal d'événements** : synchronisations, jetons, réponses, erreurs détaillées, filtrable et partageable.
+- **Inspecteur réseau** : chaque requête avec son statut, sa durée, sa taille, ses en-têtes, ses corps (JSON indenté), les événements du streaming et une commande cURL. Les jetons, cookies, codes OAuth et fichiers envoyés sont masqués, et rien n'est enregistré sur le disque ni envoyé.
+- **Journal d'événements** : synchronisations, jetons, réponses, dictée, mises à jour, erreurs détaillées, filtrable et partageable.
 - **Console API** en lecture seule sur `chatgpt.com/backend-api`, avec des raccourcis.
 - **Inspecteurs** : session et claims des jetons, données du compte et de l'abonnement, modèles, fichiers les plus lourds, préférences, appareil et build.
-- **Affichage** : overlay de performances (FPS, mémoire, CPU), détails techniques sous chaque message, Markdown brut, texte sans lissage, animations ralenties.
+- **Affichage** : overlay de performances (FPS, mémoire, CPU), détails techniques sous chaque message, Markdown brut, texte sans animation, animations ralenties.
 - **Simulation** : forfait Free, Go, Plus ou Pro, sélecteur de modèle forcé, pannes (hors ligne, blocage Cloudflare, erreur serveur, réponse coupée, délai de connexion).
-- **Actions** : synchroniser, actualiser le compte, actualiser ou faire expirer les jetons, notification de test, nouveautés, cache des modèles, et **export d'un rapport de diagnostic**.
+- **Actions** : synchroniser, actualiser le compte, actualiser ou faire expirer les jetons, notification de test, nouveautés, cache des modèles, recherche de mise à jour, et **export d'un rapport de diagnostic**.
 
 ## 🛠️ Compiler
 
@@ -106,7 +113,7 @@ swift test
 
 ### Captures d'écran
 
-Le drapeau de compilation `OCTO_DEMO` ajoute des scènes de démonstration (`welcome`, `home`, `chat`, `sidebar`, `voice`, `settings`, `settingsApp`, `about`, `developer`, `network`, `deleteToast`, `freePlan`, `lightChat`, `messageDetails`, `whatsNew`), sans réseau ni trousseau. Il n'est jamais présent dans l'IPA.
+Le drapeau de compilation `OCTO_DEMO` ajoute des scènes de démonstration (`welcome`, `home`, `chat`, `sidebar`, `voice`, `settings`, `settingsApp`, `subscription`, `about`, `developer`, `network`, `deleteToast`, `freePlan`, `lightChat`, `messageDetails`, `whatsNew`, `appearance`, `privacy`, `dataControls`, `ageVerification`, `update`), sans réseau ni trousseau. Il n'est jamais présent dans l'IPA.
 
 ```bash
 xcodebuild build -project OCTO.xcodeproj -scheme OCTO -configuration Debug \
@@ -129,13 +136,14 @@ python3 Scripts/frame-screenshots.py build/screenshots docs/screenshots
 ```
 OCTO/                  App SwiftUI
 ├── App/               Point d'entrée, AppModel, notes de version et scènes de démonstration
-├── Services/          Connexion OAuth et trousseau, compte ChatGPT, streaming, stockage, voix,
-│   └── Developer/     notifications, Face ID, toasts ; enregistreur réseau et journal du mode développeur
-├── Features/          Onboarding, Main, Sidebar, Chat, Voice, Markdown, Settings, Developer, WhatsNew
-├── DesignSystem/      Thème clair et sombre, composants Liquid Glass
+├── Services/          Connexion OAuth et trousseau, compte ChatGPT, streaming, stockage, voix et dictée,
+│   └── Developer/     confidentialité, mises à jour, notifications, Face ID, toasts ; outils du mode développeur
+├── Features/          Onboarding, Main, Sidebar, Chat, Voice, Markdown, Settings, Updates, Developer, WhatsNew
+├── DesignSystem/      Thème clair et sombre, couleurs d'accentuation, composants Liquid Glass
 └── Resources/         Icônes, logo et traductions
 Packages/OCTOCore/     Logique Swift testée : protocole OpenAI, SSE, compte ChatGPT (chats, réglages,
-                       abonnement), forfaits, masquage des identifiants, Markdown, rythme du texte
+                       abonnement, âge, dictée), forfaits, mises à jour, nettoyage des liens, masquage
+                       des identifiants, Markdown, rythme mot par mot des réponses
 Scripts/               Captures d'écran sur simulateur et cadre d'iPhone
 docs/screenshots/      Captures utilisées par ce README
 project.yml            Définition du projet XcodeGen

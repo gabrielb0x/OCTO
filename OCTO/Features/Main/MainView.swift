@@ -31,7 +31,7 @@ struct MainView: View {
                 SidebarView(
                     selectedID: session.isTemporary ? nil : session.id,
                     onSelect: open,
-                    onNewChat: { startNewChat(temporary: false) },
+                    onNewChat: { startNewChat(temporary: app.settings.temporaryChatsByDefault) },
                     onNewTemporaryChat: { startNewChat(temporary: true) },
                     onRename: rename,
                     onSetPinned: setPinned,
@@ -46,7 +46,7 @@ struct MainView: View {
                 ChatView(
                     session: session,
                     onOpenSidebar: { setSidebar(open: true) },
-                    onNewChat: { startNewChat(temporary: false) },
+                    onNewChat: { startNewChat(temporary: app.settings.temporaryChatsByDefault) },
                     onToggleTemporary: { startNewChat(temporary: !session.isTemporary) },
                     onDelete: { delete(session.id) }
                 )

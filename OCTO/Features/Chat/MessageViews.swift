@@ -107,10 +107,10 @@ struct UserMessageView: View {
                     .foregroundStyle(Theme.primaryText)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
-                    .background(app.settings.accent.bubble, in: .rect(cornerRadius: 22))
+                    .background(app.settings.accentStyle.bubble, in: .rect(cornerRadius: 22))
                     .contextMenu {
                         Button {
-                            UIPasteboard.general.string = message.text
+                            Clipboard.copy(message.text, settings: app.settings)
                         } label: {
                             Label("Copy", systemImage: "square.on.square")
                         }
@@ -260,8 +260,9 @@ private struct AssistantMessageContent: View {
                     .font(.system(.callout, design: .monospaced))
                     .textSelection(.enabled)
             } else if let live {
-                MarkdownView(text: text)
-                    .environment(\.streamingFadeLength, live.fadeLength)
+                // Bold and code left open at the end are styled right away.
+                MarkdownView(text: MarkdownStreaming.closingOpenInlineMarkers(text))
+                    .environment(\.streamingReveal, live.reveal)
             } else {
                 MarkdownView(text: text)
                     .textSelection(.enabled)
@@ -297,7 +298,7 @@ private struct AssistantMessageContent: View {
     private var actionBar: some View {
         HStack(spacing: 2) {
             actionButton(copied ? "checkmark" : "square.on.square", label: "Copy") {
-                UIPasteboard.general.string = message.text
+                Clipboard.copy(message.text, settings: app.settings)
                 copied = true
                 Task {
                     try? await Task.sleep(for: .seconds(1.5))
@@ -307,7 +308,7 @@ private struct AssistantMessageContent: View {
             actionButton(app.speech.speakingMessageID == message.id ? "stop.circle" : "speaker.wave.2", label: "Read aloud") {
                 app.speech.toggle(messageID: message.id, markdown: message.text, rate: app.settings.speechRate, voiceIdentifier: app.settings.voiceIdentifier)
             }
-            ShareLink(item: message.text) {
+            ShareLink(item: app.settings.shareableText(message.text)) {
                 Image(systemName: "square.and.arrow.up")
                     .frame(width: 34, height: 34)
                     .contentShape(Rectangle())

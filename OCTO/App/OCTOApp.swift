@@ -1,7 +1,9 @@
+import OCTOCore
 import SwiftUI
 
 @main
 struct OCTOApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var app = AppModel()
 
     var body: some Scene {
@@ -18,6 +20,7 @@ struct RootView: View {
 
     var body: some View {
         @Bindable var app = app
+        let removesTrackers = app.settings.removesLinkTrackers
 
         ZStack {
             Theme.background.ignoresSafeArea()
@@ -32,8 +35,15 @@ struct RootView: View {
         }
         .animation(.smooth(duration: 0.35), value: app.auth.state)
         .preferredColorScheme(app.settings.theme.colorScheme)
+        // Links of replies and sources open without their tracking parameters.
+        .environment(\.openURL, OpenURLAction { url in
+            .systemAction(removesTrackers ? LinkCleaner.clean(url) : url)
+        })
         .sheet(item: $app.whatsNew) { notes in
             WhatsNewView(notes: notes)
+        }
+        .sheet(item: $app.updatePrompt) { release in
+            UpdateView(release: release)
         }
         .onAppear {
             app.overlays.install(app: app)
@@ -46,7 +56,10 @@ struct RootView: View {
         .onChange(of: scenePhase, initial: true) { _, phase in
             app.protection.scenePhaseChanged(to: phase)
             if phase == .active {
-                Task { await app.notifications.refreshAuthorization() }
+                Task {
+                    await app.notifications.refreshAuthorization()
+                    await app.checkForUpdatesIfDue()
+                }
             }
         }
         .onChange(of: app.protection.showsCover, initial: true) { _, isVisible in

@@ -18,11 +18,13 @@ struct ComposerView: View {
     @State private var showCamera = false
     @State private var showFileImporter = false
     @State private var importError: String?
+    /// Shift-Return on a hardware keyboard adds a line even when Return sends.
+    @State private var allowsNextNewline = false
 
     private static let barHeight: CGFloat = 50
 
     private var showsSuggestions: Bool {
-        app.settings.showsSuggestions && session.isBlank && !session.isTemporary && session.draft.isEmpty && session.pendingAttachments.isEmpty && !isFocused
+        app.settings.showsSuggestions && session.isBlank && !session.isTemporary && session.draft.isEmpty && session.pendingAttachments.isEmpty && !isFocused && !dictation.showsRecording
     }
 
     private var isWebSearchOn: Bool {
@@ -53,6 +55,7 @@ struct ComposerView: View {
         .animation(.smooth(duration: 0.25), value: session.pendingAttachments)
         .animation(.smooth(duration: 0.25), value: showsSuggestions)
         .animation(.smooth(duration: 0.2), value: isWebSearchOn)
+        .animation(.smooth(duration: 0.2), value: dictation.showsRecording)
         .photosPicker(isPresented: $showPhotoPicker, selection: $photoSelection, maxSelectionCount: 4, matching: .images)
         .onChange(of: photoSelection) { _, items in
             loadPhotos(items)
@@ -138,26 +141,32 @@ struct ComposerView: View {
                 }
             }
 
-            HStack(alignment: .bottom, spacing: 0) {
-                if isWebSearchOn {
-                    webSearchChip
-                }
-                TextField(placeholder, text: $session.draft, axis: .vertical)
-                    .font(.body)
-                    .lineLimit(1...8)
-                    .focused($isFocused)
-                    .autocorrectionDisabled(!app.settings.correctsSpelling)
-                    .padding(.leading, isWebSearchOn ? 6 : 18)
-                    .padding(.vertical, 14)
-                    .onKeyPress(.return, phases: .down) { press in
-                        guard press.modifiers.contains(.command) else { return .ignored }
-                        send()
-                        return .handled
+            if dictation.showsRecording {
+                DictationRecordingBar(dictation: dictation, accent: app.settings.accentStyle, onCancel: dictation.cancel, onDone: finishDictation)
+                    .transition(.opacity)
+            } else {
+                HStack(alignment: .bottom, spacing: 0) {
+                    if isWebSearchOn {
+                        webSearchChip
                     }
-                dictationButton
-                trailingButton
+                    TextField(placeholder, text: $session.draft, axis: .vertical)
+                        .font(.body)
+                        .lineLimit(1...8)
+                        .focused($isFocused)
+                        .autocorrectionDisabled(!app.settings.correctsSpelling)
+                        .padding(.leading, isWebSearchOn ? 6 : 18)
+                        .padding(.vertical, 14)
+                        .onKeyPress(.return, phases: .down) { press in
+                            handleReturn(press)
+                        }
+                        .onChange(of: session.draft) { old, new in
+                            sendIfReturnWasTyped(old: old, new: new)
+                        }
+                    dictationButton
+                    trailingButton
+                }
+                .padding(.trailing, 3)
             }
-            .padding(.trailing, 3)
         }
         .frame(minHeight: Self.barHeight)
         .glassEffect(.regular.interactive(), in: .rect(cornerRadius: Self.barHeight / 2, style: .continuous))
@@ -174,9 +183,9 @@ struct ComposerView: View {
         } label: {
             Image(systemName: "globe")
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(app.settings.accent.link)
+                .foregroundStyle(app.settings.accentStyle.link)
                 .frame(width: 34, height: 34)
-                .background(app.settings.accent.link.opacity(0.18), in: Circle())
+                .background(app.settings.accentStyle.link.opacity(0.18), in: Circle())
                 .padding(.leading, 8)
                 .frame(height: Self.barHeight)
                 .contentShape(Rectangle())
@@ -188,14 +197,15 @@ struct ComposerView: View {
 
     private var dictationButton: some View {
         Button(action: toggleDictation) {
-            Image(systemName: dictation.isActive ? "waveform" : "mic")
+            Image(systemName: dictation.state == .listening ? "waveform" : "mic")
                 .symbolEffect(.variableColor.iterative, isActive: dictation.state == .listening)
                 .font(.system(size: 18, weight: .regular))
-                .foregroundStyle(dictation.isActive ? app.settings.accent.link : Theme.primaryText)
+                .foregroundStyle(dictation.isActive ? app.settings.accentStyle.link : Theme.primaryText)
                 .frame(width: 40, height: Self.barHeight)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .disabled(dictation.state == .starting)
         .accessibilityLabel(dictation.isActive ? Text("Stop dictation") : Text("Dictate"))
     }
 
@@ -204,10 +214,10 @@ struct ComposerView: View {
         Button(action: trailingAction) {
             Image(systemName: trailingSymbol)
                 .font(.system(size: session.isStreaming ? 13 : 16, weight: .bold))
-                .foregroundStyle(app.settings.accent.onFill)
+                .foregroundStyle(app.settings.accentStyle.onFill)
                 .contentTransition(.symbolEffect(.replace))
                 .frame(width: 38, height: 38)
-                .background(app.settings.accent.fill, in: Circle())
+                .background(app.settings.accentStyle.fill, in: Circle())
                 .frame(width: 44, height: Self.barHeight)
                 .contentShape(Rectangle())
         }
@@ -245,18 +255,76 @@ struct ComposerView: View {
         session.send()
     }
 
+    private func handleReturn(_ press: KeyPress) -> KeyPress.Result {
+        let sends = app.settings.sendsWithReturn ? !press.modifiers.contains(.shift) : press.modifiers.contains(.command)
+        guard sends else {
+            if app.settings.sendsWithReturn {
+                allowsNextNewline = true
+            }
+            return .ignored
+        }
+        send()
+        return .handled
+    }
+
+    /// With "Send with Return", the Return key of the on-screen keyboard sends too.
+    private func sendIfReturnWasTyped(old: String, new: String) {
+        guard app.settings.sendsWithReturn, new.count == old.count + 1, new.hasSuffix("\n"), new.dropLast() == old[...] else { return }
+        guard !allowsNextNewline else {
+            allowsNextNewline = false
+            return
+        }
+        session.draft = old
+        send()
+    }
+
     private func toggleDictation() {
         if dictation.isActive {
             dictation.stop()
             return
         }
-        let existing = session.draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        let prefix = existing.isEmpty ? "" : existing + " "
-        Task {
-            await dictation.start { transcript in
-                session.draft = prefix + transcript
+        if app.settings.transcriptionEngine == .chatGPT, app.accountService != nil {
+            Task {
+                await dictation.startRecording(onLimit: finishDictation)
+            }
+        } else {
+            let existing = session.draft.trimmingCharacters(in: .whitespacesAndNewlines)
+            let prefix = existing.isEmpty ? "" : existing + " "
+            Task {
+                await dictation.startOnDevice { transcript in
+                    session.draft = prefix + transcript
+                }
             }
         }
+    }
+
+    private func finishDictation() {
+        guard let service = app.accountService else {
+            dictation.cancel()
+            return
+        }
+        dictation.finishRecording(
+            transcribe: { audio, milliseconds in
+                try await service.transcribe(audio: audio, durationMilliseconds: milliseconds)
+            },
+            onTranscript: { text, onDevice in
+                insertDictation(text)
+                if onDevice {
+                    app.toasts.show(String(localized: "Transcribed on this device: ChatGPT couldn't do it"), style: .info, systemImage: "iphone")
+                }
+            }
+        )
+    }
+
+    private func insertDictation(_ text: String) {
+        let spoken = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !spoken.isEmpty else {
+            app.toasts.show(String(localized: "Nothing was heard"), style: .info, systemImage: "mic.slash")
+            return
+        }
+        let existing = session.draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        session.draft = existing.isEmpty ? spoken : existing + " " + spoken
+        isFocused = true
     }
 
     private func loadPhotos(_ items: [PhotosPickerItem]) {
@@ -313,6 +381,86 @@ struct ComposerView: View {
 
     private var dictationErrorIsPresented: Binding<Bool> {
         Binding(get: { dictation.errorMessage != nil }, set: { if !$0 { dictation.clearError() } })
+    }
+}
+
+/// The message bar while ChatGPT dictation records: the level of your voice, the time, and
+/// buttons to cancel or to have it written down.
+struct DictationRecordingBar: View {
+    let dictation: DictationController
+    let accent: AccentStyle
+    let onCancel: () -> Void
+    let onDone: () -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button(action: onCancel) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Theme.primaryText)
+                    .frame(width: 44, height: 50)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Cancel dictation"))
+
+            if dictation.state == .transcribing {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Transcribing…")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                LevelMeter(levels: dictation.levels)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 26)
+                if let start = dictation.recordingStartedAt {
+                    Text(timerInterval: start...Date.distantFuture, countsDown: false)
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(Theme.secondaryText)
+                        .fixedSize()
+                }
+            }
+
+            Button(action: onDone) {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(accent.onFill)
+                    .frame(width: 38, height: 38)
+                    .background(accent.fill, in: Circle())
+                    .frame(width: 44, height: 50)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(dictation.state != .recording)
+            .opacity(dictation.state == .recording ? 1 : 0.4)
+            .accessibilityLabel(Text("Transcribe"))
+        }
+        .padding(.trailing, 3)
+    }
+}
+
+/// The recent loudness of the microphone as thin bars, newest on the right.
+struct LevelMeter: View {
+    let levels: [Double]
+
+    var body: some View {
+        Canvas { context, size in
+            let barWidth: CGFloat = 3
+            let gap: CGFloat = 3
+            let fitting = max(Int((size.width + gap) / (barWidth + gap)), 0)
+            let recent = levels.suffix(fitting)
+            var x = size.width - CGFloat(recent.count) * (barWidth + gap) + gap
+            for level in recent {
+                let height = max(3, size.height * level)
+                let bar = CGRect(x: x, y: (size.height - height) / 2, width: barWidth, height: height)
+                context.fill(Path(roundedRect: bar, cornerRadius: barWidth / 2), with: .color(Theme.primaryText.opacity(0.8)))
+                x += barWidth + gap
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 

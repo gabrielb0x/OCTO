@@ -9,10 +9,11 @@ enum SettingsRoute: Hashable {
     case plugins
     case subscription
     case ageVerification
+    case appearance
     case general
     case notifications
     case voice
-    case parentalControls
+    case privacy
     case protection
     case security
     case remoteControl
@@ -42,6 +43,7 @@ struct SettingsView: View {
     @State private var confirmSignOut = false
     @State private var isRestoring = false
     @State private var showsWhatsNew = false
+    @State private var updateToShow: AppRelease?
     private let initialSection: SettingsSection?
 
     init(initialPath: [SettingsRoute] = [], initialSection: SettingsSection? = nil) {
@@ -57,6 +59,7 @@ struct SettingsView: View {
                 Form {
                     profileHeader
                     accountStatus
+                    updateBanner
 
                     Section("Customize ChatGPT") {
                         row(.personalization, "Personalization", systemImage: "smiley")
@@ -112,6 +115,7 @@ struct SettingsView: View {
                         .pickerStyle(.menu)
                         .id(SettingsSection.theme)
                         accentRow
+                        row(.appearance, "Appearance", systemImage: "paintbrush")
                     }
 
                     Section("App settings") {
@@ -119,7 +123,7 @@ struct SettingsView: View {
                             .id(SettingsSection.appSettings)
                         row(.notifications, "Notifications", systemImage: "bell")
                         row(.voice, "Voice", systemImage: "waveform")
-                        row(.parentalControls, "Parental controls", systemImage: "person.2")
+                        row(.privacy, "Privacy", systemImage: "eye.slash")
                         row(.protection, "Protection", systemImage: "lock.shield")
                         row(.security, "Security and login", systemImage: "lock")
                         row(.remoteControl, "Remote control", systemImage: "tv")
@@ -188,6 +192,9 @@ struct SettingsView: View {
             .sheet(isPresented: $showsWhatsNew) {
                 WhatsNewView(notes: ReleaseNotes.current)
             }
+            .sheet(item: $updateToShow) { release in
+                UpdateView(release: release)
+            }
             .confirmationDialog("Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
                 Button("Sign out", role: .destructive) {
                     dismiss()
@@ -250,6 +257,37 @@ struct SettingsView: View {
         }
     }
 
+    /// A newer OCTO found on GitHub.
+    @ViewBuilder
+    private var updateBanner: some View {
+        if let release = app.updates.available {
+            Section {
+                Button {
+                    updateToShow = release
+                } label: {
+                    HStack(spacing: 14) {
+                        Image(systemName: "arrow.down.app.fill")
+                            .font(.title2)
+                            .foregroundStyle(app.settings.accentStyle.link)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Update available")
+                                .font(.body.weight(.semibold))
+                            Text("OCTO \(release.version) is ready to install")
+                                .font(.subheadline)
+                                .foregroundStyle(Theme.secondaryText)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(Theme.tertiaryText)
+                    }
+                    .padding(.vertical, 4)
+                }
+                .foregroundStyle(Theme.primaryText)
+            }
+        }
+    }
+
     /// Accent color, shown like ChatGPT with a dot next to its name.
     @ViewBuilder
     private var accentRow: some View {
@@ -261,7 +299,7 @@ struct SettingsView: View {
                         Label {
                             Text(verbatim: choice.title)
                         } icon: {
-                            if let swatch = choice.swatch {
+                            if let swatch = settings.accentStyle(for: choice).swatch {
                                 Image(uiImage: swatch)
                             }
                         }
@@ -274,7 +312,7 @@ struct SettingsView: View {
             } label: {
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(settings.accent.color ?? Theme.primaryText)
+                        .fill(settings.accentStyle.color ?? Theme.primaryText)
                         .frame(width: 10, height: 10)
                     Text(verbatim: settings.accent.title)
                     Image(systemName: "chevron.up.chevron.down")
@@ -301,10 +339,11 @@ struct SettingsView: View {
         case .plugins: PluginsView()
         case .subscription: SubscriptionView()
         case .ageVerification: AgeVerificationView()
+        case .appearance: AppearanceView()
         case .general: GeneralSettingsView()
         case .notifications: NotificationSettingsView()
         case .voice: VoiceSettingsView()
-        case .parentalControls: ParentalControlsView()
+        case .privacy: PrivacyView()
         case .protection: ProtectionSettingsView()
         case .security: SecuritySettingsView()
         case .remoteControl: RemoteControlView()
@@ -329,7 +368,7 @@ struct SettingsView: View {
     }
 }
 
-/// The plan of the account, when it renews, and the Codex usage limits OCTO counts against.
+/// The plan of the account, when an active subscription renews, and the limits of the account.
 struct SubscriptionView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.openURL) private var openURL
@@ -350,18 +389,28 @@ struct SubscriptionView: View {
                     if let workspace = subscription.workspaceName {
                         LabeledContent("Workspace", value: workspace)
                     }
-                    if let expiresAt = subscription.expiresAt {
-                        LabeledContent {
-                            Text(expiresAt, format: .dateTime.day().month(.wide).year())
-                        } label: {
-                            Text(subscription.willRenew == false ? LocalizedStringKey("Ends on") : LocalizedStringKey("Renews on"))
+                    // ChatGPT keeps the dates of a subscription that ended: they only show while one is active.
+                    if subscription.hasActiveSubscription {
+                        if let renewal = subscription.renewalDate {
+                            LabeledContent {
+                                Text(renewal, format: .dateTime.day().month(.wide).year())
+                            } label: {
+                                Text("Renews on")
+                            }
                         }
-                    }
-                    if let period = subscription.billingPeriod {
-                        LabeledContent("Billing", value: billingTitle(period))
-                    }
-                    if let store = subscription.store {
-                        LabeledContent("Bought on", value: storeTitle(store))
+                        if let end = subscription.endDate {
+                            LabeledContent {
+                                Text(end, format: .dateTime.day().month(.wide).year())
+                            } label: {
+                                Text("Ends on")
+                            }
+                        }
+                        if let period = subscription.billingPeriod {
+                            LabeledContent("Billing", value: billingTitle(period))
+                        }
+                        if let store = subscription.store {
+                            LabeledContent("Bought on", value: storeTitle(store))
+                        }
                     }
                 }
             } footer: {

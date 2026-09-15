@@ -20,11 +20,36 @@ struct ReleaseNotes: Identifiable, Equatable {
 
     /// Notes of the version being shipped. Keep in sync with CHANGELOG.md.
     static var current: ReleaseNotes {
-        ReleaseNotes(version: "1.3.0", changes: [
+        ReleaseNotes(version: "1.4.0", changes: [
             Change(
-                systemImage: "gauge.with.dots.needle.50percent",
-                title: String(localized: "Your ChatGPT limits"),
-                detail: String(localized: "See how many Deep Research, image generations and file uploads your ChatGPT account has left, read live like on the website.")
+                systemImage: "text.line.first.and.arrowtriangle.forward",
+                title: String(localized: "Calmer replies"),
+                detail: String(localized: "Replies now appear word by word, each word fading in. Pick the pace in Appearance.")
+            ),
+            Change(
+                systemImage: "eye.slash",
+                title: String(localized: "Much more private"),
+                detail: String(localized: "Links without trackers, copies that stay on your iPhone, no third-party keyboards, chats hidden during screen recording and more, in Privacy.")
+            ),
+            Change(
+                systemImage: "paintpalette",
+                title: String(localized: "Make it yours"),
+                detail: String(localized: "New accent colors and one of your own, text size, font and code wrapping.")
+            ),
+            Change(
+                systemImage: "mic",
+                title: String(localized: "Dictation by ChatGPT"),
+                detail: String(localized: "Your voice is recorded, then written down by ChatGPT, like in its apps.")
+            ),
+            Change(
+                systemImage: "hand.raised",
+                title: String(localized: "Your real data controls"),
+                detail: String(localized: "Improve the model for everyone shows the setting saved in your account, and turns off from OCTO.")
+            ),
+            Change(
+                systemImage: "arrow.down.app",
+                title: String(localized: "Updates"),
+                detail: String(localized: "OCTO tells you when a new version is out and installs it with AltStore or SideStore.")
             ),
         ])
     }

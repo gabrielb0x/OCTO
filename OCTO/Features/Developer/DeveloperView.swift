@@ -152,6 +152,16 @@ struct DeveloperView: View {
                     UserDefaults.standard.removeObject(forKey: AppModel.modelsCacheKey)
                     app.toasts.show(String(localized: "Model cache cleared"), style: .info)
                 }
+                ActionRow(title: "Check for updates now", systemImage: "arrow.down.app") {
+                    await app.updates.check()
+                    if let error = app.updates.errorMessage {
+                        app.toasts.show(error, style: .failure)
+                    } else if let release = app.updates.available {
+                        app.toasts.show(String(localized: "OCTO \(release.version) is available"), style: .info)
+                    } else {
+                        app.toasts.show(String(localized: "OCTO is up to date"), style: .info)
+                    }
+                }
             }
             .foregroundStyle(Theme.primaryText)
 

@@ -10,8 +10,11 @@ public struct AccountSubscription: Codable, Equatable, Sendable {
 
     public var planType: String?
     public var hasActiveSubscription: Bool
-    /// End of the current period: the renewal date, or the end of access when it won't renew.
+    /// End of the current period. ChatGPT keeps the dates of a subscription after it ended, so
+    /// they only mean something while one is active: see `renewalDate` and `endDate`.
     public var expiresAt: Date?
+    public var renewsAt: Date?
+    public var cancelsAt: Date?
     public var willRenew: Bool?
     /// "monthly" or "yearly".
     public var billingPeriod: String?
@@ -26,6 +29,8 @@ public struct AccountSubscription: Codable, Equatable, Sendable {
         planType: String? = nil,
         hasActiveSubscription: Bool = false,
         expiresAt: Date? = nil,
+        renewsAt: Date? = nil,
+        cancelsAt: Date? = nil,
         willRenew: Bool? = nil,
         billingPeriod: String? = nil,
         purchasePlatform: String? = nil,
@@ -35,11 +40,29 @@ public struct AccountSubscription: Codable, Equatable, Sendable {
         self.planType = planType
         self.hasActiveSubscription = hasActiveSubscription
         self.expiresAt = expiresAt
+        self.renewsAt = renewsAt
+        self.cancelsAt = cancelsAt
         self.willRenew = willRenew
         self.billingPeriod = billingPeriod
         self.purchasePlatform = purchasePlatform
         self.workspaceName = workspaceName
         self.features = features
+    }
+
+    /// When the active subscription renews. Nil without a subscription, or once it was cancelled.
+    public var renewalDate: Date? {
+        guard hasActiveSubscription, !isCancelled else { return nil }
+        return renewsAt ?? expiresAt
+    }
+
+    /// When an active subscription that won't renew stops.
+    public var endDate: Date? {
+        guard hasActiveSubscription, isCancelled else { return nil }
+        return expiresAt ?? cancelsAt
+    }
+
+    private var isCancelled: Bool {
+        willRenew == false || (cancelsAt != nil && renewsAt == nil)
     }
 
     public var store: Store? {
@@ -70,6 +93,8 @@ public struct AccountSubscription: Codable, Equatable, Sendable {
             planType: JSONValue.string(account["plan_type"]),
             hasActiveSubscription: JSONValue.bool(entitlement["has_active_subscription"]) ?? false,
             expiresAt: FlexibleDate.parse(entitlement["expires_at"]),
+            renewsAt: FlexibleDate.parse(entitlement["renews_at"]),
+            cancelsAt: FlexibleDate.parse(entitlement["cancels_at"]),
             willRenew: JSONValue.bool(lastSubscription["will_renew"]),
             billingPeriod: JSONValue.string(entitlement["billing_period"]),
             purchasePlatform: JSONValue.string(lastSubscription["purchase_origin_platform"]),

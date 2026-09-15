@@ -58,13 +58,13 @@
         "en": {
           "stringUnit": {
             "state": "new",
-            "value": "OCTO uses the microphone to dictate your messages."
+            "value": "OCTO uses the microphone for dictation and voice mode."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "OCTO utilise le micro pour dicter tes messages."
+            "value": "OCTO utilise le micro pour la dictée et le mode vocal."
           }
         }
       }

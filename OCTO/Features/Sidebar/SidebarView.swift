@@ -144,6 +144,15 @@ struct SidebarView: View {
                 Image(systemName: "gearshape")
                     .font(.body.weight(.medium))
                     .foregroundStyle(Theme.secondaryText)
+                    .overlay(alignment: .topTrailing) {
+                        // A new version waits in Settings.
+                        if app.updates.available != nil {
+                            Circle()
+                                .fill(Theme.danger)
+                                .frame(width: 8, height: 8)
+                                .offset(x: 3, y: -2)
+                        }
+                    }
             }
             .foregroundStyle(Theme.primaryText)
             .padding(.leading, 8)

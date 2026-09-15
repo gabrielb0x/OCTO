@@ -26,6 +26,9 @@ struct GeneralSettingsView: View {
                 Toggle(isOn: $settings.correctsSpelling) {
                     Label("Correct spelling automatically", systemImage: "textformat.abc.dottedunderline")
                 }
+                Toggle(isOn: $settings.sendsWithReturn) {
+                    Label("Send with Return", systemImage: "return")
+                }
                 Toggle(isOn: $settings.showsSuggestions) {
                     Label("Show suggestions", systemImage: "lightbulb")
                 }
@@ -192,6 +195,22 @@ struct VoiceSettingsView: View {
                 Text("Voice mode")
             } footer: {
                 Text("How long voice mode waits once you stop talking before it sends what you said.")
+            }
+
+            Section {
+                Picker(selection: $settings.transcriptionEngine) {
+                    ForEach(TranscriptionEngine.allCases) { engine in
+                        Text(verbatim: engine.title).tag(engine)
+                    }
+                } label: {
+                    Label("Dictation", systemImage: "mic")
+                }
+            } header: {
+                Text("Dictation")
+            } footer: {
+                Text(settings.transcriptionEngine == .chatGPT
+                    ? LocalizedStringKey("Your recording is sent to ChatGPT, which writes it down like in its apps, then deleted from the device. If ChatGPT can't, the device transcribes it.")
+                    : LocalizedStringKey("Apple's speech recognition writes as you speak, on the device, without sending anything."))
             }
 
             if let voiceName = app.account.settings?.voiceName, !voiceName.isEmpty {

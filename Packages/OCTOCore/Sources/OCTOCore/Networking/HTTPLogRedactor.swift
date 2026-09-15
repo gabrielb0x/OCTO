@@ -39,6 +39,10 @@ public enum HTTPLogRedactor {
     public static func body(_ data: Data?, contentType: String?, limit: Int = 64_000) -> String? {
         guard let data, !data.isEmpty else { return nil }
         let type = contentType?.lowercased() ?? ""
+        if type.hasPrefix("multipart/") {
+            // Uploads, such as dictation recordings, stay out of the log.
+            return "<\(data.count) bytes of form data>"
+        }
         if type.contains("json") || data.first == UInt8(ascii: "{") || data.first == UInt8(ascii: "["),
            let object = try? JSONSerialization.jsonObject(with: data) {
             let cleaned = redactJSON(object)
