@@ -109,7 +109,8 @@ private struct OverlayRoot: View {
             if let toast = app.toasts.current {
                 ToastView(toast: toast)
                     .id(toast.id)
-                    .padding(.top, 6)
+                    // Below the navigation bar, so the toast doesn't cover its title and buttons.
+                    .padding(.top, 56)
                     .transition(.move(edge: .top).combined(with: .opacity).combined(with: .scale(scale: 0.92, anchor: .top)))
             }
         }
@@ -149,7 +150,7 @@ struct ToastView: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 12)
-        .glassEffect(.regular, in: .capsule)
+        .glassEffect(.regular.tint(Theme.background.opacity(0.35)), in: .capsule)
         .padding(.horizontal, 24)
         .accessibilityElement(children: .combine)
     }

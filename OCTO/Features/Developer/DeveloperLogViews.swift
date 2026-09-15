@@ -266,7 +266,11 @@ private extension NetworkEntry {
     }
 
     var sizeLabel: String {
-        ByteCountFormatter.string(fromByteCount: Int64(responseBytes), countStyle: .file)
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        // "0 bytes" rather than "Zero KB".
+        formatter.allowsNonnumericFormatting = false
+        return formatter.string(fromByteCount: Int64(responseBytes))
     }
 
     var durationLabel: String? {

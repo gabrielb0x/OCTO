@@ -98,7 +98,7 @@ enum DemoContent {
     }
 
     static func settingsSection(for scene: DemoScene?) -> SettingsSection? {
-        scene == .settingsApp ? .appSettings : nil
+        scene == .settingsApp ? .theme : nil
     }
 
     /// What a scene does once the main screen is up.

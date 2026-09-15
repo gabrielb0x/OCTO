@@ -28,6 +28,7 @@ enum SettingsRoute: Hashable {
 
 /// Parts of the settings sheet a screenshot can scroll to.
 enum SettingsSection: String, Hashable {
+    case theme
     case appSettings
     case help
 }
@@ -58,7 +59,7 @@ struct SettingsView: View {
                     accountStatus
 
                     Section("Customize ChatGPT") {
-                        row(.personalization, "Personalization", systemImage: "face.smiling")
+                        row(.personalization, "Personalization", systemImage: "smiley")
                         row(.memory, "Memory", systemImage: "book")
                         row(.plugins, "Plugins", systemImage: "at")
                     }
@@ -109,6 +110,7 @@ struct SettingsView: View {
                             Label("Theme", systemImage: "moon")
                         }
                         .pickerStyle(.menu)
+                        .id(SettingsSection.theme)
                         accentRow
                     }
 
@@ -117,10 +119,10 @@ struct SettingsView: View {
                             .id(SettingsSection.appSettings)
                         row(.notifications, "Notifications", systemImage: "bell")
                         row(.voice, "Voice", systemImage: "waveform")
-                        row(.parentalControls, "Parental controls", systemImage: "figure.and.child.holdinghands")
+                        row(.parentalControls, "Parental controls", systemImage: "person.2")
                         row(.protection, "Protection", systemImage: "lock.shield")
                         row(.security, "Security and login", systemImage: "lock")
-                        row(.remoteControl, "Remote control", systemImage: "display")
+                        row(.remoteControl, "Remote control", systemImage: "tv")
                         row(.storage, "Storage", systemImage: "externaldrive")
                         row(.dataControls, "Data controls", systemImage: "hand.raised")
                         row(.ads, "Ads management", systemImage: "megaphone")

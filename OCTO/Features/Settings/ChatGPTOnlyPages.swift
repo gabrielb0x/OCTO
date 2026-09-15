@@ -29,7 +29,7 @@ struct ParentalControlsView: View {
     var body: some View {
         ChatGPTOnlyPage(
             title: "Parental controls",
-            systemImage: "figure.and.child.holdinghands",
+            systemImage: "person.2",
             summary: "Parents can link their account to a teen's account to adjust how ChatGPT works for them.",
             details: "Parental controls are set up and managed in ChatGPT. OCTO doesn't change them."
         )
@@ -40,7 +40,7 @@ struct RemoteControlView: View {
     var body: some View {
         ChatGPTOnlyPage(
             title: "Remote control",
-            systemImage: "display",
+            systemImage: "tv",
             summary: "Remote control lets the ChatGPT apps work with your other devices.",
             details: "It's only available in the official ChatGPT apps. OCTO doesn't connect to your other devices."
         )
