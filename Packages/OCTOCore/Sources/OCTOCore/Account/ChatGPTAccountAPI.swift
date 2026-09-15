@@ -16,6 +16,22 @@ public enum ChatGPTAccountAPI {
     public static var memoriesURL: URL { url("memories", query: [("include_memory_entries", "true")]) }
     public static var accountCheckURL: URL { url("accounts/check/v4-2023-04-27") }
 
+    /// `POST /conversation/init`: the call the website makes when opening a new chat. Returns the
+    /// account's live feature limits (Deep Research, image generation, file uploads…) and default model.
+    public static var conversationInitURL: URL { url("conversation/init") }
+
+    /// Body of `POST /conversation/init`, as the website sends it: no conversation, just the timezone.
+    public static func conversationInitBody(timezone: String, offsetMinutes: Int) -> Data {
+        let object: [String: Any] = [
+            "conversation_id": NSNull(),
+            "conversation_origin": NSNull(),
+            "requested_default_model": NSNull(),
+            "timezone": timezone,
+            "timezone_offset_min": offsetMinutes,
+        ]
+        return (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data("{}".utf8)
+    }
+
     /// A `backend-api` address typed in the developer console: a relative path with an optional
     /// query. Nil for anything that could point outside `chatgpt.com/backend-api`.
     public static func consoleURL(path input: String) -> URL? {

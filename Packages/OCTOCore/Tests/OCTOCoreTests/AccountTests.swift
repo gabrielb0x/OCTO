@@ -75,6 +75,42 @@ import Testing
         #expect(JSONValue.string(traits["emoji"]) == "default")
     }
 
+    @Test func parsesFeatureLimitsFromConversationInit() throws {
+        let json = #"""
+        {"type":"conversation_detail_metadata","banner_info":null,
+         "blocked_features":[{"name":"file_upload","resets_after":"2026-09-16T07:46:12.855760+00:00","description":"You've hit your file limit."}],
+         "model_limits":[{"model_slug":"gpt-5-6","using_default_model_slug":"gpt-5-6","resets_after":"2026-09-15T17:18:03.131140+00:00"}],
+         "limits_progress":[
+           {"feature_name":"deep_research","remaining":5,"reset_after":"2026-10-15T16:42:07.853427+00:00"},
+           {"feature_name":"file_upload","remaining":0,"reset_after":"2026-09-16T07:46:12.853615+00:00"},
+           {"feature_name":"image_gen","remaining":3,"reset_after":"2026-09-16T16:42:07.853628+00:00"}
+         ],
+         "default_model_slug":"auto","file_attachment_limits":{"max_size_mb":512}}
+        """#
+        let limits = try #require(FeatureLimits.parse(Data(json.utf8)))
+        #expect(limits.defaultModelSlug == "auto")
+        #expect(limits.maxAttachmentMB == 512)
+        #expect(limits.features.map(\.feature) == ["deep_research", "file_upload", "image_gen"])
+
+        let research = try #require(limits.features.first)
+        #expect(research.remaining == 5)
+        #expect(research.isBlocked == false)
+        #expect(research.resetsAt != nil)
+
+        let fileUpload = limits.features[1]
+        #expect(fileUpload.remaining == 0)
+        #expect(fileUpload.isBlocked)
+        #expect(fileUpload.message == "You've hit your file limit.")
+
+        #expect(FeatureLimits.parse(Data(#"{"foo":1}"#.utf8)) == nil)
+
+        let body = try #require(JSONValue.object(ChatGPTAccountAPI.conversationInitBody(timezone: "Europe/Paris", offsetMinutes: -120)))
+        #expect(body["timezone"] as? String == "Europe/Paris")
+        #expect(JSONValue.int(body["timezone_offset_min"]) == -120)
+        #expect(body["conversation_id"] is NSNull)
+        #expect(ChatGPTAccountAPI.conversationInitURL.absoluteString == "https://chatgpt.com/backend-api/conversation/init")
+    }
+
     @Test func parsesPersonalityCatalogAndMemories() throws {
         let types = try #require(PersonalityCatalog.parseTypes(Data(#"[{"key":"default","label":"Default","description":"Preset style and tone","deprecated":false},{"key":"old","label":"Old","deprecated":true},{"key":"cynic","label":"Cynical","description":"Critical and sarcastic"}]"#.utf8)))
         #expect(types.map(\.key) == ["default", "cynic"])

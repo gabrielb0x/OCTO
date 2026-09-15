@@ -5246,6 +5246,118 @@
           }
         }
       }
+    },
+    "Feature limits": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limites par fonctionnalité"
+          }
+        }
+      }
+    },
+    "The limits of your ChatGPT account, read live like on the website. These features run in ChatGPT.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les limites de ton compte ChatGPT, lues en direct comme sur le site. Ces fonctionnalités s'utilisent dans ChatGPT."
+          }
+        }
+      }
+    },
+    "Limit reached": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limite atteinte"
+          }
+        }
+      }
+    },
+    "%lld left": {
+      "localizations": {
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld restant"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld restants"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Image generation": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Génération d'images"
+          }
+        }
+      }
+    },
+    "File uploads": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoi de fichiers"
+          }
+        }
+      }
+    },
+    "Paste as file": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coller en fichier"
+          }
+        }
+      }
+    },
+    "Extended thinking": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réflexion avancée"
+          }
+        }
+      }
+    },
+    "Your ChatGPT limits": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tes limites ChatGPT"
+          }
+        }
+      }
+    },
+    "See how many Deep Research, image generations and file uploads your ChatGPT account has left, read live like on the website.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vois combien de Deep Research, de générations d'images et d'envois de fichiers il te reste sur ton compte ChatGPT, lus en direct comme sur le site."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

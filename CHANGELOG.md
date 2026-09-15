@@ -2,6 +2,16 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [1.3.0] – 2026-09-15
+
+### Ajouté
+
+- **Tes limites d'utilisation ChatGPT, lues en direct depuis ton compte** : OCTO appelle `conversation/init` sur `chatgpt.com/backend-api`, exactement comme le site quand il ouvre un nouveau chat, et affiche dans Abonnement combien de **Deep Research**, de **générations d'images**, d'**envois de fichiers** et de **réflexion avancée** il te reste, avec la date de réinitialisation de chaque limite.
+
+### Précisions
+
+- Ces fonctionnalités (Deep Research, images, fichiers…) tournent sur les serveurs de ChatGPT : OCTO montre seulement ce qu'il te reste, comme sur le site. Les réponses aux messages écrits dans OCTO passent toujours par le backend Codex de ton forfait et restent sur l'appareil. Poster un message dans un chat de `chatgpt.com` (`/f/conversation`) demande une preuve de travail « sentinel » et un défi Cloudflare Turnstile que seule la page web officielle sait produire ; ce n'est donc pas fait, et rien n'est envoyé à un service d'analyse.
+
 ## [1.2.0] – 2026-09-15
 
 ### Ajouté

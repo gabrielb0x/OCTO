@@ -368,6 +368,18 @@ struct SubscriptionView: View {
                 Text("Subscriptions are managed in ChatGPT.")
             }
 
+            if let limits = app.account.featureLimits, !limits.isEmpty {
+                Section {
+                    ForEach(limits.features) { limit in
+                        FeatureLimitRow(limit: limit)
+                    }
+                } header: {
+                    Text("Feature limits")
+                } footer: {
+                    Text("The limits of your ChatGPT account, read live like on the website. These features run in ChatGPT.")
+                }
+            }
+
             Section {
                 if let usage = app.usage {
                     if let primary = usage.primary {
@@ -415,6 +427,8 @@ struct SubscriptionView: View {
         }
         .task {
             await app.refreshUsage()
+            // Pulls the account's feature limits (conversation/init) when they haven't refreshed recently.
+            await app.account.refresh(ifOlderThan: 60)
         }
     }
 
@@ -454,6 +468,64 @@ struct SubscriptionView: View {
             return String(localized: "\(hours / 24)-day limit")
         }
         return String(localized: "\(max(hours, 1))-hour limit")
+    }
+}
+
+/// One feature of the ChatGPT account with how many uses are left, like ChatGPT shows.
+struct FeatureLimitRow: View {
+    let limit: FeatureLimit
+
+    var body: some View {
+        LabeledContent {
+            if limit.isBlocked || limit.remaining == 0 {
+                Text("Limit reached")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Theme.warning)
+            } else if let remaining = limit.remaining {
+                Text("\(remaining) left")
+                    .font(.subheadline.weight(.medium))
+                    .monospacedDigit()
+                    .foregroundStyle(Theme.secondaryText)
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 2) {
+                Label {
+                    Text(verbatim: FeatureLimitLabel.title(limit.feature))
+                } icon: {
+                    Image(systemName: FeatureLimitLabel.systemImage(limit.feature))
+                }
+                if let resetsAt = limit.resetsAt {
+                    Text("Resets \(resetsAt, style: .relative)")
+                        .font(.caption)
+                        .foregroundStyle(Theme.tertiaryText)
+                }
+            }
+        }
+    }
+}
+
+/// Names and icons for the ChatGPT feature keys returned by `conversation/init`.
+enum FeatureLimitLabel {
+    static func title(_ feature: String) -> String {
+        switch feature {
+        case "deep_research": return "Deep Research"
+        case "image_gen": return String(localized: "Image generation")
+        case "file_upload": return String(localized: "File uploads")
+        case "paste_text_to_file": return String(localized: "Paste as file")
+        case "reason": return String(localized: "Extended thinking")
+        default: return feature.replacingOccurrences(of: "_", with: " ").capitalized
+        }
+    }
+
+    static func systemImage(_ feature: String) -> String {
+        switch feature {
+        case "deep_research": return "text.magnifyingglass"
+        case "image_gen": return "photo"
+        case "file_upload": return "paperclip"
+        case "paste_text_to_file": return "doc.on.clipboard"
+        case "reason": return "brain"
+        default: return "gauge.with.dots.needle.50percent"
+        }
     }
 }
 

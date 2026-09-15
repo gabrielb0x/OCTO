@@ -22,6 +22,8 @@
 | <img src="docs/screenshots/settings.png" width="250" alt="Réglages"> | <img src="docs/screenshots/settingsApp.png" width="250" alt="Paramètres de l'application"> | <img src="docs/screenshots/about.png" width="250" alt="À propos"> |
 | **Forfait Free** | **Thème clair** | **Nouveautés** |
 | <img src="docs/screenshots/freePlan.png" width="250" alt="Nouveau chat sans sélecteur de modèle"> | <img src="docs/screenshots/lightChat.png" width="250" alt="Conversation en thème clair avec accent bleu"> | <img src="docs/screenshots/whatsNew.png" width="250" alt="Écran des nouveautés"> |
+| **Abonnement** | | |
+| <img src="docs/screenshots/subscription.png" width="250" alt="Abonnement avec les limites d'utilisation du compte"> | | |
 | **Mode développeur** | **Inspecteur réseau** | **Détails des messages** |
 | <img src="docs/screenshots/developer.png" width="250" alt="Mode développeur"> | <img src="docs/screenshots/network.png" width="250" alt="Inspecteur réseau"> | <img src="docs/screenshots/messageDetails.png" width="250" alt="Détails techniques sous les messages"> |
 
@@ -40,6 +42,7 @@ Ces captures sont prises automatiquement sur un simulateur iPhone 17 Pro par le 
 - **Protection** : verrouillage par Face ID et contenu masqué dans le sélecteur d'apps.
 - **Notifications** quand une réponse se termine alors qu'OCTO est en arrière-plan.
 - **Résumé de la réflexion**, **recherche web** avec sources, **pièces jointes** (photos, appareil photo, fichiers texte), **dictée** et **lecture à voix haute**.
+- **Limites d'utilisation lues en direct depuis ton compte** : comme sur le site (`conversation/init`), l'écran Abonnement montre ce qu'il te reste de Deep Research, de générations d'images, d'envois de fichiers et de réflexion avancée, avec leur date de réinitialisation.
 - **Chats temporaires** qui ne laissent aucune trace, et suivi des **limites d'utilisation** de ton forfait.
 - **Mode développeur** complet (voir plus bas) et **écran « Nouveautés »** après chaque mise à jour (voir le [CHANGELOG](CHANGELOG.md)).
 - Interface en français et en anglais.

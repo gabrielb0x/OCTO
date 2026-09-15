@@ -230,6 +230,13 @@ final class AppModel {
         }
     }
 
+    #if OCTO_DEMO
+    /// Screenshot builds show usage without touching the network.
+    func useDemoUsage(_ snapshot: UsageSnapshot?) {
+        usage = snapshot
+    }
+    #endif
+
     func didSignIn() async {
         models = Self.cachedModels()
         DevLog.log("auth", "Signed in (\(auth.signInMethod?.rawValue ?? "unknown"))")

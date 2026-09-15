@@ -95,6 +95,21 @@ final class AccountService: Sendable {
         try await fetch(ChatGPTAccountAPI.trainingPreferenceURL, parse: TrainingPreference.parse)
     }
 
+    /// The account's live feature limits, read from `POST /conversation/init` like the website does.
+    func featureLimits() async throws -> FeatureLimits {
+        let timezone = TimeZone.current
+        let body = ChatGPTAccountAPI.conversationInitBody(
+            timezone: timezone.identifier,
+            offsetMinutes: -timezone.secondsFromGMT() / 60
+        )
+        let data = try await send(ChatGPTAccountAPI.conversationInitURL, method: "POST", body: body)
+        guard let value = FeatureLimits.parse(data) else {
+            DevLog.log("account", "Unexpected response from conversation/init", level: .warning)
+            throw AccountAPIError.invalidResponse
+        }
+        return value
+    }
+
     // MARK: Chats
 
     func conversations(offset: Int, limit: Int, archived: Bool = false) async throws -> RemoteConversationPage {

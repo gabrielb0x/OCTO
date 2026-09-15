@@ -11,6 +11,7 @@ enum DemoScene: String, CaseIterable {
     case voice
     case settings
     case settingsApp
+    case subscription
     case about
     case developer
     case network
@@ -43,7 +44,8 @@ enum DemoContent {
             app.auth.useDemoAccount(nil)
             return
         }
-        let planType = scene == .freePlan ? "free" : "plus"
+        // The subscription scene shows the free plan, where the feature limits are the interesting part.
+        let planType = scene == .freePlan || scene == .subscription ? "free" : "plus"
         app.auth.useDemoAccount(Account(email: "gabriel@example.com", planType: planType, userID: "user-demo"))
         app.account.useDemo(AccountSnapshot(
             profile: AccountProfile(userID: "user-demo", name: "Gabriel", email: "gabriel@example.com", phoneNumber: "+33 6 00 00 00 00", mfaEnabled: true),
@@ -69,8 +71,21 @@ enum DemoContent {
                 willRenew: planType != "free",
                 billingPeriod: planType == "free" ? nil : "monthly",
                 purchasePlatform: planType == "free" ? nil : "chatgpt_web"
+            ),
+            featureLimits: FeatureLimits(
+                defaultModelSlug: "auto",
+                features: [
+                    FeatureLimit(feature: "deep_research", remaining: 5, resetsAt: Date().addingTimeInterval(30 * 86_400)),
+                    FeatureLimit(feature: "image_gen", remaining: 3, resetsAt: Date().addingTimeInterval(86_400)),
+                    FeatureLimit(feature: "file_upload", remaining: 2, resetsAt: Date().addingTimeInterval(86_400)),
+                    FeatureLimit(feature: "reason", remaining: 0, resetsAt: Date().addingTimeInterval(6 * 3_600), isBlocked: true),
+                ],
+                maxAttachmentMB: 512
             )
         ))
+        if scene == .subscription {
+            app.useDemoUsage(UsageSnapshot.parse(Data(demoUsageJSON.utf8)))
+        }
         app.store.useDemoProjects([
             ChatProject(id: projectID, name: localized("School", "Cours"), iconName: "graduation-cap", colorHex: "#0285FF"),
         ])
@@ -90,6 +105,7 @@ enum DemoContent {
     /// Pages the settings sheet opens on in a scene.
     static func settingsPath(for scene: DemoScene?) -> [SettingsRoute] {
         switch scene {
+        case .subscription?: return [.subscription]
         case .about?: return [.about]
         case .developer?: return [.developer]
         case .network?: return [.developer, .developerNetwork]
@@ -107,7 +123,7 @@ enum DemoContent {
         case .sidebar?:
             try? await Task.sleep(for: .milliseconds(500))
             openSidebar()
-        case .settings?, .settingsApp?, .about?, .developer?, .network?:
+        case .settings?, .settingsApp?, .subscription?, .about?, .developer?, .network?:
             try? await Task.sleep(for: .milliseconds(500))
             openSettings()
         case .deleteToast?:
@@ -261,6 +277,11 @@ enum DemoContent {
             ),
         ]
     }
+
+    /// A free-plan `wham/usage` payload, so the subscription scene shows a real-looking usage bar.
+    private static let demoUsageJSON = #"""
+    {"plan_type":"free","rate_limit":{"allowed":true,"limit_reached":false,"primary_window":{"used_percent":18,"limit_window_seconds":2592000,"reset_after_seconds":1728000},"secondary_window":null},"credits":{"has_credits":false,"unlimited":false,"balance":null}}
+    """#
 
     private static let featuredAnswerFrench = #"""
     Avec **async/await**, une requête réseau tient en quelques lignes grâce à `URLSession` :

@@ -14,6 +14,7 @@ struct AccountSnapshot: Codable {
     var trainingAllowed: Bool?
     var avatarURL: URL?
     var subscription: AccountSubscription?
+    var featureLimits: FeatureLimits?
 }
 
 /// The account snapshot and profile picture, in Application Support.
@@ -82,6 +83,8 @@ final class AccountStore {
     private(set) var traits: [PersonalityTrait] = []
     private(set) var memories: MemoriesSnapshot?
     private(set) var trainingAllowed: Bool?
+    /// Live usage limits of the ChatGPT account (Deep Research, image generation, file uploads…).
+    private(set) var featureLimits: FeatureLimits?
     private(set) var state: LoadState = .idle
     private(set) var lastRefresh: Date?
 
@@ -138,6 +141,7 @@ final class AccountStore {
         async let traitsResult = capture { try await service.personalityTraits() }
         async let memoriesResult = capture { try await service.memories() }
         async let trainingResult = capture { try await service.trainingPreference() }
+        async let featureLimitsResult = capture { try await service.featureLimits() }
 
         let profileOutcome = await profileResult
         let settingsOutcome = await settingsResult
@@ -147,6 +151,7 @@ final class AccountStore {
         let traitsOutcome = await traitsResult
         let memoriesOutcome = await memoriesResult
         let trainingOutcome = await trainingResult
+        let featureLimitsOutcome = await featureLimitsResult
         guard generation == self.generation else { return }
 
         if case .success(let value) = profileOutcome { profile = value }
@@ -157,6 +162,7 @@ final class AccountStore {
         if case .success(let value) = traitsOutcome { traits = value }
         if case .success(let value) = memoriesOutcome { memories = value }
         if case .success(let value) = trainingOutcome { trainingAllowed = value }
+        if case .success(let value) = featureLimitsOutcome { featureLimits = value }
 
         let failures: [(String, Error?)] = [
             ("profile", profileOutcome.failure),
@@ -167,6 +173,7 @@ final class AccountStore {
             ("traits", traitsOutcome.failure),
             ("memories", memoriesOutcome.failure),
             ("training", trainingOutcome.failure),
+            ("featureLimits", featureLimitsOutcome.failure),
         ]
         for case let (name, error?) in failures {
             DevLog.log("account", "\(name) failed: \(DevLog.describe(error))", level: error.isCancellation ? .debug : .warning)
@@ -203,6 +210,7 @@ final class AccountStore {
         traits = []
         memories = nil
         trainingAllowed = nil
+        featureLimits = nil
         avatarURL = nil
         lastRefresh = nil
         state = .idle
@@ -250,6 +258,7 @@ final class AccountStore {
         traits = snapshot.traits ?? []
         memories = snapshot.memories
         trainingAllowed = snapshot.trainingAllowed
+        featureLimits = snapshot.featureLimits
         avatarURL = snapshot.avatarURL
     }
 
@@ -263,7 +272,8 @@ final class AccountStore {
             memories: memories,
             trainingAllowed: trainingAllowed,
             avatarURL: avatarURL,
-            subscription: subscription
+            subscription: subscription,
+            featureLimits: featureLimits
         ))
     }
 }
