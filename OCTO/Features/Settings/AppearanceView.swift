@@ -17,21 +17,12 @@ struct AppearanceView: View {
             }
 
             Section {
-                Picker(selection: $settings.accent) {
-                    ForEach(AccentChoice.allCases) { choice in
-                        Label {
-                            Text(verbatim: choice.title)
-                        } icon: {
-                            if let swatch = settings.accentStyle(for: choice).swatch {
-                                Image(uiImage: swatch)
-                            }
-                        }
-                        .tag(choice)
-                    }
+                LabeledContent {
+                    Text(verbatim: settings.accent.title)
                 } label: {
                     Label("Accent color", systemImage: "paintpalette")
                 }
-                .pickerStyle(.navigationLink)
+                AccentSwatches()
                 if settings.accent == .custom {
                     ColorPicker(selection: customColor, supportsOpacity: false) {
                         Label("Your color", systemImage: "eyedropper")
@@ -94,6 +85,58 @@ struct AppearanceView: View {
             get: { Color(uiColor: UIColor(hex: app.settings.customAccentHex) ?? .systemPurple) },
             set: { app.settings.customAccentHex = UIColor($0).hexString }
         )
+    }
+}
+
+/// The accent colors as a palette of swatches; the last one is a color of your own.
+private struct AccentSwatches: View {
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 44, maximum: 60), spacing: 12)], spacing: 14) {
+            ForEach(AccentChoice.allCases) { choice in
+                let isSelected = app.settings.accent == choice
+                Button {
+                    app.settings.accent = choice
+                } label: {
+                    swatch(for: choice)
+                        .frame(width: 40, height: 40)
+                        .overlay {
+                            if isSelected {
+                                Circle()
+                                    .strokeBorder(Theme.primaryText, lineWidth: 2.5)
+                                    .padding(-5)
+                            }
+                        }
+                        .frame(width: 50, height: 50)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(verbatim: choice.title))
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+            }
+        }
+        .padding(.vertical, 8)
+        .sensoryFeedback(.selection, trigger: app.settings.accent) { _, _ in
+            app.settings.hapticsEnabled
+        }
+    }
+
+    @ViewBuilder
+    private func swatch(for choice: AccentChoice) -> some View {
+        switch choice {
+        case .default:
+            // The monochrome look: white on dark, black on light.
+            Circle()
+                .fill(Theme.prominentFill)
+                .overlay(Circle().strokeBorder(Theme.separator))
+        case .custom:
+            Circle()
+                .fill(AngularGradient(colors: [.red, .orange, .yellow, .green, .mint, .blue, .purple, .pink, .red], center: .center))
+        default:
+            Circle()
+                .fill(app.settings.accentStyle(for: choice).color ?? Theme.prominentFill)
+        }
     }
 }
 
