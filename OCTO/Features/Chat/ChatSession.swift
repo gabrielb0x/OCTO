@@ -70,8 +70,9 @@ final class ChatSession: Identifiable {
         app?.model(for: conversation.modelID) ?? ModelCatalog.chatGPTFallback[0]
     }
 
+    /// Without a subscription there's no choice: the model's own thinking level is used.
     var reasoningEffort: String? {
-        model.resolvedEffort(preferred: conversation.reasoningEffort)
+        model.resolvedEffort(preferred: app?.allowsModelChoice == false ? nil : conversation.reasoningEffort)
     }
 
     /// First message written in OCTO after the account copy of the chat.
@@ -119,7 +120,9 @@ final class ChatSession: Identifiable {
             downloaded.webSearchEnabled = conversation.webSearchEnabled
             conversation = downloaded
         } catch {
-            accountLoad = .failed(Self.describe(error))
+            DevLog.log("chats", "Downloading \(conversation.remoteID ?? "?") failed: \(DevLog.describe(error))", level: error.isCancellation ? .debug : .error)
+            // Leaving the chat cancels the download: it simply starts again next time.
+            accountLoad = error.isCancellation ? .idle : .failed(Self.describe(error))
         }
     }
 
@@ -275,7 +278,7 @@ final class ChatSession: Identifiable {
         let history = conversation.messages
         let assistant = ChatMessage(role: .assistant, modelID: model.id, status: .streaming)
         conversation.messages.append(assistant)
-        let reply = LiveReply(messageID: assistant.id)
+        let reply = LiveReply(messageID: assistant.id, paced: !(app.developer.isEnabled && app.developer.disablesTextPacing))
         live = reply
         activity = .waiting
         persist()
@@ -283,11 +286,12 @@ final class ChatSession: Identifiable {
 
         let store = app.store
         let backend = app.backend
-        let effort = model.resolvedEffort(preferred: conversation.reasoningEffort)
+        let effort = model.resolvedEffort(preferred: app.allowsModelChoice ? conversation.reasoningEffort : nil)
         let instructions = SystemPrompt.make(personal: app.account.personalContext, spokenReplies: isVoiceConversation)
         let webSearch = conversation.webSearchEnabled && model.supportsWebSearch
         let summaries = app.settings.showReasoning && model.supportsReasoningSummaries
         let cacheKey = conversation.id.uuidString
+        DevLog.log("reply", "Started with \(model.id), thinking \(effort ?? "none"), web search \(webSearch ? "on" : "off"), \(history.count) messages")
 
         streamTask = Task { [weak self] in
             let input = await Task.detached(priority: .userInitiated) {
@@ -379,7 +383,17 @@ final class ChatSession: Identifiable {
         activity = .idle
         streamTask = nil
         needsSignIn = (error as? ChatBackendError)?.requiresSignIn == true || (error as? AuthError) == .sessionExpired || (error as? AuthError) == .notSignedIn
-        app?.sessionStoppedStreaming(self)
+        app?.sessionStoppedStreaming(self, reply: reply.receivedText, failed: status == .failed)
+
+        var summary = "Finished \(status.rawValue), \(reply.receivedText.count) characters"
+        if let usage = reply.usage {
+            summary += ", tokens in \(usage.inputTokens) (cached \(usage.cachedInputTokens)), out \(usage.outputTokens), reasoning \(usage.reasoningTokens)"
+        }
+        if let error {
+            summary += ": \(DevLog.describe(error))"
+        }
+        DevLog.log("reply", summary, level: status == .failed ? .error : .info)
+
         persist()
         if status == .complete {
             completedCount += 1

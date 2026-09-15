@@ -103,11 +103,34 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v7
+
       - uses: actions/download-artifact@v7
         with:
           name: OCTO-unsigned-ipa
+          path: dist
+
+      - name: Prepare release notes and IPA
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          python3 - "$version" <<'PY'
+          import re
+          import sys
+
+          version = sys.argv[1]
+          changelog = open("CHANGELOG.md", encoding="utf-8").read()
+          section = re.search(r"^## \[" + re.escape(version) + r"\][^\n]*\n(.*?)(?=^## \[|\Z)", changelog, re.S | re.M)
+          notes = section.group(1).strip() if section else f"OCTO {version}"
+          notes += "\n\n---\n\nIPA non signé pour iOS 26 : installe-le avec AltStore, SideStore ou Sideloadly."
+          with open("release-notes.md", "w", encoding="utf-8") as output:
+              output.write(notes + "\n")
+          PY
+          mv dist/OCTO-unsigned.ipa "dist/OCTO-${version}.ipa"
+          ls -l dist
 
       - uses: softprops/action-gh-release@v3
         with:
-          files: OCTO-unsigned.ipa
-          generate_release_notes: true
+          name: OCTO ${{ github.ref_name }}
+          body_path: release-notes.md
+          files: dist/OCTO-*.ipa
+          fail_on_unmatched_files: true

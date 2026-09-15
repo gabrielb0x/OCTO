@@ -172,7 +172,10 @@ final class SpeechPlayer {
         }
     }
 
-    func toggle(messageID: UUID, markdown: String, rate: Double) {
+    /// Identifies the sample read from the Voice settings.
+    static let sampleID = UUID(uuidString: "0C70C0DE-5A3E-4000-8000-000000000000")!
+
+    func toggle(messageID: UUID, markdown: String, rate: Double, voiceIdentifier: String? = nil) {
         if speakingMessageID == messageID {
             stop()
             return
@@ -180,16 +183,32 @@ final class SpeechPlayer {
         stop()
         let text = MarkdownPlainText.strip(markdown)
         guard !text.isEmpty else { return }
+        speak(text, id: messageID, rate: rate, voiceIdentifier: voiceIdentifier)
+    }
 
+    /// Reads a sentence aloud to try a voice.
+    func speakSample(_ text: String, rate: Double, voiceIdentifier: String?) {
+        stop()
+        speak(text, id: Self.sampleID, rate: rate, voiceIdentifier: voiceIdentifier)
+    }
+
+    /// The chosen voice, else a voice matching the language of the text.
+    static func voice(identifier: String?, for text: String) -> AVSpeechSynthesisVoice? {
+        if let identifier, let voice = AVSpeechSynthesisVoice(identifier: identifier) {
+            return voice
+        }
+        guard let language = NLLanguageRecognizer.dominantLanguage(for: text)?.rawValue else { return nil }
+        return AVSpeechSynthesisVoice(language: language)
+    }
+
+    private func speak(_ text: String, id: UUID, rate: Double, voiceIdentifier: String?) {
         let utterance = AVSpeechUtterance(string: text)
         utterance.rate = Float(min(max(rate, 0.3), 0.65))
-        if let language = NLLanguageRecognizer.dominantLanguage(for: text)?.rawValue {
-            utterance.voice = AVSpeechSynthesisVoice(language: language)
-        }
+        utterance.voice = Self.voice(identifier: voiceIdentifier, for: text)
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: .duckOthers)
         try? AVAudioSession.sharedInstance().setActive(true)
         currentUtterance = ObjectIdentifier(utterance)
-        speakingMessageID = messageID
+        speakingMessageID = id
         synthesizer.speak(utterance)
     }
 

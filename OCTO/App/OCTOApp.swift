@@ -8,13 +8,13 @@ struct OCTOApp: App {
         WindowGroup {
             RootView()
                 .environment(app)
-                .preferredColorScheme(.dark)
         }
     }
 }
 
 struct RootView: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         @Bindable var app = app
@@ -31,8 +31,27 @@ struct RootView: View {
             }
         }
         .animation(.smooth(duration: 0.35), value: app.auth.state)
+        .preferredColorScheme(app.settings.theme.colorScheme)
         .sheet(item: $app.whatsNew) { notes in
             WhatsNewView(notes: notes)
+        }
+        .onAppear {
+            app.overlays.install(app: app)
+            app.settings.theme.apply()
+        }
+        .onChange(of: app.settings.theme) { _, theme in
+            // Also reverts to the system appearance, which preferredColorScheme alone doesn't do.
+            theme.apply()
+        }
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            app.protection.scenePhaseChanged(to: phase)
+            if phase == .active {
+                Task { await app.notifications.refreshAuthorization() }
+            }
+        }
+        .onChange(of: app.protection.showsCover, initial: true) { _, isVisible in
+            app.overlays.install(app: app)
+            app.overlays.setCoverVisible(isVisible)
         }
         .task {
             #if OCTO_DEMO

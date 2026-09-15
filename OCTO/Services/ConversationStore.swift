@@ -22,8 +22,22 @@ struct ChatProject: Codable, Equatable, Identifiable, Sendable {
     var colorHex: String?
 }
 
+/// Space used by OCTO on the device.
+struct StorageUsage: Equatable, Sendable {
+    var chatsBytes: Int64 = 0
+    var chatFiles = 0
+    var attachmentsBytes: Int64 = 0
+    var attachmentFiles = 0
+    var accountBytes: Int64 = 0
+
+    var totalBytes: Int64 {
+        chatsBytes + attachmentsBytes + accountBytes
+    }
+}
+
 /// JSON files in Application Support. Writes happen on a serial background queue.
 final class ConversationFiles: @unchecked Sendable {
+    let rootDirectory: URL
     let conversationsDirectory: URL
     let attachmentsDirectory: URL
     private let queue = DispatchQueue(label: "com.gabrielb0x.octo.storage", qos: .utility)
@@ -36,13 +50,14 @@ final class ConversationFiles: @unchecked Sendable {
         if startEmpty {
             try? fileManager.removeItem(at: root)
         }
+        rootDirectory = root
         conversationsDirectory = root.appendingPathComponent("Conversations", isDirectory: true)
         attachmentsDirectory = root.appendingPathComponent("Attachments", isDirectory: true)
         try? fileManager.createDirectory(at: conversationsDirectory, withIntermediateDirectories: true)
         try? fileManager.createDirectory(at: attachmentsDirectory, withIntermediateDirectories: true)
     }
 
-    private var indexURL: URL {
+    var indexURL: URL {
         conversationsDirectory.appendingPathComponent("index.json")
     }
 
@@ -119,6 +134,15 @@ final class ConversationFiles: @unchecked Sendable {
         }
     }
 
+    /// Removes the message files of chats that stay listed in the index.
+    func deleteConversationFiles(_ ids: [UUID]) {
+        queue.async { [self] in
+            for id in ids {
+                try? FileManager.default.removeItem(at: fileURL(for: id))
+            }
+        }
+    }
+
     func deleteEverything() {
         queue.async { [self] in
             for directory in [conversationsDirectory, attachmentsDirectory] {
@@ -144,6 +168,20 @@ final class ConversationFiles: @unchecked Sendable {
     func flush() {
         queue.sync {}
     }
+
+    /// Size on disk and number of files inside a folder.
+    static func directorySize(_ url: URL) -> (bytes: Int64, files: Int) {
+        let keys: [URLResourceKey] = [.totalFileAllocatedSizeKey, .isRegularFileKey]
+        guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: keys) else { return (0, 0) }
+        var bytes: Int64 = 0
+        var files = 0
+        for case let fileURL as URL in enumerator {
+            guard let values = try? fileURL.resourceValues(forKeys: Set(keys)), values.isRegularFile == true else { continue }
+            bytes += Int64(values.totalFileAllocatedSize ?? 0)
+            files += 1
+        }
+        return (bytes, files)
+    }
 }
 
 /// Chat history: the chats of the ChatGPT account, downloaded and kept on the device, and the
@@ -162,6 +200,7 @@ final class ConversationStore {
     private(set) var summaries: [ConversationSummary] = []
     private(set) var projects: [ChatProject] = []
     private(set) var syncState: SyncState = .idle
+    private(set) var lastSync: Date?
     /// True while older account chats remain to be listed.
     private(set) var canLoadMore = false
     /// Set when a change couldn't be applied to the ChatGPT account.
@@ -173,8 +212,9 @@ final class ConversationStore {
     @ObservationIgnored private var cache: [UUID: Conversation] = [:]
     @ObservationIgnored private var searchCorpus: [UUID: String] = [:]
     @ObservationIgnored private var corpusLoaded = false
-    @ObservationIgnored private var nextOffset = 0
+    @ObservationIgnored private(set) var nextOffset = 0
     @ObservationIgnored private var isLoadingMore = false
+    @ObservationIgnored private var syncTask: Task<Void, Never>?
 
     init(files: ConversationFiles = ConversationFiles()) {
         self.files = files
@@ -193,6 +233,11 @@ final class ConversationStore {
     /// Chats outside projects, as listed under the sidebar's date sections.
     var looseSummaries: [ConversationSummary] {
         summaries.filter { $0.projectID == nil }
+    }
+
+    /// Chats opened in memory, for the developer tools.
+    var cachedConversationCount: Int {
+        cache.count
     }
 
     func summaries(inProject projectID: String) -> [ConversationSummary] {
@@ -232,19 +277,22 @@ final class ConversationStore {
         files.write(conversation, index: summaries)
     }
 
-    func delete(id: UUID) {
+    /// Removes the chat from the device right away, then from the ChatGPT account. Returns once
+    /// the account confirmed; when it refuses, the chat comes back with the sync and this throws.
+    func delete(id: UUID) async throws {
         let remoteID = remoteID(for: id)
         removeLocally([id])
+        DevLog.log("chats", "Deleted \(id) on the device")
         guard let service, let remoteID else { return }
-        Task {
-            do {
-                try await service.delete(conversationID: remoteID)
-            } catch AccountAPIError.notFound {
-                // Already gone from the account.
-            } catch {
-                syncError = ChatSession.describe(error)
-                await syncWithAccount()
-            }
+        do {
+            try await service.delete(conversationID: remoteID)
+            DevLog.log("chats", "Deleted \(remoteID) in the account")
+        } catch AccountAPIError.notFound {
+            // Already gone from the account.
+        } catch {
+            DevLog.log("chats", "The account didn't delete \(remoteID): \(DevLog.describe(error))", level: .error)
+            await syncWithAccount()
+            throw error
         }
     }
 
@@ -291,6 +339,7 @@ final class ConversationStore {
             do {
                 try await service.rename(conversationID: remoteID, to: title)
             } catch {
+                DevLog.log("chats", "Rename failed for \(remoteID): \(DevLog.describe(error))", level: .error)
                 syncError = ChatSession.describe(error)
             }
         }
@@ -312,22 +361,18 @@ final class ConversationStore {
     // MARK: ChatGPT account
 
     /// Lists the latest chats and the projects of the account, and forgets chats deleted elsewhere.
+    /// The work runs in its own task: pulling to refresh can't cancel it halfway, and a second
+    /// call waits for the sync already running instead of returning at once.
     func syncWithAccount() async {
-        guard let service, syncState != .syncing else { return }
-        syncState = .syncing
-        do {
-            let page = try await service.conversations(offset: 0, limit: Self.pageSize)
-            upsert(page.items)
-            removeMissingChats(firstPage: page.items, isComplete: page.items.count < Self.pageSize)
-            nextOffset = page.items.count
-            canLoadMore = hasMore(after: page)
-            files.write(nil, index: summaries)
-            syncState = .idle
-        } catch {
-            syncState = .failed(ChatSession.describe(error))
+        guard service != nil else { return }
+        if let syncTask {
+            await syncTask.value
             return
         }
-        await syncProjects(service: service)
+        let task = Task { await performSync() }
+        syncTask = task
+        await task.value
+        syncTask = nil
     }
 
     /// Lists the next page of older chats, when the sidebar reaches the end of the list.
@@ -341,7 +386,10 @@ final class ConversationStore {
             nextOffset += page.items.count
             canLoadMore = !page.items.isEmpty && hasMore(after: page)
             files.write(nil, index: summaries)
+        } catch let error where error.isCancellation {
+            // The end of the list scrolled away: it loads again when it comes back.
         } catch {
+            DevLog.log("chats", "Loading older chats failed: \(DevLog.describe(error))", level: .warning)
             canLoadMore = false
         }
     }
@@ -365,6 +413,40 @@ final class ConversationStore {
         return merged
     }
 
+    /// Frees the space of chats downloaded from the account; they download again when opened.
+    /// Chats continued in OCTO keep their file, since those replies only exist on this device.
+    func removeDownloadedCopies() -> Int {
+        var removed: [UUID] = []
+        for summary in summaries where summary.isAccountChat {
+            guard let conversation = cache[summary.id] ?? files.loadConversation(summary.id),
+                  conversation.messages.allSatisfy({ $0.remoteID != nil })
+            else { continue }
+            removed.append(summary.id)
+            cache[summary.id] = nil
+            searchCorpus[summary.id] = nil
+        }
+        files.deleteConversationFiles(removed)
+        DevLog.log("storage", "Removed \(removed.count) downloaded chats")
+        return removed.count
+    }
+
+    func storageUsage(accountDirectory: URL) async -> StorageUsage {
+        let files = files
+        return await Task.detached(priority: .utility) {
+            files.flush()
+            let chats = ConversationFiles.directorySize(files.conversationsDirectory)
+            let attachments = ConversationFiles.directorySize(files.attachmentsDirectory)
+            let account = ConversationFiles.directorySize(accountDirectory)
+            return StorageUsage(
+                chatsBytes: chats.bytes,
+                chatFiles: chats.files,
+                attachmentsBytes: attachments.bytes,
+                attachmentFiles: attachments.files,
+                accountBytes: account.bytes
+            )
+        }.value
+    }
+
     /// Forgets the account's chats on sign-out. Chats started in OCTO stay on the device.
     func removeAccountChats() {
         removeLocally(summaries.filter(\.isAccountChat).map(\.id))
@@ -373,6 +455,7 @@ final class ConversationStore {
         canLoadMore = false
         nextOffset = 0
         syncState = .idle
+        lastSync = nil
     }
 
     #if OCTO_DEMO
@@ -419,6 +502,29 @@ final class ConversationStore {
 
     // MARK: Private
 
+    private func performSync() async {
+        guard let service else { return }
+        syncState = .syncing
+        let started = Date()
+        DevLog.log("sync", "Listing the account chats")
+        do {
+            let page = try await service.conversations(offset: 0, limit: Self.pageSize)
+            upsert(page.items)
+            removeMissingChats(firstPage: page.items, isComplete: page.items.count < Self.pageSize)
+            nextOffset = page.items.count
+            canLoadMore = hasMore(after: page)
+            files.write(nil, index: summaries)
+            syncState = .idle
+            lastSync = Date()
+            DevLog.log("sync", "Listed \(page.items.count) chats (total \(page.total.map(String.init) ?? "?")) in \(Int(Date().timeIntervalSince(started) * 1_000)) ms")
+        } catch {
+            DevLog.log("sync", "Listing failed: \(DevLog.describe(error))", level: error.isCancellation ? .debug : .error)
+            syncState = error.isCancellation ? .idle : .failed(ChatSession.describe(error))
+            return
+        }
+        await syncProjects(service: service)
+    }
+
     private func upsert(_ items: [RemoteConversationSummary]) {
         var indexByRemoteID: [String: Int] = [:]
         for (index, summary) in summaries.enumerated() {
@@ -449,12 +555,19 @@ final class ConversationStore {
             return updatedAt >= oldest
         }
         if !missing.isEmpty {
+            DevLog.log("sync", "Forgetting \(missing.count) chats deleted elsewhere")
             removeLocally(missing.map(\.id))
         }
     }
 
     private func syncProjects(service: AccountService) async {
-        guard let remoteProjects = try? await service.projects() else { return }
+        let remoteProjects: [RemoteProject]
+        do {
+            remoteProjects = try await service.projects()
+        } catch {
+            DevLog.log("sync", "Projects failed: \(DevLog.describe(error))", level: .warning)
+            return
+        }
         projects = remoteProjects.map { ChatProject(id: $0.id, name: $0.name, iconName: $0.iconName, colorHex: $0.colorHex) }
 
         var items: [RemoteConversationSummary] = []
@@ -493,6 +606,7 @@ final class ConversationStore {
         }
         files.writeProjects(projects)
         files.write(nil, index: summaries)
+        DevLog.log("sync", "Listed \(projects.count) projects with \(items.count) chats")
     }
 
     private func hasMore(after page: RemoteConversationPage) -> Bool {

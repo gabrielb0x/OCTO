@@ -44,7 +44,7 @@ struct SidebarView: View {
                 .padding(.bottom, 16)
             }
             .scrollDismissesKeyboard(.immediately)
-            .refreshable {
+            .detachedRefreshable {
                 await app.store.syncWithAccount()
             }
 

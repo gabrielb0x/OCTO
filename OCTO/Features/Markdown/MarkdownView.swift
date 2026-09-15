@@ -162,7 +162,7 @@ struct MarkdownTableView: View {
             .frame(minWidth: 64, maxWidth: 260, alignment: alignment.frameAlignment)
             .padding(.horizontal, 12)
             .padding(.vertical, 9)
-            .background(isHeader ? Color.white.opacity(0.06) : Color.clear)
+            .background(isHeader ? Theme.primaryText.opacity(0.06) : Color.clear)
             .gridColumnAlignment(alignment.horizontalAlignment)
     }
 }
@@ -224,7 +224,7 @@ struct CodeBlockView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 9)
-            .background(Color.white.opacity(0.04))
+            .background(Theme.primaryText.opacity(0.04))
 
             ScrollView(.horizontal, showsIndicators: false) {
                 Text(CodeHighlighting.attributed(code, language: language))
@@ -322,7 +322,7 @@ enum InlineMarkdown {
         for run in result.runs {
             if let intent = run.inlinePresentationIntent, intent.contains(.code) {
                 result[run.range].font = .system(.callout, design: .monospaced)
-                result[run.range].backgroundColor = Color.white.opacity(0.1)
+                result[run.range].backgroundColor = Theme.primaryText.opacity(0.1)
             }
             if run.link != nil {
                 result[run.range].foregroundColor = Theme.link

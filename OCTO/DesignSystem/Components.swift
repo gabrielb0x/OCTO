@@ -33,7 +33,7 @@ struct ShimmerModifier: ViewModifier {
             .overlay {
                 if !reduceMotion {
                     GeometryReader { proxy in
-                        LinearGradient(colors: [.clear, .white.opacity(0.85), .clear], startPoint: .leading, endPoint: .trailing)
+                        LinearGradient(colors: [.clear, Theme.primaryText.opacity(0.85), .clear], startPoint: .leading, endPoint: .trailing)
                             .frame(width: proxy.size.width * 0.5)
                             .offset(x: phase * proxy.size.width * 1.5)
                     }
@@ -61,7 +61,7 @@ struct PulsingDot: View {
 
     var body: some View {
         Circle()
-            .fill(Color.white)
+            .fill(Theme.primaryText)
             .frame(width: 13, height: 13)
             .scaleEffect(expanded ? 1 : 0.65)
             .opacity(expanded ? 1 : 0.7)
@@ -110,6 +110,52 @@ struct AccountAvatar: View {
             }
         }
         return "C"
+    }
+}
+
+/// A settings page for something only the ChatGPT apps can do: what it is, and a way there.
+struct ChatGPTOnlyPage: View {
+    let title: LocalizedStringKey
+    let systemImage: String
+    let summary: LocalizedStringKey
+    let details: LocalizedStringKey
+    var link: URL = URL(string: "https://chatgpt.com/#settings")!
+    var linkTitle: LocalizedStringKey = "Open ChatGPT settings"
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        List {
+            Section {
+                VStack(spacing: 14) {
+                    Image(systemName: systemImage)
+                        .font(.system(size: 34, weight: .regular))
+                        .foregroundStyle(Theme.primaryText)
+                        .frame(width: 76, height: 76)
+                        .glassEffect(.regular, in: .circle)
+                    Text(summary)
+                        .font(.callout)
+                        .foregroundStyle(Theme.secondaryText)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .listRowBackground(Color.clear)
+            }
+
+            Section {
+                Text(details)
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.secondaryText)
+                Button {
+                    openURL(link)
+                } label: {
+                    Label(linkTitle, systemImage: "arrow.up.right.square")
+                }
+                .foregroundStyle(Theme.primaryText)
+            }
+        }
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

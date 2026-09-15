@@ -14,6 +14,29 @@ public enum ChatGPTAccountAPI {
     public static var personalityTraitsURL: URL { url("personality_trait_types") }
     public static var trainingPreferenceURL: URL { url("accounts/data_usage_for_training") }
     public static var memoriesURL: URL { url("memories", query: [("include_memory_entries", "true")]) }
+    public static var accountCheckURL: URL { url("accounts/check/v4-2023-04-27") }
+
+    /// A `backend-api` address typed in the developer console: a relative path with an optional
+    /// query. Nil for anything that could point outside `chatgpt.com/backend-api`.
+    public static func consoleURL(path input: String) -> URL? {
+        var path = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        for prefix in ["https://chatgpt.com/backend-api/", "chatgpt.com/backend-api/", "/backend-api/", "backend-api/", "/"] where path.hasPrefix(prefix) {
+            path.removeFirst(prefix.count)
+            break
+        }
+        guard !path.isEmpty, !path.contains("://"), !path.hasPrefix("/"), !path.contains("\\"), !path.contains("#") else { return nil }
+        let pathPart = String(path.split(separator: "?", maxSplits: 1, omittingEmptySubsequences: false)[0])
+        let lowered = pathPart.lowercased()
+        guard !lowered.contains("%2e"), !lowered.contains("%2f"), !lowered.contains("%5c") else { return nil }
+        let segments = pathPart.split(separator: "/", omittingEmptySubsequences: false)
+        guard !segments.contains(where: { $0.isEmpty || $0 == "." || $0 == ".." }) else { return nil }
+        guard let url = URL(string: baseURL.absoluteString + "/" + path),
+              url.scheme == baseURL.scheme,
+              url.host == baseURL.host,
+              url.path.hasPrefix(baseURL.path + "/")
+        else { return nil }
+        return url
+    }
 
     /// `PATCH` with `{"is_visible": false}` deletes every chat of the account.
     public static var allConversationsURL: URL { url("conversations") }

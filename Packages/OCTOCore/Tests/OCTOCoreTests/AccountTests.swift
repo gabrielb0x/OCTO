@@ -40,7 +40,12 @@ import Testing
 
     @Test func parsesProfileSettingsAndInstructions() throws {
         let profile = try #require(AccountProfile.parse(Data(#"{"object":"user","id":"user-1","email":"me@example.com","name":"Gabriel ","picture":"https://chatgpt.com/backend-api/estuary/public_content/enc/abc","created":1674378627}"#.utf8)))
-        #expect(profile == AccountProfile(userID: "user-1", name: "Gabriel", email: "me@example.com", pictureURL: URL(string: "https://chatgpt.com/backend-api/estuary/public_content/enc/abc")))
+        #expect(profile == AccountProfile(userID: "user-1", name: "Gabriel", email: "me@example.com", pictureURL: URL(string: "https://chatgpt.com/backend-api/estuary/public_content/enc/abc"), createdAt: Date(timeIntervalSince1970: 1_674_378_627)))
+
+        let withPhone = try #require(AccountProfile.parse(Data(#"{"id":"user-2","email":"me@example.com","phone_number":" +33600000000 ","mfa_flag_enabled":false}"#.utf8)))
+        #expect(withPhone.phoneNumber == "+33600000000")
+        #expect(withPhone.mfaEnabled == false)
+        #expect(AccountProfile.parse(Data(#"{"id":"user-3","phone_number":""}"#.utf8))?.phoneNumber == nil)
 
         let settings = try #require(AccountSettings.parse(Data(#"{"settings":{"sunshine":true,"moonshine":false,"training_allowed":false,"voice_name":"ember","voice_main_language":"fr"}}"#.utf8)))
         #expect(settings.referencesSavedMemories == true)

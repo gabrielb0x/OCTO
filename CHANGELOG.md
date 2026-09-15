@@ -2,6 +2,34 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [1.2.0] – 2026-09-15
+
+### Ajouté
+
+- **Réglages organisés comme l'app ChatGPT** : Personnaliser ChatGPT (Personnalisation, Mémoire, Plugins), Compte (adresse e-mail, numéro de téléphone, abonnement, restaurer les achats, vérification de l'âge), Thème, Paramètres de l'application (Général, Notifications, Voix, Contrôle parental, Protection, Sécurité et connexion, Contrôle à distance, Stockage, Gestion des données, Gestion des publicités) et Aide (signaler un problème, centre d'assistance, À propos).
+- **Thème Système, Clair ou Sombre** et **couleur d'accentuation** (bleu, vert, jaune, rose, orange) pour tes messages et le bouton d'envoi.
+- **Abonnement** : forfait, date de renouvellement, lieu d'achat et limites d'utilisation. « Restaurer les achats » recharge ton forfait depuis ton compte.
+- **Protection** : verrouillage par Face ID (ou code) avec un délai au choix, et contenu masqué dans le sélecteur d'apps.
+- **Notifications** quand ChatGPT a fini de répondre alors qu'OCTO est en arrière-plan, avec ou sans aperçu.
+- **Voix** : choix de la voix de lecture parmi celles de l'appareil, écoute d'un exemple et délai avant l'envoi en mode vocal.
+- **Stockage** : place prise par les chats, les pièces jointes et le compte, et suppression des chats téléchargés.
+- **Sécurité et connexion** : méthode de connexion, état de la session et actualisation des jetons.
+- **Signaler un problème** ouvre une issue GitHub pré-remplie, avec les infos de l'appareil si tu le veux.
+- **Mode développeur**, activé en touchant 8 fois de suite le numéro de build dans À propos : inspecteur réseau (en-têtes, corps, événements du streaming, commande cURL, jetons masqués), journal d'événements, console API en lecture seule, session et claims des jetons, données du compte, modèles, fichiers et préférences, overlay de performances (FPS, mémoire, CPU), détails techniques sous les messages, Markdown brut, texte sans lissage, animations ralenties, simulation de forfait et de pannes, et export d'un rapport de diagnostic.
+- Un message « Le chat a bien été supprimé » confirme la suppression d'un chat, une fois qu'elle est faite dans ton compte.
+- Toucher la version, en bas des réglages ou dans À propos, affiche les nouveautés.
+- Chaque version est publiée dans les [Releases](https://github.com/gabrielb0x/OCTO/releases) avec son IPA.
+
+### Modifié
+
+- **Sans abonnement ChatGPT, le sélecteur de modèle est masqué**, comme dans l'app officielle : le titre affiche « ChatGPT » et le modèle du forfait est utilisé, avec son niveau de réflexion par défaut.
+- La mémoire a sa propre page, avec la place utilisée par les souvenirs.
+
+### Corrigé
+
+- **Tirer pour actualiser la liste des chats ne provoque plus d'erreur** : SwiftUI annulait la synchronisation dès que la liste se mettait à jour, et la requête échouait avec « annulé ». La même correction s'applique aux réglages, à la mémoire et aux chats archivés.
+- Quitter un chat pendant le téléchargement de ses messages n'affiche plus d'erreur.
+
 ## [1.1.0] – 2026-09-15
 
 ### Ajouté

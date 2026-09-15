@@ -28,6 +28,16 @@ enum AccountAPIError: LocalizedError, Equatable {
     }
 }
 
+/// The raw answer to a request typed in the developer console.
+struct ConsoleResponse: Sendable {
+    let url: URL
+    let statusCode: Int
+    let headers: [String: String]
+    let body: String
+    let byteCount: Int
+    let duration: TimeInterval
+}
+
 /// Reads and edits the ChatGPT account (profile, settings, chats) with the signed-in session.
 /// Requests go straight from the device to chatgpt.com.
 final class AccountService: Sendable {
@@ -47,6 +57,11 @@ final class AccountService: Sendable {
 
     func settings() async throws -> AccountSettings {
         try await fetch(ChatGPTAccountAPI.settingsURL, parse: AccountSettings.parse)
+    }
+
+    func subscription() async throws -> AccountSubscription {
+        let accountID = try await vault.credential().accountID
+        return try await fetch(ChatGPTAccountAPI.accountCheckURL) { AccountSubscription.parse($0, accountID: accountID) }
     }
 
     func customInstructions() async throws -> CustomInstructions {
@@ -121,22 +136,47 @@ final class AccountService: Sendable {
         }
         var request = URLRequest(url: url)
         request.timeoutInterval = 30
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await session.recordedData(for: request)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             throw AccountAPIError.invalidResponse
         }
         return data
     }
 
+    // MARK: Developer console
+
+    /// A GET request typed in the developer console, returned whatever its status.
+    func consoleGET(_ url: URL) async throws -> ConsoleResponse {
+        let request = try await makeRequest(url)
+        let started = Date()
+        let (data, response) = try await session.recordedData(for: request)
+        let http = response as? HTTPURLResponse
+        var headers: [String: String] = [:]
+        for (key, value) in http?.allHeaderFields ?? [:] {
+            headers[String(describing: key)] = String(describing: value)
+        }
+        return ConsoleResponse(
+            url: url,
+            statusCode: http?.statusCode ?? 0,
+            headers: HTTPLogRedactor.headers(headers),
+            body: HTTPLogRedactor.body(data, contentType: http?.value(forHTTPHeaderField: "Content-Type"), limit: 400_000) ?? "",
+            byteCount: data.count,
+            duration: Date().timeIntervalSince(started)
+        )
+    }
+
     // MARK: Requests
 
     private func fetch<Value>(_ url: URL, parse: (Data) -> Value?) async throws -> Value {
         let data = try await send(url)
-        guard let value = parse(data) else { throw AccountAPIError.invalidResponse }
+        guard let value = parse(data) else {
+            DevLog.log("account", "Unexpected response from \(url.path)", level: .warning)
+            throw AccountAPIError.invalidResponse
+        }
         return value
     }
 
-    private func send(_ url: URL, method: String = "GET", body: Data? = nil, accept: String? = nil) async throws -> Data {
+    private func makeRequest(_ url: URL, method: String = "GET", body: Data? = nil, accept: String? = nil) async throws -> URLRequest {
         let credential = try await vault.credential()
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -157,9 +197,16 @@ final class AccountService: Sendable {
             request.httpBody = body
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
+        return request
+    }
 
-        let (data, response) = try await session.data(for: request)
+    private func send(_ url: URL, method: String = "GET", body: Data? = nil, accept: String? = nil) async throws -> Data {
+        let request = try await makeRequest(url, method: method, body: body, accept: accept)
+        let (data, response) = try await session.recordedData(for: request)
         guard let http = response as? HTTPURLResponse else { throw AccountAPIError.invalidResponse }
+        if !(200..<300).contains(http.statusCode) {
+            DevLog.log("account", "\(method) \(url.path) → HTTP \(http.statusCode)", level: .warning)
+        }
         switch http.statusCode {
         case 200..<300:
             return data

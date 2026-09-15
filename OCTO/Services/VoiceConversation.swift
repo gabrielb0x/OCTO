@@ -40,6 +40,8 @@ final class VoiceConversation {
     @ObservationIgnored private var listenStartedAt = Date()
     @ObservationIgnored private var quickFailures = 0
     @ObservationIgnored private var speechRate = 0.5
+    @ObservationIgnored private var voiceIdentifier: String?
+    @ObservationIgnored private var pauseDuration = VoicePause.normal.seconds
 
     init() {
         synthesizer.delegate = synthesizerDelegate
@@ -66,6 +68,8 @@ final class VoiceConversation {
         isRunning = true
         self.session = session
         speechRate = app.settings.speechRate
+        voiceIdentifier = app.settings.voiceIdentifier
+        pauseDuration = app.settings.voicePause.seconds
         app.speech.stop()
         session.isVoiceConversation = true
 
@@ -251,8 +255,9 @@ final class VoiceConversation {
     /// The user is done talking once the transcript stops changing for a moment.
     private func waitForPause() {
         silenceTask?.cancel()
+        let pause = pauseDuration
         silenceTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(1.3))
+            try? await Task.sleep(for: .seconds(pause))
             guard !Task.isCancelled else { return }
             self?.finishListening()
         }
@@ -307,8 +312,8 @@ final class VoiceConversation {
         guard isRunning, !text.isEmpty else { return }
         let utterance = AVSpeechUtterance(string: text)
         utterance.rate = Float(min(max(speechRate, 0.3), 0.65))
-        if replyVoice == nil, let language = NLLanguageRecognizer.dominantLanguage(for: text)?.rawValue {
-            replyVoice = AVSpeechSynthesisVoice(language: language)
+        if replyVoice == nil {
+            replyVoice = SpeechPlayer.voice(identifier: voiceIdentifier, for: text)
         }
         utterance.voice = replyVoice
         queuedUtterances += 1

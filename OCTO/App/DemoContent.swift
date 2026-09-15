@@ -10,6 +10,14 @@ enum DemoScene: String, CaseIterable {
     case sidebar
     case voice
     case settings
+    case settingsApp
+    case about
+    case developer
+    case network
+    case deleteToast
+    case freePlan
+    case lightChat
+    case messageDetails
     case whatsNew
 
     static var current: DemoScene? {
@@ -24,14 +32,22 @@ enum DemoContent {
     private static let projectID = "g-p-0c70c0de"
 
     static func prepare(_ scene: DemoScene, app: AppModel) {
+        // Preferences are saved in the simulator: every scene starts from the same ones.
+        app.settings.theme = scene == .lightChat ? .light : .system
+        app.settings.accent = scene == .lightChat ? .blue : .default
+        app.developer.isEnabled = [.developer, .network, .messageDetails].contains(scene)
+        app.developer.showsMessageDetails = scene == .messageDetails
+        app.developer.showsPerformanceOverlay = scene == .messageDetails
+
         guard scene != .welcome else {
             app.auth.useDemoAccount(nil)
             return
         }
-        app.auth.useDemoAccount(Account(email: "gabriel@example.com", planType: "plus", userID: "user-demo"))
+        let planType = scene == .freePlan ? "free" : "plus"
+        app.auth.useDemoAccount(Account(email: "gabriel@example.com", planType: planType, userID: "user-demo"))
         app.account.useDemo(AccountSnapshot(
-            profile: AccountProfile(userID: "user-demo", name: "Gabriel", email: "gabriel@example.com"),
-            settings: AccountSettings(referencesSavedMemories: true, referencesChatHistory: true, trainingAllowed: false),
+            profile: AccountProfile(userID: "user-demo", name: "Gabriel", email: "gabriel@example.com", phoneNumber: "+33 6 00 00 00 00", mfaEnabled: true),
+            settings: AccountSettings(referencesSavedMemories: true, referencesChatHistory: true, trainingAllowed: false, voiceName: "ember"),
             instructions: CustomInstructions(
                 nickname: "Gabriel",
                 occupation: localized("Student", "Étudiant"),
@@ -44,8 +60,16 @@ enum DemoContent {
                 PersonalityOption(key: "professional", label: localized("Professional", "Professionnel"), summary: localized("Polished and precise", "Courtois et précis")),
             ],
             traits: [],
-            memories: MemoriesSnapshot(memories: [SavedMemory(id: "demo-memory", content: localized("Is learning Swift", "Apprend Swift"))]),
-            trainingAllowed: false
+            memories: MemoriesSnapshot(memories: [SavedMemory(id: "demo-memory", content: localized("Is learning Swift", "Apprend Swift"))], usedTokens: 120, maxTokens: 2_000),
+            trainingAllowed: false,
+            subscription: AccountSubscription(
+                planType: planType,
+                hasActiveSubscription: planType != "free",
+                expiresAt: planType == "free" ? nil : Date().addingTimeInterval(20 * 86_400),
+                willRenew: planType != "free",
+                billingPeriod: planType == "free" ? nil : "monthly",
+                purchasePlatform: planType == "free" ? nil : "chatgpt_web"
+            )
         ))
         app.store.useDemoProjects([
             ChatProject(id: projectID, name: localized("School", "Cours"), iconName: "graduation-cap", colorHex: "#0285FF"),
@@ -53,8 +77,44 @@ enum DemoContent {
         for conversation in conversations(now: Date()) {
             app.store.save(conversation)
         }
+        if scene == .network {
+            for entry in networkEntries(now: Date()) {
+                app.developer.console.record(entry)
+            }
+        }
         if scene == .whatsNew {
             app.whatsNew = ReleaseNotes.current
+        }
+    }
+
+    /// Pages the settings sheet opens on in a scene.
+    static func settingsPath(for scene: DemoScene?) -> [SettingsRoute] {
+        switch scene {
+        case .about?: return [.about]
+        case .developer?: return [.developer]
+        case .network?: return [.developer, .developerNetwork]
+        default: return []
+        }
+    }
+
+    static func settingsSection(for scene: DemoScene?) -> SettingsSection? {
+        scene == .settingsApp ? .appSettings : nil
+    }
+
+    /// What a scene does once the main screen is up.
+    static func run(_ scene: DemoScene?, app: AppModel, openSidebar: () -> Void, openSettings: () -> Void) async {
+        switch scene {
+        case .sidebar?:
+            try? await Task.sleep(for: .milliseconds(500))
+            openSidebar()
+        case .settings?, .settingsApp?, .about?, .developer?, .network?:
+            try? await Task.sleep(for: .milliseconds(500))
+            openSettings()
+        case .deleteToast?:
+            try? await Task.sleep(for: .milliseconds(900))
+            app.toasts.show(String(localized: "The chat has been deleted"), duration: 20)
+        default:
+            break
         }
     }
 
@@ -72,6 +132,36 @@ enum DemoContent {
         usesFrench ? french : english
     }
 
+    private static func networkEntries(now: Date) -> [NetworkEntry] {
+        func entry(_ secondsAgo: Double, _ method: String, _ url: String, status: Int?, phase: NetworkEntry.Phase, milliseconds: Double, bytes: Int, body: String? = nil) -> NetworkEntry {
+            let address = URL(string: url)!
+            var entry = NetworkEntry(
+                id: UUID(),
+                startedAt: now.addingTimeInterval(-secondsAgo),
+                method: method,
+                url: address,
+                category: NetworkEntry.category(for: address),
+                requestHeaders: ["Authorization": "Bearer <redacted>", "originator": CodexBackend.originator],
+                requestBody: nil
+            )
+            entry.statusCode = status
+            entry.phase = phase
+            entry.duration = milliseconds / 1_000
+            entry.responseBytes = bytes
+            entry.responseBody = body
+            entry.revision = 1
+            return entry
+        }
+        return [
+            entry(4, "POST", "https://chatgpt.com/backend-api/codex/responses", status: 200, phase: .streaming, milliseconds: 2_400, bytes: 48_210),
+            entry(9, "GET", "https://chatgpt.com/backend-api/conversations?offset=0&limit=50&order=updated&is_archived=false", status: 200, phase: .finished, milliseconds: 312, bytes: 18_422),
+            entry(9, "GET", "https://chatgpt.com/backend-api/accounts/check/v4-2023-04-27", status: 200, phase: .finished, milliseconds: 187, bytes: 3_204),
+            entry(12, "GET", "https://chatgpt.com/backend-api/gizmos/snorlax/sidebar?owned_only=true&conversations_per_gizmo=5&limit=20", status: 403, phase: .finished, milliseconds: 95, bytes: 1_024, body: "<!DOCTYPE html>"),
+            entry(15, "POST", "https://auth.openai.com/oauth/token", status: nil, phase: .failed("URLError: The request timed out. [NSURLErrorDomain -1001]"), milliseconds: 30_000, bytes: 0),
+            entry(16, "GET", "https://chatgpt.com/backend-api/codex/models?client_version=\(CodexBackend.clientVersion)", status: 200, phase: .finished, milliseconds: 241, bytes: 9_870),
+        ]
+    }
+
     private static func conversations(now: Date) -> [Conversation] {
         let model = ModelCatalog.chatGPTFallback[0]
 
@@ -84,7 +174,8 @@ enum DemoContent {
             inProject: Bool = false,
             question: String,
             answer: String,
-            thinking: TimeInterval? = nil
+            thinking: TimeInterval? = nil,
+            usage: TokenUsage? = nil
         ) -> Conversation {
             let date = now.addingTimeInterval(-hoursAgo * 3_600)
             let remoteID = fromAccount ? id.uuidString.lowercased() : nil
@@ -98,7 +189,7 @@ enum DemoContent {
                 reasoningEffort: model.defaultReasoningEffort,
                 messages: [
                     ChatMessage(role: .user, text: question, createdAt: date, remoteID: remoteID.map { "\($0)-question" }),
-                    ChatMessage(role: .assistant, text: answer, reasoningDuration: thinking, modelID: model.id, createdAt: date, remoteID: remoteID.map { "\($0)-answer" }),
+                    ChatMessage(role: .assistant, text: answer, reasoningDuration: thinking, modelID: model.id, usage: usage, createdAt: date, remoteID: remoteID.map { "\($0)-answer" }),
                 ],
                 remoteID: remoteID,
                 projectID: inProject ? projectID : nil,
@@ -114,7 +205,8 @@ enum DemoContent {
                 fromAccount: false,
                 question: localized("How do I make a network request in Swift with async/await?", "Comment faire une requête réseau en Swift avec async/await ?"),
                 answer: localized(featuredAnswerEnglish, featuredAnswerFrench),
-                thinking: 7
+                thinking: 7,
+                usage: TokenUsage(inputTokens: 1_284, cachedInputTokens: 1_024, outputTokens: 212, reasoningTokens: 96)
             ),
             chat(
                 title: localized("Name ideas for my app", "Idées de nom pour mon app"),

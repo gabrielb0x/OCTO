@@ -33,6 +33,14 @@ public enum JWT {
         guard let exp = JSONValue.double(payload(of: token)?["exp"]) else { return nil }
         return Date(timeIntervalSince1970: exp)
     }
+
+    /// The payload as indented JSON with sorted keys, for the developer tools.
+    public static func prettyPayload(of token: String) -> String? {
+        guard let payload = payload(of: token),
+              let data = try? JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
+        else { return nil }
+        return String(decoding: data, as: UTF8.self)
+    }
 }
 
 /// Account information carried by the ChatGPT OAuth tokens.
@@ -92,6 +100,17 @@ public enum ChatGPTPlan {
         default:
             return raw.split(separator: "_").map { $0.capitalized }.joined(separator: " ")
         }
+    }
+
+    /// False for the free plan, true for any subscription, nil when the plan is unknown.
+    public static func isPaid(_ rawValue: String?) -> Bool? {
+        guard let raw = rawValue?.trimmingCharacters(in: .whitespaces).lowercased(), !raw.isEmpty else { return nil }
+        return !(raw == "free" || raw == "guest" || raw.hasPrefix("free_"))
+    }
+
+    /// ChatGPT only lets subscribers pick a model. The picker stays when the plan is unknown.
+    public static func allowsModelChoice(_ rawValue: String?) -> Bool {
+        isPaid(rawValue) ?? true
     }
 }
 

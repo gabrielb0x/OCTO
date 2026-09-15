@@ -56,6 +56,15 @@ actor CredentialVault {
         let accountID: String?
     }
 
+    /// The current session, for Settings and the developer tools.
+    struct SessionInfo: Sendable {
+        let idToken: String
+        let accessToken: String
+        let accountID: String?
+        let lastRefresh: Date
+        let accessTokenExpiresAt: Date?
+    }
+
     static let chatGPTAccount = "chatgpt.credentials"
     /// Written by OCTO 1.0 when signed in with an OpenAI API key, which is no longer offered.
     static let legacyAPIKeyAccount = "openai.apikey"
@@ -97,6 +106,25 @@ actor CredentialVault {
         return refreshToken
     }
 
+    func sessionInfo() -> SessionInfo? {
+        guard let current = chatGPT else { return nil }
+        return SessionInfo(
+            idToken: current.idToken,
+            accessToken: current.accessToken,
+            accountID: current.accountID,
+            lastRefresh: current.lastRefresh,
+            accessTokenExpiresAt: JWT.expirationDate(of: current.accessToken)
+        )
+    }
+
+    /// Makes the next request refresh the tokens, to try the refresh from the developer tools.
+    func markStale() {
+        guard var current = chatGPT else { return }
+        current.lastRefresh = .distantPast
+        chatGPT = current
+        Keychain.setValue(current, for: Self.chatGPTAccount)
+    }
+
     private func refresh() async throws -> StoredChatGPTCredentials {
         if let refreshTask {
             return try await refreshTask.value
@@ -112,8 +140,10 @@ actor CredentialVault {
                 chatGPT = updated
                 Keychain.setValue(updated, for: Self.chatGPTAccount)
             }
+            DevLog.log("auth", "Tokens refreshed")
             return updated
         } catch AuthError.sessionExpired {
+            DevLog.log("auth", "Refresh token refused: session expired", level: .error)
             chatGPT = nil
             Keychain.remove(Self.chatGPTAccount)
             throw AuthError.sessionExpired
@@ -127,7 +157,7 @@ actor CredentialVault {
         request.setValue(AppInfo.userAgent, forHTTPHeaderField: "User-Agent")
         request.httpBody = OpenAIAuth.refreshBody(refreshToken: credentials.refreshToken)
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await session.recordedData(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
             let error = OAuthErrorBody.parse(data)
@@ -158,11 +188,19 @@ final class AuthManager {
         case signedIn(Account)
     }
 
+    enum SignInMethod: String {
+        case browser
+        case deviceCode
+    }
+
     private(set) var state: State
 
     let vault: CredentialVault
     private let session: URLSession
     private let anchorProvider = PresentationAnchorProvider()
+
+    private static let signInMethodKey = "auth.signInMethod"
+    private static let signedInAtKey = "auth.signedInAt"
 
     init(session: URLSession) {
         self.session = session
@@ -182,6 +220,27 @@ final class AuthManager {
         return nil
     }
 
+    var signInMethod: SignInMethod? {
+        UserDefaults.standard.string(forKey: Self.signInMethodKey).flatMap(SignInMethod.init(rawValue:))
+    }
+
+    var signedInAt: Date? {
+        UserDefaults.standard.object(forKey: Self.signedInAtKey) as? Date
+    }
+
+    /// Refreshes the tokens now and picks up changes to the account they carry, such as a new plan.
+    func refreshSession() async throws {
+        do {
+            _ = try await vault.credential(forceRefresh: true)
+        } catch AuthError.sessionExpired {
+            state = .signedOut
+            throw AuthError.sessionExpired
+        }
+        if let info = await vault.sessionInfo() {
+            state = .signedIn(Self.account(idToken: info.idToken, accessToken: info.accessToken))
+        }
+    }
+
     #if OCTO_DEMO
     /// Screenshot builds show a fake account without touching the keychain.
     func useDemoAccount(_ account: Account?) {
@@ -197,7 +256,7 @@ final class AuthManager {
         let url = OpenAIAuth.authorizeURL(codeChallenge: pkce.challenge, state: expectedState)
         let code = try await authorize(url: url, expectedState: expectedState)
         let tokens = try await exchange(code: code, verifier: pkce.verifier, redirectURI: OpenAIAuth.redirectURI)
-        await complete(with: tokens)
+        await complete(with: tokens, method: .browser)
     }
 
     private func authorize(url: URL, expectedState: String) async throws -> String {
@@ -278,7 +337,7 @@ final class AuthManager {
         request.setValue(AppInfo.userAgent, forHTTPHeaderField: "User-Agent")
         request.httpBody = OpenAIAuth.deviceUserCodeBody()
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await session.recordedData(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status), let challenge = DeviceCodeChallenge.parse(data) else {
             if status == 404 { throw AuthError.deviceCodeUnavailable }
@@ -297,11 +356,11 @@ final class AuthManager {
             request.setValue(AppInfo.userAgent, forHTTPHeaderField: "User-Agent")
             request.httpBody = OpenAIAuth.deviceTokenPollBody(deviceAuthID: challenge.deviceAuthID, userCode: challenge.userCode)
 
-            let (data, response) = try await session.data(for: request)
+            let (data, response) = try await session.recordedData(for: request)
             let status = (response as? HTTPURLResponse)?.statusCode ?? 0
             if (200..<300).contains(status), let grant = DeviceCodeGrant.parse(data) {
                 let tokens = try await exchange(code: grant.authorizationCode, verifier: grant.codeVerifier, redirectURI: OpenAIAuth.deviceRedirectURI)
-                await complete(with: tokens)
+                await complete(with: tokens, method: .deviceCode)
                 return
             }
             if status == 403 || status == 404 {
@@ -318,6 +377,8 @@ final class AuthManager {
     func signOut() async {
         let refreshToken = await vault.clear()
         state = .signedOut
+        UserDefaults.standard.removeObject(forKey: Self.signInMethodKey)
+        UserDefaults.standard.removeObject(forKey: Self.signedInAtKey)
         guard let refreshToken else { return }
         // Best effort: revoke the refresh token so it cannot be reused.
         var request = URLRequest(url: OpenAIAuth.revokeURL)
@@ -326,7 +387,7 @@ final class AuthManager {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(AppInfo.userAgent, forHTTPHeaderField: "User-Agent")
         request.httpBody = OpenAIAuth.revokeBody(refreshToken: refreshToken)
-        _ = try? await session.data(for: request)
+        _ = try? await session.recordedData(for: request)
     }
 
     private func exchange(code: String, verifier: String, redirectURI: String) async throws -> OAuthTokenResponse {
@@ -336,7 +397,7 @@ final class AuthManager {
         request.setValue(AppInfo.userAgent, forHTTPHeaderField: "User-Agent")
         request.httpBody = OpenAIAuth.authorizationCodeBody(code: code, codeVerifier: verifier, redirectURI: redirectURI)
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await session.recordedData(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status),
               let tokens = OAuthTokenResponse.parse(data),
@@ -348,7 +409,7 @@ final class AuthManager {
         return tokens
     }
 
-    private func complete(with tokens: OAuthTokenResponse) async {
+    private func complete(with tokens: OAuthTokenResponse, method: SignInMethod) async {
         guard let accessToken = tokens.accessToken, let refreshToken = tokens.refreshToken else { return }
         let idToken = tokens.idToken ?? ""
         let claims = ChatGPTAccountClaims(idToken: idToken, accessToken: accessToken)
@@ -359,6 +420,8 @@ final class AuthManager {
             accountID: claims.accountID,
             lastRefresh: Date()
         ))
+        UserDefaults.standard.set(method.rawValue, forKey: Self.signInMethodKey)
+        UserDefaults.standard.set(Date(), forKey: Self.signedInAtKey)
         state = .signedIn(Self.account(idToken: idToken, accessToken: accessToken))
     }
 
@@ -397,7 +460,7 @@ final class OnceResumer<Value>: @unchecked Sendable {
 final class PresentationAnchorProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        let windows = scenes.flatMap(\.windows)
+        let windows = scenes.flatMap(\.windows).filter { $0.windowLevel == .normal }
         if let window = windows.first(where: \.isKeyWindow) ?? windows.first {
             return window
         }

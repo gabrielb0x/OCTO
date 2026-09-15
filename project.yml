@@ -14,8 +14,8 @@ packages:
 
 settings:
   base:
-    MARKETING_VERSION: "1.1.0"
-    CURRENT_PROJECT_VERSION: "2"
+    MARKETING_VERSION: "1.2.0"
+    CURRENT_PROJECT_VERSION: "3"
     SWIFT_VERSION: "5.0"
     IPHONEOS_DEPLOYMENT_TARGET: "26.0"
     CODE_SIGN_STYLE: Automatic
@@ -43,7 +43,6 @@ targets:
         CFBundleLocalizations: [en, fr]
         LSRequiresIPhoneOS: true
         ITSAppUsesNonExemptEncryption: false
-        UIUserInterfaceStyle: Dark
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UILaunchScreen:
@@ -59,6 +58,7 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         NSCameraUsageDescription: OCTO uses the camera so you can send photos in a chat.
+        NSFaceIDUsageDescription: OCTO uses Face ID to lock the app so only you can open your chats.
         NSMicrophoneUsageDescription: OCTO uses the microphone to dictate your messages.
         NSSpeechRecognitionUsageDescription: OCTO transcribes your voice on your device to write your message.
         NSLocalNetworkUsageDescription: OCTO briefly listens on this device (localhost) to receive the ChatGPT sign-in response.

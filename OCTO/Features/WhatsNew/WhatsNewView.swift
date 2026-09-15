@@ -44,11 +44,11 @@ struct WhatsNewView: View {
             } label: {
                 Text("Continue")
                     .font(.headline)
-                    .foregroundStyle(.black)
+                    .foregroundStyle(Theme.onProminent)
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.glassProminent)
-            .tint(.white)
+            .tint(Theme.prominentFill)
             .controlSize(.extraLarge)
             .padding(.horizontal, 24)
             .padding(.bottom, 16)

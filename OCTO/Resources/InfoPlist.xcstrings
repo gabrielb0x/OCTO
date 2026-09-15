@@ -18,6 +18,23 @@
         }
       }
     },
+    "NSFaceIDUsageDescription": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "OCTO uses Face ID to lock the app so only you can open your chats."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO utilise Face ID pour verrouiller l'app, afin que personne d'autre que toi ne puisse ouvrir tes chats."
+          }
+        }
+      }
+    },
     "NSLocalNetworkUsageDescription": {
       "extractionState": "extracted_with_value",
       "localizations": {

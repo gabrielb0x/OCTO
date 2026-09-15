@@ -141,7 +141,7 @@ struct ArchivedChatsView: View {
         .task {
             await load()
         }
-        .refreshable {
+        .detachedRefreshable {
             await load()
         }
     }
@@ -156,8 +156,10 @@ struct ArchivedChatsView: View {
         do {
             chats = try await service.conversations(offset: 0, limit: 100, archived: true).items
             errorMessage = nil
-        } catch {
+        } catch let error where !error.isCancellation {
             errorMessage = ChatSession.describe(error)
+        } catch {
+            // Leaving the screen cancels the request.
         }
     }
 

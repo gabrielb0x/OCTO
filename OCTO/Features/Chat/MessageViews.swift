@@ -3,6 +3,7 @@ import SwiftUI
 import UIKit
 
 struct MessageRow: View {
+    @Environment(AppModel.self) private var app
     let message: ChatMessage
     let session: ChatSession
     let isLast: Bool
@@ -15,11 +16,16 @@ struct MessageRow: View {
             if showsLocalNote {
                 LocalMessagesNote()
             }
-            switch message.role {
-            case .user:
-                UserMessageView(message: message, canEdit: session.canModify(message), onEdit: onEdit)
-            case .assistant:
-                AssistantMessageView(message: message, session: session, isLast: isLast)
+            VStack(spacing: 6) {
+                switch message.role {
+                case .user:
+                    UserMessageView(message: message, canEdit: session.canModify(message), onEdit: onEdit)
+                case .assistant:
+                    AssistantMessageView(message: message, session: session, isLast: isLast)
+                }
+                if app.developer.isEnabled, app.developer.showsMessageDetails {
+                    MessageDetails(message: message)
+                }
             }
         }
     }
@@ -40,7 +46,52 @@ struct LocalMessagesNote: View {
     }
 }
 
+/// Technical details under a message, shown by developer mode.
+struct MessageDetails: View {
+    let message: ChatMessage
+
+    var body: some View {
+        let alignment: HorizontalAlignment = message.role == .user ? .trailing : .leading
+        VStack(alignment: alignment, spacing: 2) {
+            ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                Text(verbatim: line)
+            }
+        }
+        .font(.system(size: 10, design: .monospaced))
+        .foregroundStyle(Theme.tertiaryText)
+        .multilineTextAlignment(message.role == .user ? .trailing : .leading)
+        .textSelection(.enabled)
+        .frame(maxWidth: .infinity, alignment: message.role == .user ? .trailing : .leading)
+    }
+
+    private var lines: [String] {
+        var lines = ["\(message.role.rawValue) · \(message.id.uuidString.prefix(8)) · \(message.status.rawValue) · \(message.createdAt.formatted(date: .abbreviated, time: .standard))"]
+        lines.append(message.remoteID.map { "account \($0)" } ?? "written in OCTO")
+        if let modelID = message.modelID {
+            lines.append("model \(modelID)")
+        }
+        if let usage = message.usage {
+            lines.append("tokens in \(usage.inputTokens) · cached \(usage.cachedInputTokens) · out \(usage.outputTokens) · reasoning \(usage.reasoningTokens)")
+        }
+        if let duration = message.reasoningDuration {
+            lines.append(String(format: "thought %.1f s · %ld reasoning characters", duration, message.reasoning.count))
+        }
+        if !message.searchQueries.isEmpty {
+            lines.append("searched \(message.searchQueries.joined(separator: " | "))")
+        }
+        if !message.citations.isEmpty || !message.attachments.isEmpty {
+            lines.append("\(message.citations.count) sources · \(message.attachments.count) attachments")
+        }
+        lines.append("\(message.text.count) characters")
+        if let error = message.errorMessage {
+            lines.append("error \(error)")
+        }
+        return lines
+    }
+}
+
 struct UserMessageView: View {
+    @Environment(AppModel.self) private var app
     let message: ChatMessage
     let canEdit: Bool
     let onEdit: () -> Void
@@ -56,7 +107,7 @@ struct UserMessageView: View {
                     .foregroundStyle(Theme.primaryText)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
-                    .background(Theme.userBubble, in: .rect(cornerRadius: 22))
+                    .background(app.settings.accent.bubble, in: .rect(cornerRadius: 22))
                     .contextMenu {
                         Button {
                             UIPasteboard.general.string = message.text
@@ -178,6 +229,7 @@ private struct AssistantMessageContent: View {
     private var reasoningDuration: TimeInterval? { live?.reasoningDuration ?? message.reasoningDuration }
     private var searchQueries: [String] { live?.searchQueries ?? message.searchQueries }
     private var citations: [Citation] { live?.citations ?? message.citations }
+    private var showsRawMarkdown: Bool { app.developer.isEnabled && app.developer.showsRawMarkdown }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -203,6 +255,10 @@ private struct AssistantMessageContent: View {
                     PulsingDot()
                         .padding(.vertical, 4)
                 }
+            } else if showsRawMarkdown {
+                Text(verbatim: text)
+                    .font(.system(.callout, design: .monospaced))
+                    .textSelection(.enabled)
             } else if let live {
                 MarkdownView(text: text)
                     .environment(\.streamingFadeLength, live.fadeLength)
@@ -249,7 +305,7 @@ private struct AssistantMessageContent: View {
                 }
             }
             actionButton(app.speech.speakingMessageID == message.id ? "stop.circle" : "speaker.wave.2", label: "Read aloud") {
-                app.speech.toggle(messageID: message.id, markdown: message.text, rate: app.settings.speechRate)
+                app.speech.toggle(messageID: message.id, markdown: message.text, rate: app.settings.speechRate, voiceIdentifier: app.settings.voiceIdentifier)
             }
             ShareLink(item: message.text) {
                 Image(systemName: "square.and.arrow.up")
@@ -274,7 +330,7 @@ private struct AssistantMessageContent: View {
     /// Tap to try again, press and hold to pick another model, like ChatGPT.
     private var regenerateMenu: some View {
         Menu {
-            if let usedModelTitle {
+            if app.allowsModelChoice, let usedModelTitle {
                 Text(verbatim: usedModelTitle)
             }
             Button {
@@ -282,14 +338,16 @@ private struct AssistantMessageContent: View {
             } label: {
                 Label("Try again", systemImage: "arrow.clockwise")
             }
-            Menu {
-                ForEach(app.models) { model in
-                    Button(model.displayName) {
-                        session.regenerate(message.id, using: model)
+            if app.allowsModelChoice {
+                Menu {
+                    ForEach(app.models) { model in
+                        Button(model.displayName) {
+                            session.regenerate(message.id, using: model)
+                        }
                     }
+                } label: {
+                    Label("Change model", systemImage: "cpu")
                 }
-            } label: {
-                Label("Change model", systemImage: "cpu")
             }
         } label: {
             Image(systemName: "arrow.clockwise")
@@ -446,7 +504,7 @@ struct SourceBadge: View {
             .foregroundStyle(.white)
             .frame(width: 20, height: 20)
             .background(Color(hue: Self.hue(for: host), saturation: 0.55, brightness: 0.72), in: Circle())
-            .overlay(Circle().strokeBorder(Color.black.opacity(0.6), lineWidth: 1))
+            .overlay(Circle().strokeBorder(Theme.background.opacity(0.6), lineWidth: 1))
     }
 
     /// Stable color per site (String.hashValue changes between launches).
@@ -516,10 +574,10 @@ struct ErrorCard: View {
                     onSignIn()
                 } label: {
                     Text("Sign in again")
-                        .foregroundStyle(.black)
+                        .foregroundStyle(Theme.onProminent)
                 }
                 .buttonStyle(.glassProminent)
-                .tint(.white)
+                .tint(Theme.prominentFill)
                 .controlSize(.small)
             } else if let onRetry {
                 Button(action: onRetry) {

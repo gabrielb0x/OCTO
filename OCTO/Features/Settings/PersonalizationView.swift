@@ -1,7 +1,7 @@
 import OCTOCore
 import SwiftUI
 
-/// Custom instructions, personality and memory of the ChatGPT account.
+/// Custom instructions and personality of the ChatGPT account.
 struct PersonalizationView: View {
     @Environment(AppModel.self) private var app
     @State private var draft = CustomInstructions()
@@ -23,7 +23,6 @@ struct PersonalizationView: View {
             } else {
                 loadingSection
             }
-            memorySection
         }
         .navigationTitle("Personalization")
         .navigationBarTitleDisplayMode(.inline)
@@ -34,10 +33,10 @@ struct PersonalizationView: View {
                 } else if isEdited {
                     Button(action: save) {
                         Text("Save")
-                            .foregroundStyle(.black)
+                            .foregroundStyle(Theme.onProminent)
                     }
                     .buttonStyle(.glassProminent)
-                    .tint(.white)
+                    .tint(Theme.prominentFill)
                 }
             }
         }
@@ -152,36 +151,6 @@ struct PersonalizationView: View {
         }
     }
 
-    private var memorySection: some View {
-        Section {
-            LabeledContent {
-                onOffText(account.settings?.referencesSavedMemories)
-            } label: {
-                Label("Reference saved memories", systemImage: "brain")
-            }
-            LabeledContent {
-                onOffText(account.settings?.referencesChatHistory)
-            } label: {
-                Label("Reference chat history", systemImage: "clock.arrow.circlepath")
-            }
-            NavigationLink {
-                MemoriesView()
-            } label: {
-                LabeledContent {
-                    if let count = account.memories?.memories.count {
-                        Text(verbatim: "\(count)")
-                    }
-                } label: {
-                    Label("Saved memories", systemImage: "list.bullet.rectangle")
-                }
-            }
-        } header: {
-            Text("Memory")
-        } footer: {
-            Text("When “Reference saved memories” is on, your saved memories are sent with the messages you write in OCTO. OCTO can't reference your chat history.")
-        }
-    }
-
     // MARK: Helpers
 
     private var personalityOptions: [PersonalityOption] {
@@ -207,14 +176,6 @@ struct PersonalizationView: View {
         )
     }
 
-    private func onOffText(_ value: Bool?) -> Text {
-        switch value {
-        case true?: return Text("On")
-        case false?: return Text("Off")
-        case nil: return Text(verbatim: "–")
-        }
-    }
-
     private func loadDraft() {
         guard let instructions = account.instructions else { return }
         draft = instructions
@@ -230,6 +191,7 @@ struct PersonalizationView: View {
             do {
                 try await account.saveInstructions(edited)
                 loadDraft()
+                app.toasts.show(String(localized: "Personalization saved"))
             } catch {
                 saveError = ChatSession.describe(error)
             }
@@ -241,18 +203,51 @@ struct PersonalizationView: View {
     }
 }
 
-/// The memories ChatGPT saved about the user.
-struct MemoriesView: View {
+/// Memory settings of the ChatGPT account and the memories it saved.
+struct MemoryView: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
         List {
+            Section {
+                LabeledContent {
+                    onOffText(app.account.settings?.referencesSavedMemories)
+                } label: {
+                    Label("Reference saved memories", systemImage: "brain")
+                }
+                LabeledContent {
+                    onOffText(app.account.settings?.referencesChatHistory)
+                } label: {
+                    Label("Reference chat history", systemImage: "clock.arrow.circlepath")
+                }
+            } footer: {
+                Text("When “Reference saved memories” is on, your saved memories are sent with the messages you write in OCTO. OCTO can't reference your chat history.")
+            }
+
             if let snapshot = app.account.memories {
-                if snapshot.memories.isEmpty {
-                    Text("No saved memories.")
-                        .foregroundStyle(Theme.secondaryText)
-                } else {
+                if let used = snapshot.usedTokens, let capacity = snapshot.maxTokens, capacity > 0 {
                     Section {
+                        let fraction = min(Double(used) / Double(capacity), 1)
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Memory used")
+                                Spacer()
+                                Text(verbatim: "\(Int((fraction * 100).rounded())) %")
+                                    .monospacedDigit()
+                                    .foregroundStyle(Theme.secondaryText)
+                            }
+                            ProgressView(value: fraction)
+                                .tint(fraction >= 0.9 ? Theme.danger : Theme.primaryText)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+
+                Section {
+                    if snapshot.memories.isEmpty {
+                        Text("No saved memories.")
+                            .foregroundStyle(Theme.secondaryText)
+                    } else {
                         ForEach(snapshot.memories) { memory in
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(verbatim: memory.content)
@@ -264,9 +259,11 @@ struct MemoriesView: View {
                             }
                             .padding(.vertical, 2)
                         }
-                    } footer: {
-                        Text("Memories are managed in ChatGPT.")
                     }
+                } header: {
+                    Text("Saved memories")
+                } footer: {
+                    Text("Memories are managed in ChatGPT.")
                 }
             } else if case .failed(let message) = app.account.state {
                 Label(message, systemImage: "exclamationmark.triangle.fill")
@@ -280,10 +277,23 @@ struct MemoriesView: View {
                 .listRowBackground(Color.clear)
             }
         }
-        .navigationTitle("Saved memories")
+        .navigationTitle("Memory")
         .navigationBarTitleDisplayMode(.inline)
-        .refreshable {
+        .detachedRefreshable {
             await app.account.refresh()
+        }
+        .task {
+            if app.account.memories == nil {
+                await app.account.refresh()
+            }
+        }
+    }
+
+    private func onOffText(_ value: Bool?) -> Text {
+        switch value {
+        case true?: return Text("On")
+        case false?: return Text("Off")
+        case nil: return Text(verbatim: "–")
         }
     }
 }

@@ -6,23 +6,42 @@ public struct AccountProfile: Codable, Equatable, Sendable {
     public var name: String?
     public var email: String?
     public var pictureURL: URL?
+    public var phoneNumber: String?
+    /// Multi-factor authentication, when the account reports it.
+    public var mfaEnabled: Bool?
+    public var createdAt: Date?
 
-    public init(userID: String? = nil, name: String? = nil, email: String? = nil, pictureURL: URL? = nil) {
+    public init(
+        userID: String? = nil,
+        name: String? = nil,
+        email: String? = nil,
+        pictureURL: URL? = nil,
+        phoneNumber: String? = nil,
+        mfaEnabled: Bool? = nil,
+        createdAt: Date? = nil
+    ) {
         self.userID = userID
         self.name = name
         self.email = email
         self.pictureURL = pictureURL
+        self.phoneNumber = phoneNumber
+        self.mfaEnabled = mfaEnabled
+        self.createdAt = createdAt
     }
 
     public static func parse(_ data: Data) -> AccountProfile? {
         guard let object = JSONValue.object(data) else { return nil }
         let name = JSONValue.string(object["name"])?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let phone = JSONValue.string(object["phone_number"])?.trimmingCharacters(in: .whitespacesAndNewlines)
         let picture = JSONValue.string(object["picture"]).flatMap { $0.isEmpty ? nil : URL(string: $0) }
         let profile = AccountProfile(
             userID: JSONValue.string(object["id"]),
             name: name?.isEmpty == false ? name : nil,
             email: JSONValue.string(object["email"]),
-            pictureURL: picture
+            pictureURL: picture,
+            phoneNumber: phone?.isEmpty == false ? phone : nil,
+            mfaEnabled: JSONValue.bool(object["mfa_flag_enabled"]),
+            createdAt: FlexibleDate.parse(object["created"])
         )
         guard profile.userID != nil || profile.email != nil else { return nil }
         return profile

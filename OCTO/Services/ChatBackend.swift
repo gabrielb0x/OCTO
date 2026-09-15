@@ -90,8 +90,11 @@ final class ChatBackend: Sendable {
     ) async throws {
         let credential = try await vault.credential(forceRefresh: attempt > 0)
         let urlRequest = try makeURLRequest(for: request, credential: credential)
-        let (bytes, response) = try await session.bytes(for: urlRequest)
-        guard let http = response as? HTTPURLResponse else { throw ChatBackendError.invalidResponse }
+        let (bytes, response, recording) = try await session.recordedBytes(for: urlRequest)
+        guard let http = response as? HTTPURLResponse else {
+            recording?.finishStream(bytes: 0, events: 0, eventCounts: [:], preview: nil, error: ChatBackendError.invalidResponse)
+            throw ChatBackendError.invalidResponse
+        }
 
         guard (200..<300).contains(http.statusCode) else {
             var body = Data()
@@ -100,6 +103,8 @@ final class ChatBackend: Sendable {
                 if body.count > 65_536 { break }
             }
             let payload = APIErrorPayload.parse(body)
+            recording?.finishStream(bytes: body.count, events: 0, eventCounts: [:], preview: String(decoding: body, as: UTF8.self), error: nil)
+            DevLog.log("codex", "Responses HTTP \(http.statusCode) for \(request.modelID): \(payload.message ?? "no message")", level: .error)
 
             if http.statusCode == 401, attempt == 0 {
                 return try await run(request, continuation: continuation, attempt: attempt + 1)
@@ -114,12 +119,22 @@ final class ChatBackend: Sendable {
         }
 
         var parser = ServerSentEventParser()
-        for try await byte in bytes {
-            guard let event = parser.consume(byte) else { continue }
-            try forward(event, to: continuation)
-        }
-        if let event = parser.finish() {
-            try forward(event, to: continuation)
+        var stats = StreamStats(isRecording: recording != nil)
+        do {
+            for try await byte in bytes {
+                stats.bytes += 1
+                guard let event = parser.consume(byte) else { continue }
+                stats.record(event)
+                try forward(event, to: continuation)
+            }
+            if let event = parser.finish() {
+                stats.record(event)
+                try forward(event, to: continuation)
+            }
+            recording?.finishStream(bytes: stats.bytes, events: stats.events, eventCounts: stats.counts, preview: stats.preview, error: nil)
+        } catch {
+            recording?.finishStream(bytes: stats.bytes, events: stats.events, eventCounts: stats.counts, preview: stats.preview, error: error)
+            throw error
         }
     }
 
@@ -173,7 +188,7 @@ final class ChatBackend: Sendable {
         }
         request.timeoutInterval = 30
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await session.recordedData(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
             throw ChatBackendError.failure(ChatFailureKind.classify(status: status, payload: APIErrorPayload.parse(data)))
@@ -190,7 +205,7 @@ final class ChatBackend: Sendable {
         for (name, value) in CodexBackend.headers(accessToken: credential.accessToken, accountID: credential.accountID, userAgent: AppInfo.userAgent) {
             request.setValue(value, forHTTPHeaderField: name)
         }
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await session.recordedData(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
             throw ChatBackendError.failure(ChatFailureKind.classify(status: status, payload: APIErrorPayload.parse(data)))
@@ -216,5 +231,32 @@ final class ChatBackend: Sendable {
             }
         }
         return TitlePrompt.sanitize(text)
+    }
+}
+
+/// What the network log shows about a streamed reply: size, events by type and the first events.
+private struct StreamStats {
+    let isRecording: Bool
+    var bytes = 0
+    var events = 0
+    var counts: [String: Int] = [:]
+    var preview = ""
+
+    mutating func record(_ event: ServerSentEvent) {
+        guard isRecording else { return }
+        events += 1
+        let name = event.event ?? Self.type(in: event.data) ?? "message"
+        counts[name, default: 0] += 1
+        if preview.utf8.count < 24_000 {
+            preview += "event: \(name)\ndata: \(event.data)\n\n"
+        }
+    }
+
+    /// The `"type"` of a Responses event, read without decoding the whole JSON.
+    static func type(in data: String) -> String? {
+        guard let range = data.range(of: "\"type\":\"") else { return nil }
+        let rest = data[range.upperBound...]
+        guard let end = rest.firstIndex(of: "\"") else { return nil }
+        return String(rest[..<end])
     }
 }

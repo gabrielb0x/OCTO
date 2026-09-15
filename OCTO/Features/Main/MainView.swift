@@ -15,7 +15,7 @@ struct MainView: View {
     init(app: AppModel) {
         var initialSession: ChatSession?
         #if OCTO_DEMO
-        if let scene = app.demoScene, [DemoScene.chat, .sidebar, .voice].contains(scene) {
+        if let scene = app.demoScene, [DemoScene.chat, .sidebar, .voice, .lightChat, .messageDetails].contains(scene) {
             initialSession = app.makeSession(conversationID: DemoContent.featuredConversationID)
         }
         #endif
@@ -82,7 +82,11 @@ struct MainView: View {
         }
         .background(Theme.sidebarBackground.ignoresSafeArea())
         .sheet(isPresented: $showSettings) {
+            #if OCTO_DEMO
+            SettingsView(initialPath: DemoContent.settingsPath(for: app.demoScene), initialSection: DemoContent.settingsSection(for: app.demoScene))
+            #else
             SettingsView()
+            #endif
         }
         .alert("Couldn't update your ChatGPT account", isPresented: syncErrorIsPresented) {
             Button("OK", role: .cancel) {}
@@ -92,21 +96,20 @@ struct MainView: View {
         .task {
             await app.refreshAccount()
             #if OCTO_DEMO
-            switch app.demoScene {
-            case .sidebar?:
-                try? await Task.sleep(for: .milliseconds(500))
-                setSidebar(open: true)
-            case .settings?:
-                try? await Task.sleep(for: .milliseconds(500))
-                showSettings = true
-            default:
-                break
-            }
+            await DemoContent.run(app.demoScene, app: app, openSidebar: { setSidebar(open: true) }, openSettings: { showSettings = true })
             #endif
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 Task { await app.refreshAccount() }
+            }
+        }
+        .onChange(of: app.notifications.conversationToOpen) { _, id in
+            guard let id else { return }
+            app.notifications.conversationToOpen = nil
+            if id == session.id || app.store.summary(id: id) != nil || app.liveSession(for: id) != nil {
+                showSettings = false
+                open(id)
             }
         }
         .sensoryFeedback(.selection, trigger: isSidebarOpen) { _, _ in
@@ -138,13 +141,22 @@ struct MainView: View {
         setSidebar(open: false)
     }
 
+    /// The chat disappears right away; the confirmation shows once the account has deleted it too.
     private func delete(_ id: UUID) {
         if session.id == id {
             session.stop()
             session.discardIfTemporary()
             session = app.makeSession()
         }
-        app.store.delete(id: id)
+        let app = app
+        Task {
+            do {
+                try await app.store.delete(id: id)
+                app.toasts.show(String(localized: "The chat has been deleted"))
+            } catch {
+                app.toasts.show(ChatSession.describe(error), style: .failure)
+            }
+        }
     }
 
     private func rename(_ id: UUID, to title: String) {

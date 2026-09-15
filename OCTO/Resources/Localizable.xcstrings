@@ -1,6 +1,166 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%lld chats": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld chat"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld chats"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld chat"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld chats"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld downloaded chats removed": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld downloaded chat removed"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld downloaded chats removed"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld chat téléchargé supprimé"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld chats téléchargés supprimés"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld files": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld file"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld files"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld fichier"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld fichiers"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld more taps to turn on developer mode": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld more tap to turn on developer mode"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld more taps to turn on developer mode"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Plus que %lld appui pour activer le mode développeur"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Plus que %lld appuis pour activer le mode développeur"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld-day limit": {
       "localizations": {
         "fr": {
@@ -17,6 +177,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Limite sur %lld h"
+          }
+        }
+      }
+    },
+    "A confirmation shows when a chat is deleted, and pulling to refresh the chat list no longer fails.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un message confirme la suppression d'un chat, et tirer pour actualiser la liste des chats ne provoque plus d'erreur."
+          }
+        }
+      }
+    },
+    "A text report with the device details, the event log and the network log, without credentials.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un rapport texte avec les infos de l'appareil, le journal d'événements et le journal réseau, sans identifiants."
+          }
+        }
+      }
+    },
+    "About": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À propos"
           }
         }
       }
@@ -41,6 +231,36 @@
         }
       }
     },
+    "Accent color": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couleur d'accentuation"
+          }
+        }
+      }
+    },
+    "Access expires": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expiration de l'accès"
+          }
+        }
+      }
+    },
+    "Access token claims": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claims du jeton d'accès"
+          }
+        }
+      }
+    },
     "Account": {
       "localizations": {
         "fr": {
@@ -51,12 +271,172 @@
         }
       }
     },
+    "Account blocked by Cloudflare": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compte bloqué par Cloudflare"
+          }
+        }
+      }
+    },
+    "Account data": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Données du compte"
+          }
+        }
+      }
+    },
+    "Account ID": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID du compte"
+          }
+        }
+      }
+    },
+    "Account refreshed": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compte actualisé"
+          }
+        }
+      }
+    },
+    "Account server error": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erreur serveur du compte"
+          }
+        }
+      }
+    },
+    "Actions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actions"
+          }
+        }
+      }
+    },
     "Add attachments": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Ajouter des pièces jointes"
+          }
+        }
+      }
+    },
+    "Address": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresse"
+          }
+        }
+      }
+    },
+    "Ads and their personalization are managed with your ChatGPT account in ChatGPT. OCTO sends nothing to advertisers: no telemetry, no analytics, no third-party SDK.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les publicités et leur personnalisation se gèrent avec ton compte dans ChatGPT. OCTO n'envoie rien aux annonceurs : aucune télémétrie, aucun outil d'analyse, aucun SDK tiers."
+          }
+        }
+      }
+    },
+    "Ads management": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestion des publicités"
+          }
+        }
+      }
+    },
+    "After 1 hour": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Après 1 heure"
+          }
+        }
+      }
+    },
+    "After 1 minute": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Après 1 minute"
+          }
+        }
+      }
+    },
+    "After 15 minutes": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Après 15 minutes"
+          }
+        }
+      }
+    },
+    "After 5 minutes": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Après 5 minutes"
+          }
+        }
+      }
+    },
+    "Age verification": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérification de l'âge"
+          }
+        }
+      }
+    },
+    "Age verification is done by OpenAI in ChatGPT. OCTO never asks for an ID and doesn't receive any verification data.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La vérification de l'âge est faite par OpenAI dans ChatGPT. OCTO ne demande jamais de pièce d'identité et ne reçoit aucune donnée de vérification."
+          }
+        }
+      }
+    },
+    "All": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toutes"
           }
         }
       }
@@ -101,6 +481,46 @@
         }
       }
     },
+    "Always show the model picker": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toujours afficher le sélecteur de modèle"
+          }
+        }
+      }
+    },
+    "An open-source ChatGPT client for iOS": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un client ChatGPT open source pour iOS"
+          }
+        }
+      }
+    },
+    "Anyone with this token can use your ChatGPT account until it expires. Never share it.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "N'importe qui avec ce jeton peut utiliser ton compte ChatGPT jusqu'à son expiration. Ne le partage jamais."
+          }
+        }
+      }
+    },
+    "API console": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Console API"
+          }
+        }
+      }
+    },
     "App": {
       "localizations": {
         "fr": {
@@ -117,6 +537,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Langue de l'app"
+          }
+        }
+      }
+    },
+    "App settings": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paramètres de l'application"
           }
         }
       }
@@ -141,12 +571,82 @@
         }
       }
     },
+    "Attachments": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pièces jointes"
+          }
+        }
+      }
+    },
+    "Automatic": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatique"
+          }
+        }
+      }
+    },
+    "Available on this device": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disponible sur l'appareil"
+          }
+        }
+      }
+    },
     "Base style and tone": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Style et ton de base"
+          }
+        }
+      }
+    },
+    "Billing": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facturation"
+          }
+        }
+      }
+    },
+    "Blue": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bleu"
+          }
+        }
+      }
+    },
+    "Body": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corps"
+          }
+        }
+      }
+    },
+    "Bought on": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acheté sur"
           }
         }
       }
@@ -167,6 +667,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trouver des idées de projet pour le week-end"
+          }
+        }
+      }
+    },
+    "Build": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build"
+          }
+        }
+      }
+    },
+    "Cached account data": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Données du compte en cache"
           }
         }
       }
@@ -201,6 +721,16 @@
         }
       }
     },
+    "Changelog": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historique des versions"
+          }
+        }
+      }
+    },
     "Characteristics": {
       "localizations": {
         "fr": {
@@ -231,6 +761,36 @@
         }
       }
     },
+    "ChatGPT can ask you to confirm your age for some content and features.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT peut te demander de confirmer ton âge pour certains contenus et fonctionnalités."
+          }
+        }
+      }
+    },
+    "ChatGPT couldn't finish replying.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT n'a pas pu terminer sa réponse."
+          }
+        }
+      }
+    },
+    "ChatGPT in the browser": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT dans le navigateur"
+          }
+        }
+      }
+    },
     "ChatGPT is having trouble right now. Try again in a moment.": {
       "localizations": {
         "fr": {
@@ -247,6 +807,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ChatGPT a refusé l'accès aux données de ton compte. Essaie de te déconnecter puis de te reconnecter."
+          }
+        }
+      }
+    },
+    "ChatGPT replied.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT a répondu."
           }
         }
       }
@@ -271,12 +841,42 @@
         }
       }
     },
+    "ChatGPT voice": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voix ChatGPT"
+          }
+        }
+      }
+    },
     "Chats": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Chats"
+          }
+        }
+      }
+    },
+    "Chats from your account are kept on this device so they open instantly and offline.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les chats de ton compte sont gardés sur l'appareil pour s'ouvrir instantanément, même hors ligne."
+          }
+        }
+      }
+    },
+    "Chats synced": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chats synchronisés"
           }
         }
       }
@@ -291,6 +891,16 @@
         }
       }
     },
+    "Clear": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effacer"
+          }
+        }
+      }
+    },
     "Clear search": {
       "localizations": {
         "fr": {
@@ -301,12 +911,42 @@
         }
       }
     },
+    "Clear the model cache": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vider le cache des modèles"
+          }
+        }
+      }
+    },
+    "Clearer feedback": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Des retours plus clairs"
+          }
+        }
+      }
+    },
     "Code": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Coder"
+          }
+        }
+      }
+    },
+    "Code on another device": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code sur un autre appareil"
           }
         }
       }
@@ -351,12 +991,72 @@
         }
       }
     },
+    "Copy as cURL": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier en cURL"
+          }
+        }
+      }
+    },
     "Copy code": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Copier le code"
+          }
+        }
+      }
+    },
+    "Copy for 2 minutes": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier pendant 2 minutes"
+          }
+        }
+      }
+    },
+    "Copy the access token": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier le jeton d'accès"
+          }
+        }
+      }
+    },
+    "Copy the access token?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier le jeton d'accès ?"
+          }
+        }
+      }
+    },
+    "Copy the report": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier le rapport"
+          }
+        }
+      }
+    },
+    "Correct spelling automatically": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corriger l'orthographe automatiquement"
           }
         }
       }
@@ -451,12 +1151,52 @@
         }
       }
     },
+    "Covers your chats as soon as OCTO leaves the screen, so they don't show in the app switcher.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masque tes chats dès qu'OCTO quitte l'écran, pour qu'ils n'apparaissent pas dans le sélecteur d'apps."
+          }
+        }
+      }
+    },
+    "cURL command copied": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commande cURL copiée"
+          }
+        }
+      }
+    },
     "Custom instructions": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Instructions personnalisées"
+          }
+        }
+      }
+    },
+    "Customize ChatGPT": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personnaliser ChatGPT"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sombre"
           }
         }
       }
@@ -541,6 +1281,96 @@
         }
       }
     },
+    "Describe what happened and what you expected.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Décris ce qui s'est passé et ce que tu attendais."
+          }
+        }
+      }
+    },
+    "Developer": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Développeur"
+          }
+        }
+      }
+    },
+    "Developer mode": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mode développeur"
+          }
+        }
+      }
+    },
+    "Developer mode is already on": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mode développeur est déjà activé"
+          }
+        }
+      }
+    },
+    "Developer mode is off": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mode développeur désactivé"
+          }
+        }
+      }
+    },
+    "Developer mode is on": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mode développeur activé"
+          }
+        }
+      }
+    },
+    "Device": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appareil"
+          }
+        }
+      }
+    },
+    "Device and build": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appareil et build"
+          }
+        }
+      }
+    },
+    "Device details are the versions of OCTO and iOS, the device model and the language. Nothing about your account or your chats is included.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les infos de l'appareil sont les versions d'OCTO et d'iOS, le modèle de l'appareil et la langue. Rien sur ton compte ni sur tes chats n'est inclus."
+          }
+        }
+      }
+    },
     "Dictate": {
       "localizations": {
         "fr": {
@@ -557,6 +1387,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dictée indisponible"
+          }
+        }
+      }
+    },
+    "Display": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Affichage"
+          }
+        }
+      }
+    },
+    "Does OCTO collect my data?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO collecte-t-il mes données ?"
           }
         }
       }
@@ -591,6 +1441,16 @@
         }
       }
     },
+    "Email address": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresse e-mail"
+          }
+        }
+      }
+    },
     "Enable customization": {
       "localizations": {
         "fr": {
@@ -611,12 +1471,52 @@
         }
       }
     },
+    "Ends on": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se termine le"
+          }
+        }
+      }
+    },
+    "Enhanced": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Améliorée"
+          }
+        }
+      }
+    },
+    "Event log": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal d'événements"
+          }
+        }
+      }
+    },
     "Every chat of your ChatGPT account and of this device will be deleted. This can't be undone.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Tous les chats de ton compte ChatGPT et de cet appareil seront supprimés. Cette action est irréversible."
+          }
+        }
+      }
+    },
+    "Expire tokens": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faire expirer les jetons"
           }
         }
       }
@@ -631,12 +1531,42 @@
         }
       }
     },
+    "Export diagnostics": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exporter un diagnostic"
+          }
+        }
+      }
+    },
     "Extended": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Approfondi"
+          }
+        }
+      }
+    },
+    "Face ID lock": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verrouillage Face ID"
+          }
+        }
+      }
+    },
+    "Failures": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échecs"
           }
         }
       }
@@ -651,12 +1581,82 @@
         }
       }
     },
+    "Files and preferences": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fichiers et préférences"
+          }
+        }
+      }
+    },
+    "Filter": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrer"
+          }
+        }
+      }
+    },
+    "Filter by address": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrer par adresse"
+          }
+        }
+      }
+    },
+    "Filter the events": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrer les événements"
+          }
+        }
+      }
+    },
     "For example: concise, friendly, with examples, always in French.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Par exemple : concis, amical, avec des exemples, toujours en français."
+          }
+        }
+      }
+    },
+    "Frees the space of chats downloaded from your account. They stay in your history and download again when you open them. Chats continued in OCTO are kept.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libère la place des chats téléchargés depuis ton compte. Ils restent dans ton historique et se téléchargent à nouveau quand tu les ouvres. Les chats continués dans OCTO sont conservés."
+          }
+        }
+      }
+    },
+    "Frequently asked questions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questions fréquentes"
+          }
+        }
+      }
+    },
+    "General": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Général"
           }
         }
       }
@@ -681,12 +1681,42 @@
         }
       }
     },
+    "Get a notification when ChatGPT finishes a reply while OCTO is in the background. iOS lets a reply keep generating for about 30 seconds after you leave the app.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reçois une notification quand ChatGPT termine une réponse alors qu'OCTO est en arrière-plan. iOS laisse une réponse continuer environ 30 secondes après que tu as quitté l'app."
+          }
+        }
+      }
+    },
     "Get advice": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Demander conseil"
+          }
+        }
+      }
+    },
+    "Get notified when ChatGPT finishes replying while OCTO is in the background.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reçois une notification quand ChatGPT a fini de répondre alors qu'OCTO est en arrière-plan."
+          }
+        }
+      }
+    },
+    "Green": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vert"
           }
         }
       }
@@ -701,6 +1731,16 @@
         }
       }
     },
+    "Headers": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En-têtes"
+          }
+        }
+      }
+    },
     "Heavy": {
       "localizations": {
         "fr": {
@@ -711,12 +1751,72 @@
         }
       }
     },
+    "Help": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aide"
+          }
+        }
+      }
+    },
+    "Help center": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Centre d'assistance"
+          }
+        }
+      }
+    },
     "Help me debug my code": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "M'aider à déboguer mon code"
+          }
+        }
+      }
+    },
+    "Hi! This is how I'll read ChatGPT's replies to you.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salut ! Voici comment je te lirai les réponses de ChatGPT."
+          }
+        }
+      }
+    },
+    "Hide content in the app switcher": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masquer le contenu dans le sélecteur d'apps"
+          }
+        }
+      }
+    },
+    "How long voice mode waits once you stop talking before it sends what you said.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le temps que le mode vocal attend une fois que tu t'arrêtes de parler avant d'envoyer ce que tu as dit."
+          }
+        }
+      }
+    },
+    "ID token claims": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claims du jeton d'identité"
           }
         }
       }
@@ -741,6 +1841,16 @@
         }
       }
     },
+    "Immediately": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immédiatement"
+          }
+        }
+      }
+    },
     "Improve the model for everyone": {
       "localizations": {
         "fr": {
@@ -751,12 +1861,72 @@
         }
       }
     },
+    "Include device details": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Joindre les infos de l'appareil"
+          }
+        }
+      }
+    },
+    "Include the developer log": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Joindre le journal développeur"
+          }
+        }
+      }
+    },
+    "Inspect": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspecter"
+          }
+        }
+      }
+    },
     "Instant": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Instantané"
+          }
+        }
+      }
+    },
+    "It's only available in the official ChatGPT apps. OCTO doesn't connect to your other devices.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il n'est disponible que dans les apps ChatGPT officielles. OCTO ne se connecte pas à tes autres appareils."
+          }
+        }
+      }
+    },
+    "Largest files": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fichiers les plus lourds"
+          }
+        }
+      }
+    },
+    "Last refreshed": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dernière actualisation"
           }
         }
       }
@@ -821,12 +1991,52 @@
         }
       }
     },
+    "Like in ChatGPT, choosing the model needs a subscription. On the free plan, ChatGPT uses the model available for you.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comme dans ChatGPT, choisir le modèle nécessite un abonnement. Avec le forfait gratuit, ChatGPT utilise le modèle disponible pour toi."
+          }
+        }
+      }
+    },
+    "Like in ChatGPT, the model picker only shows with a subscription.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comme dans ChatGPT, le sélecteur de modèle n'apparaît qu'avec un abonnement."
+          }
+        }
+      }
+    },
+    "Links": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liens"
+          }
+        }
+      }
+    },
     "Liquid Glass message bar": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Barre de saisie en Liquid Glass"
+          }
+        }
+      }
+    },
+    "Listen": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écouter"
           }
         }
       }
@@ -861,12 +2071,52 @@
         }
       }
     },
+    "Lock OCTO with Face ID and hide your chats in the app switcher.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verrouille OCTO avec Face ID et masque tes chats dans le sélecteur d'apps."
+          }
+        }
+      }
+    },
+    "Lock with %@": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verrouiller avec %@"
+          }
+        }
+      }
+    },
+    "Long (%@ s)": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Longue (%@ s)"
+          }
+        }
+      }
+    },
     "Make a plan": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Faire un plan"
+          }
+        }
+      }
+    },
+    "Manage in ChatGPT": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gérer dans ChatGPT"
           }
         }
       }
@@ -911,12 +2161,52 @@
         }
       }
     },
+    "Memory used": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mémoire utilisée"
+          }
+        }
+      }
+    },
+    "Message details": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Détails des messages"
+          }
+        }
+      }
+    },
     "Messages sent from OCTO count toward the Codex usage limits included in your ChatGPT plan.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Les messages envoyés depuis OCTO sont décomptés des limites d'utilisation Codex incluses dans ton forfait ChatGPT."
+          }
+        }
+      }
+    },
+    "Messages sent from OCTO count toward the Codex usage limits of your ChatGPT plan. You can follow them in Settings → Subscription.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les messages envoyés depuis OCTO sont décomptés des limites d'utilisation Codex de ton forfait ChatGPT. Tu peux les suivre dans Réglages → Abonnement."
+          }
+        }
+      }
+    },
+    "Method": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Méthode"
           }
         }
       }
@@ -941,12 +2231,72 @@
         }
       }
     },
+    "Minimum level": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niveau minimum"
+          }
+        }
+      }
+    },
+    "MIT license": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Licence MIT"
+          }
+        }
+      }
+    },
     "Model": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Modèle"
+          }
+        }
+      }
+    },
+    "Model cache cleared": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cache des modèles vidé"
+          }
+        }
+      }
+    },
+    "Model picker for subscribers": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sélecteur de modèle pour les abonnés"
+          }
+        }
+      }
+    },
+    "Models": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modèles"
+          }
+        }
+      }
+    },
+    "Monthly": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mensuelle"
           }
         }
       }
@@ -971,6 +2321,16 @@
         }
       }
     },
+    "Multi-factor authentication": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Authentification multifacteur"
+          }
+        }
+      }
+    },
     "Mute": {
       "localizations": {
         "fr": {
@@ -981,12 +2341,32 @@
         }
       }
     },
+    "My chats don't load": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mes chats ne se chargent pas"
+          }
+        }
+      }
+    },
     "Name": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Nom"
+          }
+        }
+      }
+    },
+    "Network": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réseau"
           }
         }
       }
@@ -1031,6 +2411,26 @@
         }
       }
     },
+    "No connection": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas de connexion"
+          }
+        }
+      }
+    },
+    "No events": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun événement"
+          }
+        }
+      }
+    },
     "No limits were reported for your plan.": {
       "localizations": {
         "fr": {
@@ -1061,6 +2461,16 @@
         }
       }
     },
+    "No requests": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune requête"
+          }
+        }
+      }
+    },
     "No results": {
       "localizations": {
         "fr": {
@@ -1081,12 +2491,92 @@
         }
       }
     },
+    "No stored session": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune session enregistrée"
+          }
+        }
+      }
+    },
     "No telemetry, no analytics, no third-party SDKs.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Aucune télémétrie, aucune analyse, aucun SDK tiers."
+          }
+        }
+      }
+    },
+    "No. OCTO has no telemetry, analytics or third-party SDK. Requests go straight from your device to OpenAI, and your sign-in tokens stay in the iOS keychain.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non. OCTO n'a ni télémétrie, ni outil d'analyse, ni SDK tiers. Les requêtes partent directement de ton appareil vers OpenAI, et tes jetons de connexion restent dans le trousseau iOS."
+          }
+        }
+      }
+    },
+    "None": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune"
+          }
+        }
+      }
+    },
+    "Normal (%@ s)": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normale (%@ s)"
+          }
+        }
+      }
+    },
+    "Notification in 5 seconds: leave OCTO to see it": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notification dans 5 secondes : quitte OCTO pour la voir"
+          }
+        }
+      }
+    },
+    "Notifications": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
+          }
+        }
+      }
+    },
+    "Notifications are turned off for OCTO in iOS Settings.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les notifications d'OCTO sont désactivées dans les Réglages d'iOS."
+          }
+        }
+      }
+    },
+    "Notifications work.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les notifications fonctionnent."
           }
         }
       }
@@ -1101,6 +2591,16 @@
         }
       }
     },
+    "OCTO asks for %@ or your passcode when it opens.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO demande %@ ou ton code quand il s'ouvre."
+          }
+        }
+      }
+    },
     "OCTO could not receive the sign-in response. Try signing in with a code instead.": {
       "localizations": {
         "fr": {
@@ -1111,12 +2611,82 @@
         }
       }
     },
+    "OCTO couldn't tell which plan your account has.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO n'a pas pu déterminer le forfait de ton compte."
+          }
+        }
+      }
+    },
+    "OCTO follows the appearance of your device or stays light or dark, with ChatGPT's accent colors.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO suit l'apparence de ton appareil ou reste clair ou sombre, avec les couleurs d'accentuation de ChatGPT."
+          }
+        }
+      }
+    },
     "OCTO is an independent open-source project, not affiliated with or endorsed by OpenAI. ChatGPT is a trademark of OpenAI.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "OCTO est un projet open source indépendant, ni affilié ni approuvé par OpenAI. ChatGPT est une marque d'OpenAI."
+          }
+        }
+      }
+    },
+    "OCTO is locked": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO est verrouillé"
+          }
+        }
+      }
+    },
+    "OCTO on GitHub": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO sur GitHub"
+          }
+        }
+      }
+    },
+    "OCTO reads replies with the voices of your device, without sending anything. More voices can be downloaded in iOS Settings → Accessibility → Spoken Content.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO lit les réponses avec les voix de ton appareil, sans rien envoyer. D'autres voix se téléchargent dans Réglages → Accessibilité → Contenu énoncé."
+          }
+        }
+      }
+    },
+    "OCTO shows no ads and doesn't track you.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO n'affiche aucune publicité et ne te piste pas."
+          }
+        }
+      }
+    },
+    "OCTO shows the chats of your account, but its replies are generated through the Codex backend of your plan. The messages you write in OCTO stay on this device, and a note shows where they start in a chat from your account.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO affiche les chats de ton compte, mais ses réponses sont générées par le backend Codex de ton forfait. Les messages que tu écris dans OCTO restent sur l'appareil, et une mention indique où ils commencent dans un chat de ton compte."
           }
         }
       }
@@ -1151,6 +2721,36 @@
         }
       }
     },
+    "Open ChatGPT settings": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir les réglages de ChatGPT"
+          }
+        }
+      }
+    },
+    "Open iOS Settings": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir les Réglages d'iOS"
+          }
+        }
+      }
+    },
+    "Open on GitHub": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir sur GitHub"
+          }
+        }
+      }
+    },
     "Open page": {
       "localizations": {
         "fr": {
@@ -1177,6 +2777,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ouvre la page ci-dessous sur n'importe quel appareil, connecte-toi à ChatGPT et saisis ce code."
+          }
+        }
+      }
+    },
+    "OpenAI Help Center": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Centre d'aide OpenAI"
           }
         }
       }
@@ -1221,6 +2831,76 @@
         }
       }
     },
+    "OpenAI status": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "État des services OpenAI"
+          }
+        }
+      }
+    },
+    "Orange": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orange"
+          }
+        }
+      }
+    },
+    "Parental controls": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contrôle parental"
+          }
+        }
+      }
+    },
+    "Parental controls are set up and managed in ChatGPT. OCTO doesn't change them.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le contrôle parental se configure et se gère dans ChatGPT. OCTO ne le modifie pas."
+          }
+        }
+      }
+    },
+    "Parents can link their account to a teen's account to adjust how ChatGPT works for them.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les parents peuvent associer leur compte à celui d'un ado pour adapter ChatGPT à son âge."
+          }
+        }
+      }
+    },
+    "Passcode": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code"
+          }
+        }
+      }
+    },
+    "Performance overlay": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overlay de performances"
+          }
+        }
+      }
+    },
     "Persistent": {
       "localizations": {
         "fr": {
@@ -1241,6 +2921,26 @@
         }
       }
     },
+    "Personalization saved": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personnalisation enregistrée"
+          }
+        }
+      }
+    },
+    "Phone number": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numéro de téléphone"
+          }
+        }
+      }
+    },
     "Photos": {
       "localizations": {
         "fr": {
@@ -1257,6 +2957,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Épingler"
+          }
+        }
+      }
+    },
+    "Pink": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rose"
           }
         }
       }
@@ -1287,6 +2997,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Organiser 3 jours à Lisbonne"
+          }
+        }
+      }
+    },
+    "Plugins": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plugins"
+          }
+        }
+      }
+    },
+    "Plugins connect ChatGPT to other apps and services, and you call them with @ in a chat.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les plugins connectent ChatGPT à d'autres apps et services, et tu les appelles avec @ dans un chat."
+          }
+        }
+      }
+    },
+    "Plugins run inside ChatGPT. Replies in OCTO come from the Codex backend of your plan, which can search the web but can't use the plugins of your account. Add or remove plugins in ChatGPT.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les plugins fonctionnent dans ChatGPT. Les réponses d'OCTO viennent du backend Codex de ton forfait, qui peut chercher sur le web mais pas utiliser les plugins de ton compte. Ajoute ou retire des plugins dans ChatGPT."
+          }
+        }
+      }
+    },
+    "Preferences": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préférences"
+          }
+        }
+      }
+    },
+    "Premium": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premium"
           }
         }
       }
@@ -1331,6 +3091,36 @@
         }
       }
     },
+    "Protection": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protection"
+          }
+        }
+      }
+    },
+    "Pull down on the chat list to try again. If it keeps failing, turn on developer mode by tapping the build number 8 times in About: the network log shows the exact error.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tire la liste des chats vers le bas pour réessayer. Si ça échoue encore, active le mode développeur en touchant 8 fois le numéro de build dans À propos : le journal réseau affiche l'erreur exacte."
+          }
+        }
+      }
+    },
+    "Raw Markdown": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markdown brut"
+          }
+        }
+      }
+    },
     "Read aloud": {
       "localizations": {
         "fr": {
@@ -1347,6 +3137,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vitesse de lecture"
+          }
+        }
+      }
+    },
+    "Read-only requests to chatgpt.com/backend-api with your session. Responses stay on this device.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requêtes en lecture seule vers chatgpt.com/backend-api avec ta session. Les réponses restent sur l'appareil."
+          }
+        }
+      }
+    },
+    "Record network requests": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer les requêtes réseau"
+          }
+        }
+      }
+    },
+    "Recording is paused.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'enregistrement est en pause."
           }
         }
       }
@@ -1371,6 +3191,36 @@
         }
       }
     },
+    "Refresh session": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiser la session"
+          }
+        }
+      }
+    },
+    "Refresh the account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiser le compte"
+          }
+        }
+      }
+    },
+    "Refresh tokens now": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiser les jetons maintenant"
+          }
+        }
+      }
+    },
     "Regenerate": {
       "localizations": {
         "fr": {
@@ -1381,12 +3231,72 @@
         }
       }
     },
+    "Reload models": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharger les modèles"
+          }
+        }
+      }
+    },
+    "Remote control": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contrôle à distance"
+          }
+        }
+      }
+    },
+    "Remote control lets the ChatGPT apps work with your other devices.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le contrôle à distance permet aux apps ChatGPT de fonctionner avec tes autres appareils."
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer"
+          }
+        }
+      }
+    },
     "Remove attachment": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Retirer la pièce jointe"
+          }
+        }
+      }
+    },
+    "Remove downloaded chats": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer les chats téléchargés"
+          }
+        }
+      }
+    },
+    "Remove downloaded chats?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer les chats téléchargés ?"
           }
         }
       }
@@ -1411,6 +3321,36 @@
         }
       }
     },
+    "Renews on": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se renouvelle le"
+          }
+        }
+      }
+    },
+    "Replies": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réponses"
+          }
+        }
+      }
+    },
+    "Replies cut off": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réponses coupées"
+          }
+        }
+      }
+    },
     "Replies flow in smoothly, and the chat no longer scrolls by itself while ChatGPT writes.": {
       "localizations": {
         "fr": {
@@ -1421,12 +3361,162 @@
         }
       }
     },
+    "Reply notifications": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications de réponse"
+          }
+        }
+      }
+    },
+    "Report a problem": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signaler un problème"
+          }
+        }
+      }
+    },
+    "Report a problem with the app": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signaler un problème lié à l'application"
+          }
+        }
+      }
+    },
+    "Report copied": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rapport copié"
+          }
+        }
+      }
+    },
+    "Request": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requête"
+          }
+        }
+      }
+    },
+    "Request body": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corps de la requête"
+          }
+        }
+      }
+    },
+    "Request headers": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En-têtes de la requête"
+          }
+        }
+      }
+    },
+    "Request not found": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requête introuvable"
+          }
+        }
+      }
+    },
+    "Requests": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requêtes"
+          }
+        }
+      }
+    },
+    "Requests made by OCTO show up here while developer mode is on.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les requêtes d'OCTO s'affichent ici tant que le mode développeur est activé."
+          }
+        }
+      }
+    },
+    "Require": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demander"
+          }
+        }
+      }
+    },
     "Resets %@": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Réinitialisation %@"
+          }
+        }
+      }
+    },
+    "Response": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réponse"
+          }
+        }
+      }
+    },
+    "Response body": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corps de la réponse"
+          }
+        }
+      }
+    },
+    "Response headers": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En-têtes de la réponse"
+          }
+        }
+      }
+    },
+    "Restore purchases": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurer les achats"
           }
         }
       }
@@ -1531,6 +3621,16 @@
         }
       }
     },
+    "Security and login": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sécurité et connexion"
+          }
+        }
+      }
+    },
     "Send": {
       "localizations": {
         "fr": {
@@ -1541,12 +3641,92 @@
         }
       }
     },
+    "Send a test notification": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer une notification de test"
+          }
+        }
+      }
+    },
+    "Send after a pause of": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer après une pause de"
+          }
+        }
+      }
+    },
+    "Session": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session"
+          }
+        }
+      }
+    },
+    "Session and tokens": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session et jetons"
+          }
+        }
+      }
+    },
+    "Session refreshed": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session actualisée"
+          }
+        }
+      }
+    },
+    "Set a passcode on this device to lock OCTO.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Définis un code sur cet appareil pour verrouiller OCTO."
+          }
+        }
+      }
+    },
     "Settings": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Réglages"
+          }
+        }
+      }
+    },
+    "Settings are organized like in the ChatGPT app: customization, account, theme, app settings and help.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les réglages sont organisés comme dans l'app ChatGPT : personnalisation, compte, thème, paramètres de l'application et aide."
+          }
+        }
+      }
+    },
+    "Settings like ChatGPT's": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Des réglages comme dans ChatGPT"
           }
         }
       }
@@ -1571,12 +3751,92 @@
         }
       }
     },
+    "Short (%@ s)": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Courte (%@ s)"
+          }
+        }
+      }
+    },
+    "Shortcuts": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raccourcis"
+          }
+        }
+      }
+    },
+    "Show previews": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher les aperçus"
+          }
+        }
+      }
+    },
     "Show reasoning": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Afficher la réflexion"
+          }
+        }
+      }
+    },
+    "Show suggestions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher les suggestions"
+          }
+        }
+      }
+    },
+    "Show text as it arrives": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher le texte dès qu'il arrive"
+          }
+        }
+      }
+    },
+    "Show What's New": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher les nouveautés"
+          }
+        }
+      }
+    },
+    "Show What's New at next launch": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher les nouveautés au prochain lancement"
+          }
+        }
+      }
+    },
+    "Shows what's new in this version": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Affiche les nouveautés de cette version"
           }
         }
       }
@@ -1621,6 +3881,16 @@
         }
       }
     },
+    "Sign-in": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connexion"
+          }
+        }
+      }
+    },
     "Sign-in failed": {
       "localizations": {
         "fr": {
@@ -1637,6 +3907,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Échec de la connexion (HTTP %lld)."
+          }
+        }
+      }
+    },
+    "Sign-in timeout": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Délai de connexion dépassé"
           }
         }
       }
@@ -1661,6 +3941,16 @@
         }
       }
     },
+    "Signed in": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connexion le"
+          }
+        }
+      }
+    },
     "Signing in with an OpenAI API key isn't offered anymore for now.": {
       "localizations": {
         "fr": {
@@ -1671,12 +3961,82 @@
         }
       }
     },
+    "Signing out revokes the session of this device. To sign out everywhere, use ChatGPT.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La déconnexion révoque la session de cet appareil. Pour te déconnecter partout, utilise ChatGPT."
+          }
+        }
+      }
+    },
     "Simply ChatGPT": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Tout simplement ChatGPT"
+          }
+        }
+      }
+    },
+    "Simulate a failure": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simuler une panne"
+          }
+        }
+      }
+    },
+    "Simulated by developer mode": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simulée par le mode développeur"
+          }
+        }
+      }
+    },
+    "Simulating: %@": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simulation : %@"
+          }
+        }
+      }
+    },
+    "Simulation": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simulation"
+          }
+        }
+      }
+    },
+    "Simulations last until OCTO restarts.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les simulations durent jusqu'au redémarrage d'OCTO."
+          }
+        }
+      }
+    },
+    "Slow animations": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Animations ralenties"
           }
         }
       }
@@ -1791,12 +4151,42 @@
         }
       }
     },
+    "Storage": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stockage"
+          }
+        }
+      }
+    },
+    "Stream events": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Événements du streaming"
+          }
+        }
+      }
+    },
     "Subscription": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Abonnement"
+          }
+        }
+      }
+    },
+    "Subscriptions are managed in ChatGPT.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les abonnements se gèrent dans ChatGPT."
           }
         }
       }
@@ -1827,6 +4217,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Balaie un chat pour le remettre dans ton historique."
+          }
+        }
+      }
+    },
+    "Swipe a preference to delete it. Some only take effect at the next launch.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balaie une préférence pour la supprimer. Certaines ne s'appliquent qu'au prochain lancement."
+          }
+        }
+      }
+    },
+    "Sync chats now": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchroniser les chats"
+          }
+        }
+      }
+    },
+    "System": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Système"
+          }
+        }
+      }
+    },
+    "Tap the build number 8 times in About to inspect requests, logs, tokens and performance.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touche 8 fois le numéro de build dans À propos pour inspecter les requêtes, les journaux, les jetons et les performances."
+          }
+        }
+      }
+    },
+    "Tap the version to see what's new.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touche la version pour voir les nouveautés."
           }
         }
       }
@@ -1871,6 +4311,16 @@
         }
       }
     },
+    "The chat has been deleted": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le chat a bien été supprimé"
+          }
+        }
+      }
+    },
     "The chats of your ChatGPT account will be removed from this device.": {
       "localizations": {
         "fr": {
@@ -1887,6 +4337,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Le code a expiré. Demandes-en un nouveau."
+          }
+        }
+      }
+    },
+    "The console isn't available in demo mode.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La console n'est pas disponible en mode démo."
+          }
+        }
+      }
+    },
+    "The logs are cleared and the simulations stop.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les journaux sont effacés et les simulations s'arrêtent."
           }
         }
       }
@@ -1911,6 +4381,36 @@
         }
       }
     },
+    "The network log keeps the last 250 requests in memory, without tokens or cookies. Nothing is saved or sent.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le journal réseau garde les 250 dernières requêtes en mémoire, sans jetons ni cookies. Rien n'est enregistré ni envoyé."
+          }
+        }
+      }
+    },
+    "The next request will refresh the tokens": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La prochaine requête actualisera les jetons"
+          }
+        }
+      }
+    },
+    "The report opens as a new issue on OCTO's GitHub page, where you can check it before sending it. A GitHub account is needed.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le rapport s'ouvre comme une nouvelle issue sur la page GitHub d'OCTO, où tu peux le relire avant de l'envoyer. Il faut un compte GitHub."
+          }
+        }
+      }
+    },
     "The request timed out.": {
       "localizations": {
         "fr": {
@@ -1931,6 +4431,62 @@
         }
       }
     },
+    "The voice of your account in ChatGPT's own voice mode. OCTO speaks with the voices of your device.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La voix de ton compte dans le mode vocal de ChatGPT. OCTO parle avec les voix de ton appareil."
+          }
+        }
+      }
+    },
+    "The web": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le web"
+          }
+        }
+      }
+    },
+    "Theme": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thème"
+          }
+        }
+      }
+    },
+    "Theme and accent color": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thème et couleur d'accentuation"
+          }
+        }
+      }
+    },
+    "theme.light": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clair"
+          }
+        }
+      }
+    },
     "Thinking": {
       "localizations": {
         "fr": {
@@ -1947,6 +4503,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Réflexion : %@"
+          }
+        }
+      }
+    },
+    "This address isn't a relative path of backend-api.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette adresse n'est pas un chemin relatif de backend-api."
           }
         }
       }
@@ -2051,6 +4617,16 @@
         }
       }
     },
+    "Token copied for 2 minutes": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeton copié pour 2 minutes"
+          }
+        }
+      }
+    },
     "Too many requests right now. Wait a moment and try again.": {
       "localizations": {
         "fr": {
@@ -2071,12 +4647,62 @@
         }
       }
     },
+    "Try the toasts": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tester les messages de confirmation"
+          }
+        }
+      }
+    },
+    "Turn off": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactiver"
+          }
+        }
+      }
+    },
+    "Turn off developer mode": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactiver le mode développeur"
+          }
+        }
+      }
+    },
+    "Turn off developer mode?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactiver le mode développeur ?"
+          }
+        }
+      }
+    },
     "Turn off web search": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Désactiver la recherche web"
+          }
+        }
+      }
+    },
+    "Turn on the lock for OCTO": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activer le verrouillage d'OCTO"
           }
         }
       }
@@ -2097,6 +4723,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Désarchiver"
+          }
+        }
+      }
+    },
+    "Unlock": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déverrouiller"
+          }
+        }
+      }
+    },
+    "Unlock OCTO": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déverrouiller OCTO"
           }
         }
       }
@@ -2151,12 +4797,42 @@
         }
       }
     },
+    "used by OCTO": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "utilisés par OCTO"
+          }
+        }
+      }
+    },
     "Used for the messages you write in OCTO.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Utilisé pour les messages que tu écris dans OCTO."
+          }
+        }
+      }
+    },
+    "User agent": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User-Agent"
+          }
+        }
+      }
+    },
+    "User ID": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID utilisateur"
           }
         }
       }
@@ -2177,6 +4853,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Version %@"
+          }
+        }
+      }
+    },
+    "Voice": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voix"
           }
         }
       }
@@ -2241,6 +4927,36 @@
         }
       }
     },
+    "What counts toward my limits?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qu'est-ce qui est décompté de mes limites ?"
+          }
+        }
+      }
+    },
+    "What happened?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Que s'est-il passé ?"
+          }
+        }
+      }
+    },
+    "What OCTO does shows up here while developer mode is on.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce que fait OCTO s'affiche ici tant que le mode développeur est activé."
+          }
+        }
+      }
+    },
     "What's new in OCTO": {
       "localizations": {
         "fr": {
@@ -2251,12 +4967,72 @@
         }
       }
     },
+    "What's New will show at next launch": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les nouveautés s'afficheront au prochain lancement"
+          }
+        }
+      }
+    },
     "When “Reference saved memories” is on, your saved memories are sent with the messages you write in OCTO. OCTO can't reference your chat history.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Quand « Consulter les souvenirs enregistrés » est activé, tes souvenirs sont envoyés avec les messages que tu écris dans OCTO. OCTO ne peut pas consulter l'historique de tes chats."
+          }
+        }
+      }
+    },
+    "Why aren't my messages on chatgpt.com?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pourquoi mes messages ne sont pas sur chatgpt.com ?"
+          }
+        }
+      }
+    },
+    "Why can't I choose the model?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pourquoi je ne peux pas choisir le modèle ?"
+          }
+        }
+      }
+    },
+    "Workspace": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espace de travail"
+          }
+        }
+      }
+    },
+    "Yearly": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuelle"
+          }
+        }
+      }
+    },
+    "Yellow": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jaune"
           }
         }
       }
@@ -2297,6 +5073,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tu n'es pas connecté."
+          }
+        }
+      }
+    },
+    "You're on the free plan: ChatGPT picks the model for you.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu es sur le forfait gratuit : ChatGPT choisit le modèle pour toi."
           }
         }
       }
@@ -2397,6 +5183,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ta session a expiré. Reconnecte-toi."
+          }
+        }
+      }
+    },
+    "Your sign-in tokens stay in the keychain of this device and are refreshed automatically.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tes jetons de connexion restent dans le trousseau de cet appareil et sont actualisés automatiquement."
+          }
+        }
+      }
+    },
+    "Your subscription is up to date: %@": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton abonnement est à jour : %@"
+          }
+        }
+      }
+    },
+    "Your subscription lets you choose the model of each chat.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton abonnement te permet de choisir le modèle de chaque chat."
           }
         }
       }

@@ -165,7 +165,15 @@ struct ChatView: View {
         }
 
         ToolbarItem(placement: .principal) {
-            ModelMenu(session: session)
+            // Without a subscription ChatGPT offers no choice of model, so there's no picker.
+            if app.allowsModelChoice {
+                ModelMenu(session: session)
+            } else {
+                Text(verbatim: "ChatGPT")
+                    .font(.headline)
+                    .foregroundStyle(Theme.primaryText)
+                    .accessibilityAddTraits(.isHeader)
+            }
         }
 
         if session.isBlank {
@@ -399,10 +407,10 @@ struct EditMessageSheet: View {
                             dismiss()
                         } label: {
                             Image(systemName: "arrow.up")
-                                .foregroundStyle(.black)
+                                .foregroundStyle(Theme.onProminent)
                         }
                         .buttonStyle(.glassProminent)
-                        .tint(.white)
+                        .tint(Theme.prominentFill)
                         .disabled(!canSend)
                         .accessibilityLabel(Text("Send"))
                     }

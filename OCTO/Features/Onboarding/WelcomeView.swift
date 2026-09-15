@@ -35,7 +35,7 @@ struct WelcomeView: View {
                         HStack(spacing: 10) {
                             if isSigningIn {
                                 ProgressView()
-                                    .tint(.black)
+                                    .tint(Theme.onProminent)
                             } else {
                                 Image("Logo")
                                     .resizable()
@@ -45,11 +45,11 @@ struct WelcomeView: View {
                             Text("Continue with ChatGPT")
                         }
                         .font(.headline)
-                        .foregroundStyle(.black)
+                        .foregroundStyle(Theme.onProminent)
                         .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.glassProminent)
-                    .tint(.white)
+                    .tint(Theme.prominentFill)
                     .disabled(isSigningIn)
 
                     Button {
@@ -297,11 +297,11 @@ struct DeviceCodeSheet: View {
                         openURL(challenge.verificationURL)
                     } label: {
                         Label("Open page", systemImage: "safari")
-                            .foregroundStyle(.black)
+                            .foregroundStyle(Theme.onProminent)
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.glassProminent)
-                    .tint(.white)
+                    .tint(Theme.prominentFill)
                     .controlSize(.large)
                 }
             }

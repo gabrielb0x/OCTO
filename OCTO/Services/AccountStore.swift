@@ -13,11 +13,12 @@ struct AccountSnapshot: Codable {
     var memories: MemoriesSnapshot?
     var trainingAllowed: Bool?
     var avatarURL: URL?
+    var subscription: AccountSubscription?
 }
 
 /// The account snapshot and profile picture, in Application Support.
 final class AccountCache: @unchecked Sendable {
-    private let directory: URL
+    let directory: URL
 
     init(folderName: String = "OCTO") {
         let fileManager = FileManager.default
@@ -29,7 +30,7 @@ final class AccountCache: @unchecked Sendable {
         try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
     }
 
-    private var snapshotURL: URL { directory.appendingPathComponent("account.json") }
+    var snapshotURL: URL { directory.appendingPathComponent("account.json") }
     private var avatarURL: URL { directory.appendingPathComponent("avatar") }
 
     func loadSnapshot() -> AccountSnapshot? {
@@ -60,8 +61,8 @@ final class AccountCache: @unchecked Sendable {
     }
 }
 
-/// The signed-in ChatGPT account: profile and picture, custom instructions, personality,
-/// memory and data settings, as shown in Settings and sent along with messages.
+/// The signed-in ChatGPT account: profile and picture, subscription, custom instructions,
+/// personality, memory and data settings, as shown in Settings and sent along with messages.
 @MainActor
 @Observable
 final class AccountStore {
@@ -75,17 +76,18 @@ final class AccountStore {
     private(set) var profile: AccountProfile?
     private(set) var avatar: UIImage?
     private(set) var settings: AccountSettings?
+    private(set) var subscription: AccountSubscription?
     private(set) var instructions: CustomInstructions?
     private(set) var personalities: [PersonalityOption] = []
     private(set) var traits: [PersonalityTrait] = []
     private(set) var memories: MemoriesSnapshot?
     private(set) var trainingAllowed: Bool?
     private(set) var state: LoadState = .idle
+    private(set) var lastRefresh: Date?
 
+    @ObservationIgnored let cache: AccountCache
     @ObservationIgnored private let service: AccountService?
-    @ObservationIgnored private let cache: AccountCache
     @ObservationIgnored private var avatarURL: URL?
-    @ObservationIgnored private var lastRefresh: Date?
     /// Bumped on sign-out so late responses don't bring the old account back.
     @ObservationIgnored private var generation = 0
 
@@ -126,9 +128,11 @@ final class AccountStore {
         lastRefresh = Date()
         let generation = self.generation
         state = .loading
+        DevLog.log("account", "Refreshing the account")
 
         async let profileResult = capture { try await service.profile() }
         async let settingsResult = capture { try await service.settings() }
+        async let subscriptionResult = capture { try await service.subscription() }
         async let instructionsResult = capture { try await service.customInstructions() }
         async let personalitiesResult = capture { try await service.personalityTypes() }
         async let traitsResult = capture { try await service.personalityTraits() }
@@ -137,6 +141,7 @@ final class AccountStore {
 
         let profileOutcome = await profileResult
         let settingsOutcome = await settingsResult
+        let subscriptionOutcome = await subscriptionResult
         let instructionsOutcome = await instructionsResult
         let personalitiesOutcome = await personalitiesResult
         let traitsOutcome = await traitsResult
@@ -146,13 +151,28 @@ final class AccountStore {
 
         if case .success(let value) = profileOutcome { profile = value }
         if case .success(let value) = settingsOutcome { settings = value }
+        if case .success(let value) = subscriptionOutcome { subscription = value }
         if case .success(let value) = instructionsOutcome { instructions = value }
         if case .success(let value) = personalitiesOutcome { personalities = value }
         if case .success(let value) = traitsOutcome { traits = value }
         if case .success(let value) = memoriesOutcome { memories = value }
         if case .success(let value) = trainingOutcome { trainingAllowed = value }
 
-        if let error = profileOutcome.failure ?? instructionsOutcome.failure {
+        let failures: [(String, Error?)] = [
+            ("profile", profileOutcome.failure),
+            ("settings", settingsOutcome.failure),
+            ("subscription", subscriptionOutcome.failure),
+            ("instructions", instructionsOutcome.failure),
+            ("personalities", personalitiesOutcome.failure),
+            ("traits", traitsOutcome.failure),
+            ("memories", memoriesOutcome.failure),
+            ("training", trainingOutcome.failure),
+        ]
+        for case let (name, error?) in failures {
+            DevLog.log("account", "\(name) failed: \(DevLog.describe(error))", level: error.isCancellation ? .debug : .warning)
+        }
+
+        if let error = profileOutcome.failure ?? instructionsOutcome.failure, !error.isCancellation {
             state = .failed(ChatSession.describe(error))
         } else {
             state = .loaded
@@ -177,6 +197,7 @@ final class AccountStore {
         profile = nil
         avatar = nil
         settings = nil
+        subscription = nil
         instructions = nil
         personalities = []
         traits = []
@@ -223,6 +244,7 @@ final class AccountStore {
     private func apply(_ snapshot: AccountSnapshot) {
         profile = snapshot.profile
         settings = snapshot.settings
+        subscription = snapshot.subscription
         instructions = snapshot.instructions
         personalities = snapshot.personalities ?? []
         traits = snapshot.traits ?? []
@@ -240,7 +262,8 @@ final class AccountStore {
             traits: traits,
             memories: memories,
             trainingAllowed: trainingAllowed,
-            avatarURL: avatarURL
+            avatarURL: avatarURL,
+            subscription: subscription
         ))
     }
 }

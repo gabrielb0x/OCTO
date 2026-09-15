@@ -22,7 +22,7 @@ struct ComposerView: View {
     private static let barHeight: CGFloat = 50
 
     private var showsSuggestions: Bool {
-        session.isBlank && !session.isTemporary && session.draft.isEmpty && session.pendingAttachments.isEmpty && !isFocused
+        app.settings.showsSuggestions && session.isBlank && !session.isTemporary && session.draft.isEmpty && session.pendingAttachments.isEmpty && !isFocused
     }
 
     private var isWebSearchOn: Bool {
@@ -146,6 +146,7 @@ struct ComposerView: View {
                     .font(.body)
                     .lineLimit(1...8)
                     .focused($isFocused)
+                    .autocorrectionDisabled(!app.settings.correctsSpelling)
                     .padding(.leading, isWebSearchOn ? 6 : 18)
                     .padding(.vertical, 14)
                     .onKeyPress(.return, phases: .down) { press in
@@ -173,9 +174,9 @@ struct ComposerView: View {
         } label: {
             Image(systemName: "globe")
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Theme.link)
+                .foregroundStyle(app.settings.accent.link)
                 .frame(width: 34, height: 34)
-                .background(Theme.link.opacity(0.18), in: Circle())
+                .background(app.settings.accent.link.opacity(0.18), in: Circle())
                 .padding(.leading, 8)
                 .frame(height: Self.barHeight)
                 .contentShape(Rectangle())
@@ -190,7 +191,7 @@ struct ComposerView: View {
             Image(systemName: dictation.isActive ? "waveform" : "mic")
                 .symbolEffect(.variableColor.iterative, isActive: dictation.state == .listening)
                 .font(.system(size: 18, weight: .regular))
-                .foregroundStyle(dictation.isActive ? Theme.link : Theme.primaryText)
+                .foregroundStyle(dictation.isActive ? app.settings.accent.link : Theme.primaryText)
                 .frame(width: 40, height: Self.barHeight)
                 .contentShape(Rectangle())
         }
@@ -203,10 +204,10 @@ struct ComposerView: View {
         Button(action: trailingAction) {
             Image(systemName: trailingSymbol)
                 .font(.system(size: session.isStreaming ? 13 : 16, weight: .bold))
-                .foregroundStyle(.black)
+                .foregroundStyle(app.settings.accent.onFill)
                 .contentTransition(.symbolEffect(.replace))
                 .frame(width: 38, height: 38)
-                .background(.white, in: Circle())
+                .background(app.settings.accent.fill, in: Circle())
                 .frame(width: 44, height: Self.barHeight)
                 .contentShape(Rectangle())
         }

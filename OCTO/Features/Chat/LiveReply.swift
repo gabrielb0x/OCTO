@@ -30,9 +30,15 @@ final class LiveReply {
     @ObservationIgnored private var isComplete = false
     @ObservationIgnored private var pacer = StreamPacer()
     @ObservationIgnored private var ticker: FrameTicker?
+    /// Off from the developer tools: text then appears as soon as it arrives.
+    @ObservationIgnored private let paced: Bool
 
-    init(messageID: UUID) {
+    init(messageID: UUID, paced: Bool = true) {
         self.messageID = messageID
+        self.paced = paced
+        if !paced {
+            fadeLength = 0
+        }
     }
 
     func start() {
@@ -123,7 +129,7 @@ final class LiveReply {
             reasoningClock = 0
         }
 
-        let count = pacer.charactersToReveal(backlog: pendingCount, elapsed: elapsed, isFinished: isComplete)
+        let count = paced ? pacer.charactersToReveal(backlog: pendingCount, elapsed: elapsed, isFinished: isComplete) : pendingCount
         guard count > 0 else { return }
         let end = pendingText.index(pendingText.startIndex, offsetBy: count, limitedBy: pendingText.endIndex) ?? pendingText.endIndex
         text.append(contentsOf: pendingText[..<end])
