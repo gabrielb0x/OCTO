@@ -215,6 +215,8 @@ final class ConversationStore {
     @ObservationIgnored private(set) var nextOffset = 0
     @ObservationIgnored private var isLoadingMore = false
     @ObservationIgnored private var syncTask: Task<Void, Never>?
+    /// Bumped on sign-out, so a sync still running doesn't bring the account's chats back.
+    @ObservationIgnored private var generation = 0
 
     init(files: ConversationFiles = ConversationFiles()) {
         self.files = files
@@ -372,7 +374,9 @@ final class ConversationStore {
         let task = Task { await performSync() }
         syncTask = task
         await task.value
-        syncTask = nil
+        if syncTask == task {
+            syncTask = nil
+        }
     }
 
     /// Lists the next page of older chats, when the sidebar reaches the end of the list.
@@ -380,8 +384,10 @@ final class ConversationStore {
         guard let service, canLoadMore, !isLoadingMore, syncState != .syncing else { return }
         isLoadingMore = true
         defer { isLoadingMore = false }
+        let generation = self.generation
         do {
             let page = try await service.conversations(offset: nextOffset, limit: Self.pageSize)
+            guard generation == self.generation else { return }
             upsert(page.items)
             nextOffset += page.items.count
             canLoadMore = !page.items.isEmpty && hasMore(after: page)
@@ -449,6 +455,9 @@ final class ConversationStore {
 
     /// Forgets the account's chats on sign-out. Chats started in OCTO stay on the device.
     func removeAccountChats() {
+        generation += 1
+        syncTask?.cancel()
+        syncTask = nil
         removeLocally(summaries.filter(\.isAccountChat).map(\.id))
         projects = []
         files.writeProjects([])
@@ -504,11 +513,13 @@ final class ConversationStore {
 
     private func performSync() async {
         guard let service else { return }
+        let generation = self.generation
         syncState = .syncing
         let started = Date()
         DevLog.log("sync", "Listing the account chats")
         do {
             let page = try await service.conversations(offset: 0, limit: Self.pageSize)
+            guard generation == self.generation else { return }
             upsert(page.items)
             removeMissingChats(firstPage: page.items, isComplete: page.items.count < Self.pageSize)
             nextOffset = page.items.count
@@ -561,6 +572,7 @@ final class ConversationStore {
     }
 
     private func syncProjects(service: AccountService) async {
+        let generation = self.generation
         let remoteProjects: [RemoteProject]
         do {
             remoteProjects = try await service.projects()
@@ -568,6 +580,7 @@ final class ConversationStore {
             DevLog.log("sync", "Projects failed: \(DevLog.describe(error))", level: .warning)
             return
         }
+        guard generation == self.generation else { return }
         projects = remoteProjects.map { ChatProject(id: $0.id, name: $0.name, iconName: $0.iconName, colorHex: $0.colorHex) }
 
         var items: [RemoteConversationSummary] = []
@@ -590,6 +603,7 @@ final class ConversationStore {
                 return chat
             }
         }
+        guard generation == self.generation else { return }
         upsert(items)
 
         let listed = Set(items.map(\.id))
