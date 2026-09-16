@@ -2,6 +2,15 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [1.6.0] – 2026-09-16
+
+### Ajouté
+
+- **La recherche trouve enfin tous tes chats.** La barre de recherche de la barre latérale interroge aussi ton compte ChatGPT (`conversations/search`), qui cherche **dans les messages** et pas seulement dans les titres : les chats jamais ouverts sur cet iPhone remontent donc eux aussi, avec **le passage qui correspond** sous leur titre. Ce qui est déjà sur l'appareil s'affiche immédiatement, le compte répond juste après, et ouvrir un résultat ajoute le chat à l'historique et télécharge ses messages.
+- **Appareils connectés** (Réglages → Sécurité et connexion → Appareils, ou depuis Confidentialité) : tous les appareils connectés à ton compte ChatGPT (`accounts/sessions`), avec leur système, la ville et le pays de leur dernière connexion, quand c'était, et les apps qui s'en servent (ChatGPT Web, Codex, l'app iOS…). Celui que tu tiens est marqué. En dessous, l'état de ta double authentification, de tes clés d'accès, de tes codes d'authentification et des alertes de connexion (`accounts/security_settings/info`, `accounts/mfa_info`). De quoi repérer une connexion qui n'est pas la tienne.
+- **Ce que tes fichiers occupent dans ton compte**, dans Réglages → Stockage (`files/library/storage/usage`) : à côté de la place prise par OCTO sur l'iPhone, ChatGPT dit combien ses images, ses fichiers texte et le reste occupent dans ton compte, et sur combien.
+- Les nouvelles adresses (`conversations/search`, `accounts/sessions`, `accounts/security_settings/info`, `accounts/mfa_info`, `files/library/storage/usage`) rejoignent les **raccourcis de la console** du mode développeur.
+
 ## [1.5.1] – 2026-09-16
 
 ### Modifié

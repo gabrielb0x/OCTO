@@ -26,13 +26,7 @@ struct SidebarView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 2) {
                     if isSearching {
-                        let results = app.store.search(query)
-                        if results.isEmpty {
-                            placeholder(title: "No results", systemImage: "magnifyingglass")
-                        } else {
-                            sectionHeader(String(localized: "Results"))
-                            ForEach(results) { row($0) }
-                        }
+                        searchResults
                     } else {
                         shortcuts
                         syncStatus
@@ -51,6 +45,9 @@ struct SidebarView: View {
             footer
         }
         .background(Theme.sidebarBackground.ignoresSafeArea())
+        .onChange(of: query) { _, newValue in
+            app.store.searchAccount(newValue)
+        }
         .alert("Rename chat", isPresented: renameIsPresented) {
             TextField("Title", text: $renameText)
             Button("Cancel", role: .cancel) {}
@@ -193,6 +190,38 @@ struct SidebarView: View {
             .padding(12)
             .background(Theme.surface, in: .rect(cornerRadius: 16))
             .padding(.vertical, 6)
+        }
+    }
+
+    /// What's typed in the search field: first the chats already on this device, then those
+    /// ChatGPT found in the account, which this iPhone has never downloaded.
+    @ViewBuilder
+    private var searchResults: some View {
+        let local = app.store.search(query)
+        let known = Set(local.compactMap(\.remoteID))
+        let hits = app.store.searchHits.filter { !known.contains($0.id) }
+        if local.isEmpty, hits.isEmpty, !app.store.isSearchingAccount {
+            placeholder(title: "No results", systemImage: "magnifyingglass")
+        } else {
+            if !local.isEmpty {
+                sectionHeader(hits.isEmpty ? String(localized: "Results") : String(localized: "On this device"))
+                ForEach(local) { row($0) }
+            }
+            if !hits.isEmpty {
+                sectionHeader(String(localized: "In your ChatGPT account"))
+                ForEach(hits) { hitRow($0) }
+            }
+            if app.store.isSearchingAccount {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("Searching your account…")
+                        .font(.footnote)
+                        .foregroundStyle(Theme.tertiaryText)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+            }
         }
     }
 
@@ -344,6 +373,39 @@ struct SidebarView: View {
                 Label("Delete", systemImage: "trash")
             }
         }
+    }
+
+    /// A chat ChatGPT found in the account, with the passage that matched. Opening it puts the chat
+    /// in the history and downloads its messages.
+    private func hitRow(_ hit: RemoteSearchHit) -> some View {
+        Button {
+            onSelect(app.store.adopt(hit.summary))
+        } label: {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "bubble.left.and.text.bubble.right")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.tertiaryText)
+                    .padding(.top, 3)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: hit.title.isEmpty ? String(localized: "New chat") : hit.title)
+                        .font(.body)
+                        .lineLimit(1)
+                        .foregroundStyle(Theme.primaryText)
+                    if let snippet = hit.snippet {
+                        Text(verbatim: snippet)
+                            .font(.caption)
+                            .lineLimit(2)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 9)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(.rect(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
     }
 
     private func sectionHeader(_ title: String) -> some View {

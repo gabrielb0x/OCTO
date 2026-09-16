@@ -7034,6 +7034,306 @@
           }
         }
       }
+    },
+    "Devices": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appareils"
+          }
+        }
+      }
+    },
+    "No device is signed into your account.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun appareil n'est connecté à ton compte."
+          }
+        }
+      }
+    },
+    "Every device signed into your ChatGPT account, wherever it last connected from. If one isn't yours, change your password in ChatGPT: it signs the others out.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous les appareils connectés à ton compte ChatGPT, avec l'endroit d'où ils se sont connectés la dernière fois. Si l'un d'eux n'est pas à toi, change ton mot de passe dans ChatGPT : ça déconnecte les autres."
+          }
+        }
+      }
+    },
+    "Sign-in alerts": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alertes de connexion"
+          }
+        }
+      }
+    },
+    "Advanced protection": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protection avancée"
+          }
+        }
+      }
+    },
+    "How your ChatGPT account proves it's you. These are changed in ChatGPT.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment ton compte ChatGPT vérifie que c'est bien toi. Ces réglages se changent dans ChatGPT."
+          }
+        }
+      }
+    },
+    "Authenticator app": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application d'authentification"
+          }
+        }
+      }
+    },
+    "Passkey": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clé d'accès"
+          }
+        }
+      }
+    },
+    "Text message": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SMS"
+          }
+        }
+      }
+    },
+    "Push notification": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notification push"
+          }
+        }
+      }
+    },
+    "New devices": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouveaux appareils"
+          }
+        }
+      }
+    },
+    "Every sign-in": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque connexion"
+          }
+        }
+      }
+    },
+    "This device": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet appareil"
+          }
+        }
+      }
+    },
+    "Last used %@": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dernière utilisation %@"
+          }
+        }
+      }
+    },
+    "In your ChatGPT account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans ton compte ChatGPT"
+          }
+        }
+      }
+    },
+    "Searching your account…": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recherche dans ton compte…"
+          }
+        }
+      }
+    },
+    "The devices signed into your ChatGPT account, where they last connected from, and how your account is protected.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les appareils connectés à ton compte ChatGPT, d'où ils se sont connectés la dernière fois, et comment ton compte est protégé."
+          }
+        }
+      }
+    },
+    "The photos and files of your chats, kept by ChatGPT. They stay in your account; this is the room they take there.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les photos et les fichiers de tes chats, gardés par ChatGPT. Ils restent dans ton compte : voici la place qu'ils y prennent."
+          }
+        }
+      }
+    },
+    "of %@": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sur %@"
+          }
+        }
+      }
+    },
+    "Images": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Images"
+          }
+        }
+      }
+    },
+    "Text files": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fichiers texte"
+          }
+        }
+      }
+    },
+    "Audio": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio"
+          }
+        }
+      }
+    },
+    "Video": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vidéo"
+          }
+        }
+      }
+    },
+    "Other files": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autres fichiers"
+          }
+        }
+      }
+    },
+    "Search finds every chat": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La recherche trouve tous tes chats"
+          }
+        }
+      }
+    },
+    "The sidebar asks ChatGPT too, which searches inside your messages: chats this iPhone never opened show up, with the passage that matched.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La barre latérale interroge aussi ChatGPT, qui cherche dans tes messages : les chats jamais ouverts sur cet iPhone apparaissent, avec le passage qui correspond."
+          }
+        }
+      }
+    },
+    "Every device signed in": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous tes appareils connectés"
+          }
+        }
+      }
+    },
+    "Security and login lists the devices on your ChatGPT account, where they last connected from, and how your account is protected.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sécurité et connexion liste les appareils de ton compte ChatGPT, d'où ils se sont connectés, et comment ton compte est protégé."
+          }
+        }
+      }
+    },
+    "What your files take up": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La place que prennent tes fichiers"
+          }
+        }
+      }
+    },
+    "Storage now shows what the files of your chats take in your ChatGPT account, next to what OCTO takes on this iPhone.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stockage montre maintenant ce que les fichiers de tes chats occupent dans ton compte ChatGPT, à côté de ce qu'OCTO occupe sur cet iPhone."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

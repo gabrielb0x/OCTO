@@ -384,7 +384,12 @@ struct APIConsoleView: View {
         "user_system_messages",
         "memories?include_memory_entries=true",
         "conversations?offset=0&limit=5&order=updated",
+        "conversations/search?query=test",
         "gizmos/snorlax/sidebar?owned_only=true&conversations_per_gizmo=2&limit=5",
+        "accounts/sessions",
+        "accounts/security_settings/info",
+        "accounts/mfa_info",
+        "files/library/storage/usage",
         "codex/models?client_version=\(CodexBackend.clientVersion)",
         "wham/usage",
     ]

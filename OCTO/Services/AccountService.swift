@@ -118,6 +118,32 @@ final class AccountService: Sendable {
         try await fetch(ChatGPTAccountAPI.dataUsagePolicyURL, parse: TrainingPolicy.parse)
     }
 
+    // MARK: Devices & protection
+
+    /// The devices signed into the ChatGPT account, as its own "Devices" screen lists them.
+    func devices() async throws -> AccountDevices {
+        try await fetch(ChatGPTAccountAPI.devicesURL, parse: AccountDevices.parse)
+    }
+
+    /// How the account is protected. The two calls are asked for together, and whichever answers
+    /// is shown: an account without multi-factor still has sign-in alerts to report, and vice versa.
+    func security() async throws -> AccountSecurity {
+        async let settingsRequest = send(ChatGPTAccountAPI.securitySettingsURL)
+        async let multiFactorRequest = send(ChatGPTAccountAPI.multiFactorURL)
+        let settings = try? await settingsRequest
+        let multiFactor = try? await multiFactorRequest
+        guard let value = AccountSecurity.parse(settings: settings, multiFactor: multiFactor) else {
+            DevLog.log("account", "Unexpected response from the security settings", level: .warning)
+            throw AccountAPIError.invalidResponse
+        }
+        return value
+    }
+
+    /// Space the files of the account's chats take on ChatGPT's side.
+    func fileStorage() async throws -> AccountFileStorage {
+        try await fetch(ChatGPTAccountAPI.fileStorageURL, parse: AccountFileStorage.parse)
+    }
+
     /// The account's live feature limits, read from `POST /conversation/init` like the website does.
     func featureLimits() async throws -> FeatureLimits {
         let timezone = TimeZone.current
@@ -173,6 +199,11 @@ final class AccountService: Sendable {
 
     func conversation(id: String) async throws -> RemoteConversation {
         try await fetch(ChatGPTAccountAPI.conversationURL(id: id)) { RemoteConversationParser.parse($0, id: id) }
+    }
+
+    /// Searches every chat of the account, inside the messages, like ChatGPT's own search.
+    func searchConversations(query: String) async throws -> [RemoteSearchHit] {
+        try await fetch(ChatGPTAccountAPI.conversationSearchURL(query: query), parse: RemoteSearchResults.parse)
     }
 
     func rename(conversationID: String, to title: String) async throws {

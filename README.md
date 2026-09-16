@@ -28,6 +28,8 @@
 | <img src="docs/screenshots/dataControls.png" width="250" alt="Réglages d'entraînement lus depuis le compte"> | <img src="docs/screenshots/ageVerification.png" width="250" alt="Statut de l'âge et raisons de ne pas le vérifier"> | <img src="docs/screenshots/update.png" width="250" alt="Nouvelle version proposée"> |
 | **Mode développeur** | **Inspecteur réseau** | **Détails des messages** |
 | <img src="docs/screenshots/developer.png" width="250" alt="Mode développeur"> | <img src="docs/screenshots/network.png" width="250" alt="Inspecteur réseau"> | <img src="docs/screenshots/messageDetails.png" width="250" alt="Détails techniques sous les messages"> |
+| **Appareils connectés** | **Stockage** | **Mémoire** |
+| <img src="docs/screenshots/devices.png" width="250" alt="Appareils connectés au compte ChatGPT"> | <img src="docs/screenshots/storage.png" width="250" alt="Stockage sur l'appareil et dans le compte"> | <img src="docs/screenshots/memory.png" width="250" alt="Mémoire du compte ChatGPT"> |
 
 Ces captures sont prises automatiquement sur un simulateur iPhone 17 Pro par le workflow [`screenshots.yml`](.github/workflows/screenshots.yml), avec un compte et des chats de démonstration.
 
@@ -35,8 +37,9 @@ Ces captures sont prises automatiquement sur un simulateur iPhone 17 Pro par le 
 
 - **Connexion avec ton compte ChatGPT** (Free, Plus, Pro, Business…) via OAuth, comme la CLI officielle et open source [Codex](https://github.com/openai/codex), ou avec un code d'appareil.
 - **Tes chats et tes projets viennent de ton compte** : chaque chat s'ouvre avec ses messages, sa réflexion et ses sources. Renommer ou supprimer un chat le fait aussi dans ton compte, avec une confirmation, et les chats archivés restent consultables.
+- **Recherche dans tout ton compte** : la barre de recherche interroge aussi ChatGPT (`conversations/search`), qui cherche **dans les messages**, y compris ceux des chats jamais ouverts sur cet iPhone. Le passage qui correspond s'affiche sous le titre, et ouvrir un résultat télécharge le chat.
 - **Interface calquée sur l'app ChatGPT**, construite avec les composants **Liquid Glass** natifs d'iOS 26 : barres d'outils en verre, barre de saisie en capsule de verre avec le bouton + à l'intérieur, suggestions d'accueil en liste, bouton « Mettre à niveau » en haut pour les comptes sans abonnement, menus, boutons `.glass` et feuilles système.
-- **Réglages organisés comme ChatGPT** : Personnalisation, Mémoire, Plugins, compte (e-mail et téléphone **masquables**, abonnement, restaurer les achats, vérification de l'âge), thème et apparence, Général, Notifications, Voix, Confidentialité, Protection, Sécurité et connexion, Stockage, Gestion des données et Aide.
+- **Réglages organisés comme ChatGPT** : Personnalisation, Mémoire, Plugins, compte (e-mail et téléphone **masquables**, abonnement, restaurer les achats, vérification de l'âge), thème et apparence, Général, Notifications, Voix, Confidentialité, Protection, Sécurité et connexion (avec les **appareils connectés**), Stockage, Gestion des données et Aide.
 - **Réponses qui arrivent mot par mot, en fondu**, à la vitesse de ton choix (lente, normale, rapide ou instantanée), sans que le chat défile tout seul. Rendu Markdown (titres, listes, tableaux, citations) et blocs de code colorés avec bouton « Copier ».
 - **Personnalisable** : thème Système, Clair ou Sombre, couleurs d'accentuation de ChatGPT et couleur de ton choix, taille du texte et police des chats, retour à la ligne dans le code, vibrations pendant que ChatGPT écrit, envoi avec la touche Retour, et un **écran d'accueil à ta main** (bouton « Mettre à niveau », salutation, suggestions en liste ou en pastilles).
 - **Choix du modèle et du niveau de réflexion** depuis le titre du chat, avec le catalogue de modèles de ton compte. Comme dans ChatGPT, le sélecteur n'apparaît qu'avec un abonnement.
@@ -44,6 +47,8 @@ Ces captures sont prises automatiquement sur un simulateur iPhone 17 Pro par le 
 - **Gestion des données** : « Améliorer le modèle pour tout le monde », l'inclusion de l'audio et de la vidéo et le réglage équivalent de Codex sont lus et modifiés **directement dans ton compte**.
 - **Vérification de l'âge** : ce que ChatGPT pense de ton âge (`settings/is_adult`), et pourquoi ne pas lui confier ton visage ni tes papiers.
 - **Protection** : verrouillage par Face ID, contenu masqué dans le sélecteur d'apps et pendant l'enregistrement de l'écran.
+- **Appareils connectés** : la liste des appareils connectés à ton compte ChatGPT (`accounts/sessions`), avec la ville, le pays, la dernière connexion et les apps qui s'en servent, plus l'état de ta double authentification, de tes clés d'accès et des alertes de connexion (`accounts/security_settings/info`, `accounts/mfa_info`). De quoi repérer une connexion qui n'est pas la tienne.
+- **Stockage** : ce qu'OCTO occupe sur l'iPhone, et ce que les fichiers de tes chats occupent **dans ton compte ChatGPT** (`files/library/storage/usage`), par type de fichier.
 - **Notifications** quand une réponse se termine alors qu'OCTO est en arrière-plan.
 - **Résumé de la réflexion**, **recherche web** avec sources, **pièces jointes** (photos, appareil photo, fichiers texte) et **lecture à voix haute**.
 - **Limites d'utilisation lues en direct depuis ton compte** : comme sur le site (`conversation/init`), l'écran Abonnement montre ce qu'il te reste de Deep Research, de générations d'images, d'envois de fichiers et de réflexion avancée, avec leur date de réinitialisation.

@@ -111,6 +111,9 @@ struct PrivacyView: View {
             }
 
             Section {
+                NavigationLink(value: SettingsRoute.devices) {
+                    Label("Devices", systemImage: "laptopcomputer.and.iphone")
+                }
                 NavigationLink(value: SettingsRoute.dataControls) {
                     Label("Data controls", systemImage: "hand.raised")
                 }

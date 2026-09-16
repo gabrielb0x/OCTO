@@ -16,6 +16,7 @@ enum SettingsRoute: Hashable {
     case privacy
     case protection
     case security
+    case devices
     case remoteControl
     case storage
     case dataControls
@@ -349,6 +350,7 @@ struct SettingsView: View {
         case .privacy: PrivacyView()
         case .protection: ProtectionSettingsView()
         case .security: SecuritySettingsView()
+        case .devices: DevicesView()
         case .remoteControl: RemoteControlView()
         case .storage: StorageSettingsView()
         case .dataControls: DataControlsView()

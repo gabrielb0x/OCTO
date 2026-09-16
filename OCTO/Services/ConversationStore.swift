@@ -205,6 +205,9 @@ final class ConversationStore {
     private(set) var canLoadMore = false
     /// Set when a change couldn't be applied to the ChatGPT account.
     var syncError: String?
+    /// Chats of the account matching what's typed in the sidebar's search field, found by ChatGPT.
+    private(set) var searchHits: [RemoteSearchHit] = []
+    private(set) var isSearchingAccount = false
 
     let files: ConversationFiles
     /// Nil in screenshot builds, which never touch the network.
@@ -215,6 +218,8 @@ final class ConversationStore {
     @ObservationIgnored private(set) var nextOffset = 0
     @ObservationIgnored private var isLoadingMore = false
     @ObservationIgnored private var syncTask: Task<Void, Never>?
+    @ObservationIgnored private var accountSearchTask: Task<Void, Never>?
+    @ObservationIgnored private var accountSearchQuery = ""
     /// Bumped on sign-out, so a sync still running doesn't bring the account's chats back.
     @ObservationIgnored private var generation = 0
 
@@ -398,6 +403,49 @@ final class ConversationStore {
         }
     }
 
+    /// Also asks the account for chats matching `query`, the way ChatGPT's own search does: it
+    /// looks inside the messages and reaches chats this device never downloaded. The chats already
+    /// here show while it runs, and a search the account refuses simply adds nothing.
+    func searchAccount(_ query: String) {
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard needle != accountSearchQuery else { return }
+        accountSearchQuery = needle
+        accountSearchTask?.cancel()
+        accountSearchTask = nil
+        // One letter matches half the history: the account is asked from the second one.
+        guard let service, needle.count >= 2 else {
+            searchHits = []
+            isSearchingAccount = false
+            return
+        }
+        // What the previous letters found stays in place until the new answer arrives, so the
+        // list doesn't blink at every keystroke.
+        isSearchingAccount = true
+        let generation = self.generation
+        accountSearchTask = Task { [weak self] in
+            // Waits for a pause in the typing, so a word isn't searched letter by letter.
+            try? await Task.sleep(for: .milliseconds(350))
+            guard !Task.isCancelled else { return }
+            let hits = (try? await service.searchConversations(query: needle)) ?? []
+            guard !Task.isCancelled, let self, generation == self.generation, self.accountSearchQuery == needle else { return }
+            self.searchHits = hits
+            self.isSearchingAccount = false
+        }
+    }
+
+    /// Puts a chat found in the account into the list, so it opens like any other, and gives back
+    /// the id it has on this device.
+    func adopt(_ remote: RemoteConversationSummary) -> UUID {
+        if let existing = summaries.first(where: { $0.remoteID == remote.id }) {
+            return existing.id
+        }
+        let summary = AccountChatMapper.summary(from: remote, existing: nil)
+        summaries.append(summary)
+        sortSummaries()
+        files.write(nil, index: summaries)
+        return summary.id
+    }
+
     // MARK: ChatGPT account
 
     /// Lists the latest chats and the projects of the account, and forgets chats deleted elsewhere.
@@ -496,6 +544,11 @@ final class ConversationStore {
         generation += 1
         syncTask?.cancel()
         syncTask = nil
+        accountSearchTask?.cancel()
+        accountSearchTask = nil
+        accountSearchQuery = ""
+        searchHits = []
+        isSearchingAccount = false
         removeLocally(summaries.filter(\.isAccountChat).map(\.id))
         projects = []
         files.writeProjects([])

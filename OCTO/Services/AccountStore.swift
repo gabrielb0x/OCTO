@@ -17,6 +17,9 @@ struct AccountSnapshot: Codable {
     var subscription: AccountSubscription?
     var featureLimits: FeatureLimits?
     var ageStatus: AgeStatus?
+    var devices: AccountDevices?
+    var security: AccountSecurity?
+    var fileStorage: AccountFileStorage?
 }
 
 /// The account snapshot and profile picture, in Application Support.
@@ -88,6 +91,13 @@ final class AccountStore {
     private(set) var ageStatus: AgeStatus?
     /// Live usage limits of the ChatGPT account (Deep Research, image generation, file uploads…).
     private(set) var featureLimits: FeatureLimits?
+    /// Devices signed into the account, and how it's protected. Only the Devices page needs them,
+    /// so they're read there instead of at every refresh.
+    private(set) var devices: AccountDevices?
+    private(set) var security: AccountSecurity?
+    private(set) var devicesState: LoadState = .idle
+    /// Space the files of the account's chats take on ChatGPT's side, shown next to the device's.
+    private(set) var fileStorage: AccountFileStorage?
     /// Settings being saved to the account right now.
     private(set) var savingSettings: Set<AccountSettingFeature> = []
     private(set) var state: LoadState = .idle
@@ -96,6 +106,8 @@ final class AccountStore {
     @ObservationIgnored let cache: AccountCache
     @ObservationIgnored private let service: AccountService?
     @ObservationIgnored private var avatarURL: URL?
+    @ObservationIgnored private var lastDevicesRefresh: Date?
+    @ObservationIgnored private var lastFileStorageRefresh: Date?
     /// Bumped on sign-out so late responses don't bring the old account back.
     @ObservationIgnored private var generation = 0
 
@@ -198,6 +210,52 @@ final class AccountStore {
         await updateAvatar()
     }
 
+    /// The devices signed into the account and how it's protected. Asked for by the Devices page
+    /// only: they say nothing about the chats, so they stay out of the refresh that runs at launch.
+    func refreshDevices(ifOlderThan interval: TimeInterval = 0) async {
+        guard let service, devicesState != .loading else { return }
+        if interval > 0, let lastDevicesRefresh, Date().timeIntervalSince(lastDevicesRefresh) < interval { return }
+        lastDevicesRefresh = Date()
+        let generation = self.generation
+        devicesState = .loading
+
+        async let devicesResult = capture { try await service.devices() }
+        async let securityResult = capture { try await service.security() }
+        let devicesOutcome = await devicesResult
+        let securityOutcome = await securityResult
+        guard generation == self.generation else { return }
+
+        if case .success(let value) = devicesOutcome { devices = value }
+        if case .success(let value) = securityOutcome { security = value }
+        let failures: [(String, Error?)] = [("devices", devicesOutcome.failure), ("security", securityOutcome.failure)]
+        for case let (name, error?) in failures {
+            DevLog.log("account", "\(name) failed: \(DevLog.describe(error))", level: error.isCancellation ? .debug : .warning)
+        }
+        // The protection is a bonus: only the device list failing is worth telling about.
+        if let error = devicesOutcome.failure, !error.isCancellation {
+            devicesState = .failed(ChatSession.describe(error))
+        } else {
+            devicesState = .loaded
+        }
+        saveSnapshot()
+    }
+
+    /// What the account's own files take on ChatGPT's side, for the Storage page.
+    func refreshFileStorage(ifOlderThan interval: TimeInterval = 0) async {
+        guard let service else { return }
+        if interval > 0, let lastFileStorageRefresh, Date().timeIntervalSince(lastFileStorageRefresh) < interval { return }
+        lastFileStorageRefresh = Date()
+        let generation = self.generation
+        do {
+            let value = try await service.fileStorage()
+            guard generation == self.generation else { return }
+            fileStorage = value
+            saveSnapshot()
+        } catch {
+            DevLog.log("account", "fileStorage failed: \(DevLog.describe(error))", level: error.isCancellation ? .debug : .warning)
+        }
+    }
+
     func saveInstructions(_ draft: CustomInstructions) async throws {
         guard let service else {
             instructions = draft
@@ -258,9 +316,15 @@ final class AccountStore {
         dataUsagePermitted = nil
         ageStatus = nil
         featureLimits = nil
+        devices = nil
+        security = nil
+        devicesState = .idle
+        fileStorage = nil
         savingSettings = []
         avatarURL = nil
         lastRefresh = nil
+        lastDevicesRefresh = nil
+        lastFileStorageRefresh = nil
         state = .idle
         cache.clear()
     }
@@ -308,6 +372,9 @@ final class AccountStore {
         dataUsagePermitted = snapshot.dataUsagePermitted
         featureLimits = snapshot.featureLimits
         ageStatus = snapshot.ageStatus
+        devices = snapshot.devices
+        security = snapshot.security
+        fileStorage = snapshot.fileStorage
         avatarURL = snapshot.avatarURL
     }
 
@@ -323,7 +390,10 @@ final class AccountStore {
             avatarURL: avatarURL,
             subscription: subscription,
             featureLimits: featureLimits,
-            ageStatus: ageStatus
+            ageStatus: ageStatus,
+            devices: devices,
+            security: security,
+            fileStorage: fileStorage
         ))
     }
 }

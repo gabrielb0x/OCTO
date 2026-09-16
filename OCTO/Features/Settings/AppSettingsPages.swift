@@ -379,6 +379,14 @@ struct SecuritySettingsView: View {
             }
 
             Section {
+                NavigationLink(value: SettingsRoute.devices) {
+                    Label("Devices", systemImage: "laptopcomputer.and.iphone")
+                }
+            } footer: {
+                Text("The devices signed into your ChatGPT account, where they last connected from, and how your account is protected.")
+            }
+
+            Section {
                 if let session {
                     LabeledContent {
                         Text(session.lastRefresh, format: .relative(presentation: .named))
@@ -484,6 +492,34 @@ struct StorageSettingsView: View {
                 Text("Chats from your account are kept on this device so they open instantly and offline.")
             }
 
+            if let storage = app.account.fileStorage {
+                Section {
+                    accountStorageBar(storage)
+                    ForEach(storage.byFileType) { bucket in
+                        LabeledContent {
+                            Text(verbatim: ByteCountFormatter.string(fromByteCount: bucket.bytes, countStyle: .file))
+                        } label: {
+                            Label {
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(Self.title(forFileType: bucket.key))
+                                    if let count = bucket.count, count > 0 {
+                                        Text("\(count) files")
+                                            .font(.caption)
+                                            .foregroundStyle(Theme.secondaryText)
+                                    }
+                                }
+                            } icon: {
+                                Image(systemName: Self.systemImage(forFileType: bucket.key))
+                            }
+                        }
+                    }
+                } header: {
+                    Text("In your ChatGPT account")
+                } footer: {
+                    Text("The photos and files of your chats, kept by ChatGPT. They stay in your account; this is the room they take there.")
+                }
+            }
+
             Section {
                 Button(role: .destructive) {
                     confirmRemoval = true
@@ -498,9 +534,50 @@ struct StorageSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await load()
+            await app.account.refreshFileStorage(ifOlderThan: 300)
         }
         .confirmationDialog("Remove downloaded chats?", isPresented: $confirmRemoval, titleVisibility: .visible) {
             Button("Remove", role: .destructive, action: removeDownloads)
+        }
+    }
+
+    /// What ChatGPT keeps for the account, out of the room its plan gives it.
+    private func accountStorageBar(_ storage: AccountFileStorage) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(verbatim: ByteCountFormatter.string(fromByteCount: storage.usedBytes, countStyle: .file))
+                    .font(.title2.weight(.semibold))
+                if let allowed = storage.allowedBytes {
+                    Text("of \(ByteCountFormatter.string(fromByteCount: allowed, countStyle: .file))")
+                        .foregroundStyle(Theme.secondaryText)
+                }
+            }
+            if let fraction = storage.usedFraction {
+                ProgressView(value: fraction)
+                    .tint(storage.isOverLimit || fraction >= 0.9 ? Theme.danger : Theme.link)
+            }
+        }
+        .padding(.vertical, 6)
+    }
+
+    static func title(forFileType key: String) -> LocalizedStringKey {
+        switch key {
+        case "image": return "Images"
+        case "text": return "Text files"
+        case "audio": return "Audio"
+        case "video": return "Video"
+        case "other": return "Other files"
+        default: return LocalizedStringKey(key.capitalized)
+        }
+    }
+
+    static func systemImage(forFileType key: String) -> String {
+        switch key {
+        case "image": return "photo"
+        case "text": return "doc.text"
+        case "audio": return "waveform"
+        case "video": return "video"
+        default: return "doc"
         }
     }
 

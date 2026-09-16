@@ -24,6 +24,9 @@ enum DemoScene: String, CaseIterable {
     case privacy
     case dataControls
     case ageVerification
+    case devices
+    case storage
+    case memory
     case update
 
     static var current: DemoScene? {
@@ -101,7 +104,31 @@ enum DemoContent {
                 ],
                 maxAttachmentMB: 512
             ),
-            ageStatus: AgeStatus(isAdult: false, hasVerifiedAge: false, isAgeKnown: true, underEighteenPolicyEnabled: true, offersVerification: true, status: "under_18")
+            ageStatus: AgeStatus(isAdult: false, hasVerifiedAge: false, isAgeKnown: true, underEighteenPolicyEnabled: true, offersVerification: true, status: "under_18"),
+            devices: AccountDevices(devices: [
+                AccountDevice(id: "demo-iphone", name: "iPhone", summary: "iPhone · iOS 26.0", platform: "ios", osVersion: "26.0", isCurrentDevice: true, isTrusted: true, lastSignedInAt: Date().addingTimeInterval(-180), city: "Tours", countryCode: "FR", apps: ["Codex"]),
+                AccountDevice(id: "demo-mac", name: "Mac", summary: "Mac · macOS 26.1", platform: "macos", osVersion: "26.1", lastSignedInAt: Date().addingTimeInterval(-3 * 3_600), city: "Tours", countryCode: "FR", apps: ["ChatGPT Web", "Codex"]),
+                AccountDevice(id: "demo-pc", name: "Computer", summary: "Computer · Windows 11", platform: "windows", osVersion: "11", lastSignedInAt: Date().addingTimeInterval(-2 * 86_400), city: "Limoges", countryCode: "FR", apps: ["ChatGPT Web"]),
+            ]),
+            security: AccountSecurity(
+                advancedProtectionEnabled: false,
+                loginNotificationMode: "new_devices",
+                multiFactorEnabled: true,
+                factors: [
+                    SecurityFactor(id: "demo-totp", kind: .authenticator),
+                    SecurityFactor(id: "demo-passkey", kind: .passkey, name: "Proton Pass"),
+                ]
+            ),
+            fileStorage: AccountFileStorage(
+                usedBytes: 20_231_796,
+                allowedBytes: 536_870_912,
+                remainingBytes: 516_639_116,
+                byFileType: [
+                    AccountFileStorage.Bucket(key: "image", bytes: 19_060_546, count: 13),
+                    AccountFileStorage.Bucket(key: "other", bytes: 1_156_575, count: 3),
+                    AccountFileStorage.Bucket(key: "text", bytes: 14_675, count: 1),
+                ]
+            )
         ))
         if scene == .subscription {
             app.useDemoUsage(UsageSnapshot.parse(Data(demoUsageJSON.utf8)))
@@ -154,6 +181,9 @@ enum DemoContent {
         case .privacy?: return [.privacy]
         case .dataControls?: return [.dataControls]
         case .ageVerification?: return [.ageVerification]
+        case .devices?: return [.devices]
+        case .storage?: return [.storage]
+        case .memory?: return [.memory]
         default: return []
         }
     }
@@ -168,7 +198,7 @@ enum DemoContent {
         case .sidebar?:
             try? await Task.sleep(for: .milliseconds(500))
             openSidebar()
-        case .settings?, .settingsApp?, .subscription?, .about?, .developer?, .network?, .appearance?, .privacy?, .dataControls?, .ageVerification?:
+        case .settings?, .settingsApp?, .subscription?, .about?, .developer?, .network?, .appearance?, .privacy?, .dataControls?, .ageVerification?, .devices?, .storage?, .memory?:
             try? await Task.sleep(for: .milliseconds(500))
             openSettings()
         case .deleteToast?:

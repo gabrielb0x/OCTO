@@ -23,6 +23,15 @@ public enum ChatGPTAccountAPI {
     public static var memoriesURL: URL { url("memories", query: [("include_memory_entries", "true")]) }
     public static var accountCheckURL: URL { url("accounts/check/v4-2023-04-27") }
 
+    /// Devices signed into the account, as ChatGPT's own "Devices" screen lists them.
+    public static var devicesURL: URL { url("accounts/sessions") }
+    /// Advanced protection and sign-in alerts.
+    public static var securitySettingsURL: URL { url("accounts/security_settings/info") }
+    /// The account's second factors: authenticator, passkeys, SMS.
+    public static var multiFactorURL: URL { url("accounts/mfa_info") }
+    /// Space the files of the account's chats take on ChatGPT's side.
+    public static var fileStorageURL: URL { url("files/library/storage/usage") }
+
     /// `POST /conversation/init`: the call the website makes when opening a new chat. Returns the
     /// account's live feature limits (Deep Research, image generation, file uploads…) and default model.
     public static var conversationInitURL: URL { url("conversation/init") }
@@ -76,6 +85,11 @@ public enum ChatGPTAccountAPI {
     /// `GET` returns the whole message tree, `PATCH` renames, archives or deletes the chat.
     public static func conversationURL(id: String) -> URL {
         url("conversation/\(pathSegment(id))")
+    }
+
+    /// Searches every chat of the account, inside the messages, the way ChatGPT's own search does.
+    public static func conversationSearchURL(query: String) -> URL {
+        url("conversations/search", query: [("query", query)])
     }
 
     /// Projects with their latest chats, as listed in the ChatGPT sidebar.
