@@ -20,36 +20,26 @@ struct ReleaseNotes: Identifiable, Equatable {
 
     /// Notes of the version being shipped. Keep in sync with CHANGELOG.md.
     static var current: ReleaseNotes {
-        ReleaseNotes(version: "1.4.0", changes: [
-            Change(
-                systemImage: "text.line.first.and.arrowtriangle.forward",
-                title: String(localized: "Calmer replies"),
-                detail: String(localized: "Replies now appear word by word, each word fading in. Pick the pace in Appearance.")
-            ),
+        ReleaseNotes(version: "1.5.0", changes: [
             Change(
                 systemImage: "eye.slash",
-                title: String(localized: "Much more private"),
-                detail: String(localized: "Links without trackers, copies that stay on your iPhone, no third-party keyboards, chats hidden during screen recording and more, in Privacy.")
+                title: String(localized: "Your email stays yours"),
+                detail: String(localized: "In Settings, the email address and the phone number hide behind dots: on a tap, only while the screen is recorded, or for good.")
             ),
             Change(
-                systemImage: "paintpalette",
-                title: String(localized: "Make it yours"),
-                detail: String(localized: "New accent colors and one of your own, text size, font and code wrapping.")
+                systemImage: "sparkle",
+                title: String(localized: "The upgrade button"),
+                detail: String(localized: "Accounts without a subscription get ChatGPT's Upgrade in the top bar, and Appearance takes it away in one tap.")
             ),
             Change(
-                systemImage: "mic",
-                title: String(localized: "Dictation by ChatGPT"),
-                detail: String(localized: "Your voice is recorded, then written down by ChatGPT, like in its apps.")
+                systemImage: "list.bullet",
+                title: String(localized: "The ChatGPT home screen"),
+                detail: String(localized: "Suggestions are listed like in the app, and the + button joins the message bar.")
             ),
             Change(
-                systemImage: "hand.raised",
-                title: String(localized: "Your real data controls"),
-                detail: String(localized: "Improve the model for everyone shows the setting saved in your account, and turns off from OCTO.")
-            ),
-            Change(
-                systemImage: "arrow.down.app",
-                title: String(localized: "Updates"),
-                detail: String(localized: "OCTO tells you when a new version is out and installs it with AltStore or SideStore.")
+                systemImage: "hand.wave",
+                title: String(localized: "Your home screen"),
+                detail: String(localized: "The greeting, the suggestions and their style are yours to choose in Appearance.")
             ),
         ])
     }

@@ -23,6 +23,20 @@ struct PrivacyView: View {
             }
 
             Section {
+                Picker(selection: $settings.contactVisibility) {
+                    ForEach(ContactVisibility.allCases) { visibility in
+                        Text(verbatim: visibility.title).tag(visibility)
+                    }
+                } label: {
+                    Label("Email and phone number", systemImage: "eye.slash")
+                }
+            } header: {
+                Text("Your details")
+            } footer: {
+                Text("How the email address and the phone number of your account show in Settings. Behind dots, a tap shows them for 30 seconds — never while the screen is recorded, mirrored or shared.")
+            }
+
+            Section {
                 Toggle(isOn: $settings.temporaryChatsByDefault) {
                     Label {
                         Text("Temporary chats by default")
@@ -146,6 +160,17 @@ struct PrivacyView: View {
         if host.hasSuffix("openai.com") { return "person.badge.key" }
         if host.hasSuffix("github.com") { return "arrow.down.app" }
         return "network"
+    }
+}
+
+extension ContactVisibility {
+    var title: String {
+        switch self {
+        case .always: return String(localized: "Always shown")
+        case .tapToReveal: return String(localized: "Tap to show")
+        case .whileNotRecording: return String(localized: "Hidden while recording")
+        case .never: return String(localized: "Never shown")
+        }
     }
 }
 

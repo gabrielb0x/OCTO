@@ -8,6 +8,7 @@ struct ChatView: View {
     let onNewChat: () -> Void
     let onToggleTemporary: () -> Void
     let onDelete: () -> Void
+    let onUpgrade: () -> Void
 
     @State private var scrollPosition = ScrollPosition(idType: UUID.self, edge: .bottom)
     @State private var isNearBottom = true
@@ -31,7 +32,7 @@ struct ChatView: View {
                         Task { await session.loadFromAccount(force: true) }
                     }
                 } else {
-                    EmptyChatView(isTemporary: session.isTemporary)
+                    EmptyChatView(isTemporary: session.isTemporary, showsGreeting: app.settings.showsGreeting)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -167,9 +168,11 @@ struct ChatView: View {
         }
 
         ToolbarItem(placement: .principal) {
-            // Without a subscription ChatGPT offers no choice of model, so there's no picker.
+            // Without a subscription ChatGPT offers no choice of model: it offers to upgrade instead.
             if app.allowsModelChoice {
                 ModelMenu(session: session)
+            } else if app.showsUpgradeOffer {
+                UpgradePill(action: onUpgrade)
             } else {
                 Text(verbatim: "ChatGPT")
                     .font(.headline)
@@ -311,6 +314,8 @@ struct ModelMenu: View {
 
 struct EmptyChatView: View {
     let isTemporary: Bool
+    /// The ChatGPT app leaves a new chat empty; Appearance can bring the greeting back.
+    var showsGreeting = false
 
     var body: some View {
         VStack(spacing: 10) {
@@ -321,7 +326,7 @@ struct EmptyChatView: View {
                     .font(.callout)
                     .foregroundStyle(Theme.secondaryText)
                     .multilineTextAlignment(.center)
-            } else {
+            } else if showsGreeting {
                 Text("What can I help with?")
                     .font(.system(size: 27, weight: .semibold))
                     .multilineTextAlignment(.center)

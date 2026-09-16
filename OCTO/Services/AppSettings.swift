@@ -75,6 +75,56 @@ enum ClipboardExpiry: Int, CaseIterable, Identifiable {
     var id: Int { rawValue }
 }
 
+/// How the email address and the phone number of the account show in Settings.
+enum ContactVisibility: String, CaseIterable, Identifiable {
+    /// Readable, like in the ChatGPT app.
+    case always
+    /// Behind dots until you tap them.
+    case tapToReveal
+    /// Readable, except while the screen is recorded, mirrored or shared.
+    case whileNotRecording
+    /// Never readable in OCTO.
+    case never
+
+    var id: String { rawValue }
+}
+
+/// Whether the email address and the phone number can be read right now.
+struct ContactShield {
+    let visibility: ContactVisibility
+    /// The screen is being recorded, mirrored or shared.
+    let isScreenCaptured: Bool
+
+    /// True when the values show as dots until they're revealed.
+    var isMasked: Bool {
+        switch visibility {
+        case .always: return false
+        case .tapToReveal, .never: return true
+        case .whileNotRecording: return isScreenCaptured
+        }
+    }
+
+    /// True when a tap shows the real value. Never while the screen is captured.
+    var canReveal: Bool {
+        visibility == .tapToReveal && !isScreenCaptured
+    }
+
+    /// True when the value may leave OCTO, for the copy action.
+    var allowsCopy: Bool {
+        visibility != .never
+    }
+}
+
+/// The starter prompts above the message bar of a new chat.
+enum SuggestionStyle: String, CaseIterable, Identifiable {
+    /// The list of the ChatGPT app: an icon and a few words, one per line.
+    case list
+    /// Glass chips that scroll sideways.
+    case chips
+
+    var id: String { rawValue }
+}
+
 /// How long chats stay on this device.
 enum LocalRetention: Int, CaseIterable, Identifiable {
     case forever = 0
@@ -199,6 +249,25 @@ final class AppSettings {
         didSet { defaults.set(showsSuggestions, forKey: Keys.showsSuggestions) }
     }
 
+    var suggestionStyle: SuggestionStyle {
+        didSet { defaults.set(suggestionStyle.rawValue, forKey: Keys.suggestionStyle) }
+    }
+
+    /// "Upgrade" in the top bar of a chat, shown to accounts without a subscription.
+    var showsUpgradeButton: Bool {
+        didSet { defaults.set(showsUpgradeButton, forKey: Keys.showsUpgradeButton) }
+    }
+
+    /// "What can I help with?" in the middle of a new chat. The ChatGPT app leaves it out.
+    var showsGreeting: Bool {
+        didSet { defaults.set(showsGreeting, forKey: Keys.showsGreeting) }
+    }
+
+    /// How the email address and the phone number show in Settings.
+    var contactVisibility: ContactVisibility {
+        didSet { defaults.set(contactVisibility.rawValue, forKey: Keys.contactVisibility) }
+    }
+
     /// System voice used to read replies aloud; nil picks one matching the language of the reply.
     var voiceIdentifier: String? {
         didSet { defaults.set(voiceIdentifier, forKey: Keys.voiceIdentifier) }
@@ -288,6 +357,11 @@ final class AppSettings {
         sendsWithReturn = defaults.bool(forKey: Keys.sendsWithReturn)
         correctsSpelling = defaults.object(forKey: Keys.correctsSpelling) as? Bool ?? true
         showsSuggestions = defaults.object(forKey: Keys.showsSuggestions) as? Bool ?? true
+        suggestionStyle = defaults.string(forKey: Keys.suggestionStyle).flatMap(SuggestionStyle.init(rawValue:)) ?? .list
+        showsUpgradeButton = defaults.object(forKey: Keys.showsUpgradeButton) as? Bool ?? true
+        showsGreeting = defaults.object(forKey: Keys.showsGreeting) as? Bool ?? false
+        // Personal by default: the address and the number show once you ask for them.
+        contactVisibility = defaults.string(forKey: Keys.contactVisibility).flatMap(ContactVisibility.init(rawValue:)) ?? .tapToReveal
         voiceIdentifier = defaults.string(forKey: Keys.voiceIdentifier)
         voicePause = defaults.string(forKey: Keys.voicePause).flatMap(VoicePause.init(rawValue:)) ?? .normal
         transcriptionEngine = defaults.string(forKey: Keys.transcriptionEngine).flatMap(TranscriptionEngine.init(rawValue:)) ?? .chatGPT
@@ -333,6 +407,10 @@ final class AppSettings {
         static let sendsWithReturn = "settings.sendsWithReturn"
         static let correctsSpelling = "settings.correctsSpelling"
         static let showsSuggestions = "settings.showsSuggestions"
+        static let suggestionStyle = "settings.suggestionStyle"
+        static let showsUpgradeButton = "settings.showsUpgradeButton"
+        static let showsGreeting = "settings.showsGreeting"
+        static let contactVisibility = "settings.contactVisibility"
         static let voiceIdentifier = "settings.voiceIdentifier"
         static let voicePause = "settings.voicePause"
         static let transcriptionEngine = "settings.transcriptionEngine"

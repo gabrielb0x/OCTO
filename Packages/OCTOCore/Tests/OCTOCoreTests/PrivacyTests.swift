@@ -27,3 +27,29 @@ import Testing
         #expect(LinkCleaner.cleanLinks(in: "Pas de lien ici ?") == "Pas de lien ici ?")
     }
 }
+
+@Suite struct ContactMaskingTests {
+    @Test func hidesAnEmailAddressButKeepsItRecognizable() {
+        #expect(ContactMasking.email("gabriel@example.com") == "g••••••@e••••••.com")
+        #expect(ContactMasking.email("a@b.fr") == "•@•.fr")
+        #expect(ContactMasking.email("gabriel.badre.long.address@protonmail.com") == "g••••••••@p••••••••.com")
+        // A domain without an extension, and values that aren't addresses, are hidden all the same.
+        #expect(ContactMasking.email("me@localhost") == "m•@l••••••••")
+        #expect(ContactMasking.email("not an address") == "n••••••••")
+        #expect(ContactMasking.email("") == "")
+    }
+
+    @Test func keepsTheShapeOfAPhoneNumberAndItsLastDigits() {
+        #expect(ContactMasking.phone("+33 6 12 34 56 78") == "+•• • •• •• •• 78")
+        #expect(ContactMasking.phone("0612345678") == "••••••••78")
+        // Too short to hide anything useful: every digit goes.
+        #expect(ContactMasking.phone("1234") == "••••")
+        #expect(ContactMasking.phone("") == "")
+    }
+
+    @Test func hidesAnyOtherValue() {
+        #expect(ContactMasking.text("Gabriel") == "G••••••")
+        #expect(ContactMasking.text("G") == "•")
+        #expect(ContactMasking.text("  ") == "")
+    }
+}

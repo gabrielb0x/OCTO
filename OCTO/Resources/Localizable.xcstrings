@@ -321,6 +321,16 @@
         }
       }
     },
+    "Accounts without a subscription get ChatGPT's Upgrade in the top bar, and Appearance takes it away in one tap.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les comptes sans abonnement retrouvent le « Mettre à niveau » de ChatGPT en haut de l'écran, et Apparence l'enlève d'une pression."
+          }
+        }
+      }
+    },
     "Actions": {
       "localizations": {
         "fr": {
@@ -481,6 +491,16 @@
         }
       }
     },
+    "Always shown": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toujours affichés"
+          }
+        }
+      }
+    },
     "An open-source ChatGPT client for iOS": {
       "localizations": {
         "fr": {
@@ -551,12 +571,12 @@
         }
       }
     },
-    "Ask anything": {
+    "Ask ChatGPT": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pose ta question"
+            "value": "Demander à ChatGPT"
           }
         }
       }
@@ -861,6 +881,16 @@
         }
       }
     },
+    "Chips": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pastilles"
+          }
+        }
+      }
+    },
     "Choose model": {
       "localizations": {
         "fr": {
@@ -1137,6 +1167,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Masque tes chats dès qu'OCTO quitte l'écran, pour qu'ils n'apparaissent pas dans le sélecteur d'apps."
+          }
+        }
+      }
+    },
+    "Create an image": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créer une image"
+          }
+        }
+      }
+    },
+    "Create an image of": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crée une image de"
           }
         }
       }
@@ -1431,6 +1481,16 @@
         }
       }
     },
+    "Email and phone number": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-mail et numéro de téléphone"
+          }
+        }
+      }
+    },
     "Enable customization": {
       "localizations": {
         "fr": {
@@ -1701,6 +1761,16 @@
         }
       }
     },
+    "Greeting": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salutation"
+          }
+        }
+      }
+    },
     "Haptic feedback": {
       "localizations": {
         "fr": {
@@ -1761,12 +1831,32 @@
         }
       }
     },
+    "Help me write": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aide-moi à écrire"
+          }
+        }
+      }
+    },
     "Hi! This is how I'll read ChatGPT's replies to you.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Salut ! Voici comment je te lirai les réponses de ChatGPT."
+          }
+        }
+      }
+    },
+    "Hidden while recording": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masqués pendant l'enregistrement"
           }
         }
       }
@@ -1781,12 +1871,42 @@
         }
       }
     },
+    "Hides it again": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le masque à nouveau"
+          }
+        }
+      }
+    },
+    "Home screen": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écran d'accueil"
+          }
+        }
+      }
+    },
     "How long voice mode waits once you stop talking before it sends what you said.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Le temps que le mode vocal attend une fois que tu t'arrêtes de parler avant d'envoyer ce que tu as dit."
+          }
+        }
+      }
+    },
+    "How the email address and the phone number of your account show in Settings. Behind dots, a tap shows them for 30 seconds — never while the screen is recorded, mirrored or shared.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment l'adresse e-mail et le numéro de téléphone de ton compte s'affichent dans les Réglages. Derrière les points, une pression les montre pendant 30 secondes — jamais pendant l'enregistrement, la recopie ou le partage de l'écran."
           }
         }
       }
@@ -1837,6 +1957,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Améliorer le modèle pour tous"
+          }
+        }
+      }
+    },
+    "In Settings, the email address and the phone number hide behind dots: on a tap, only while the screen is recorded, or for good.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans les Réglages, l'adresse e-mail et le numéro de téléphone se cachent derrière des points : d'une pression, seulement pendant l'enregistrement de l'écran, ou pour de bon."
           }
         }
       }
@@ -2007,6 +2137,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Barre de saisie en Liquid Glass"
+          }
+        }
+      }
+    },
+    "List": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste"
           }
         }
       }
@@ -2337,6 +2477,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Réseau"
+          }
+        }
+      }
+    },
+    "Never shown": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jamais affichés"
           }
         }
       }
@@ -3721,16 +3871,6 @@
         }
       }
     },
-    "Show suggestions": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Afficher les suggestions"
-          }
-        }
-      }
-    },
     "Show text as it arrives": {
       "localizations": {
         "fr": {
@@ -3757,6 +3897,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Afficher les nouveautés au prochain lancement"
+          }
+        }
+      }
+    },
+    "Shows it": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'affiche"
+          }
+        }
+      }
+    },
+    "Shows the plan of your ChatGPT account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Affiche le forfait de ton compte ChatGPT"
           }
         }
       }
@@ -4121,6 +4281,36 @@
         }
       }
     },
+    "Suggestion style": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Style des suggestions"
+          }
+        }
+      }
+    },
+    "Suggestions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestions"
+          }
+        }
+      }
+    },
+    "Suggestions are listed like in the app, and the + button joins the message bar.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les suggestions s'affichent en liste comme dans l'app, et le bouton + rejoint la barre de saisie."
+          }
+        }
+      }
+    },
     "Summarize an article for me": {
       "localizations": {
         "fr": {
@@ -4211,6 +4401,16 @@
         }
       }
     },
+    "Tap to show": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Affichés d'une pression"
+          }
+        }
+      }
+    },
     "Temporary chat": {
       "localizations": {
         "fr": {
@@ -4251,6 +4451,16 @@
         }
       }
     },
+    "The ChatGPT home screen": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'accueil de l'app ChatGPT"
+          }
+        }
+      }
+    },
     "The chats of your ChatGPT account will be removed from this device.": {
       "localizations": {
         "fr": {
@@ -4277,6 +4487,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "La console n'est pas disponible en mode démo."
+          }
+        }
+      }
+    },
+    "The greeting, the suggestions and their style are yours to choose in Appearance.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La salutation, les suggestions et leur style se choisissent dans Apparence."
           }
         }
       }
@@ -4357,6 +4577,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "L'animation du texte sur l'écran de connexion est plus fluide."
+          }
+        }
+      }
+    },
+    "The upgrade button": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le bouton Mettre à niveau"
           }
         }
       }
@@ -4697,6 +4927,26 @@
         }
       }
     },
+    "Upgrade": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mettre à niveau"
+          }
+        }
+      }
+    },
+    "Upgrade button": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bouton Mettre à niveau"
+          }
+        }
+      }
+    },
     "Usage": {
       "localizations": {
         "fr": {
@@ -4947,6 +5197,16 @@
         }
       }
     },
+    "Write or edit": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écrire ou modifier"
+          }
+        }
+      }
+    },
     "Yearly": {
       "localizations": {
         "fr": {
@@ -5093,6 +5353,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tes chats, projets, instructions personnalisées, personnalité, mémoire et photo de profil viennent maintenant de ton compte ChatGPT."
+          }
+        }
+      }
+    },
+    "Your details": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tes informations"
+          }
+        }
+      }
+    },
+    "Your email stays yours": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton e-mail reste à toi"
+          }
+        }
+      }
+    },
+    "Your home screen": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton écran d'accueil"
           }
         }
       }
@@ -6731,6 +7021,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "“Upgrade” shows in the top bar of accounts without a subscription, like in ChatGPT, and opens your plan. A new chat is empty in the ChatGPT app: the greeting is OCTO's own.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "« Mettre à niveau » s'affiche en haut pour les comptes sans abonnement, comme dans ChatGPT, et ouvre ton forfait. Un nouveau chat est vide dans l'app ChatGPT : la salutation est propre à OCTO."
           }
         }
       }

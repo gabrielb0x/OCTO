@@ -2,6 +2,20 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [1.5.0] – 2026-09-16
+
+### Ajouté
+
+- **E-mail et numéro de téléphone masqués dans les Réglages**, au choix dans Confidentialité → Tes informations : toujours affichés, **affichés d'une pression** (ils repassent derrière les points au bout de 30 secondes), **masqués pendant l'enregistrement, la recopie ou le partage de l'écran** — pratique en live — ou **jamais affichés**. Seules la première lettre, l'extension du domaine et les deux derniers chiffres restent visibles, et le masquage vaut aussi pour le nom du compte quand c'est l'adresse e-mail, dans la barre latérale comme en haut des Réglages et dans Sécurité et connexion.
+- **Bouton « Mettre à niveau »** en haut de l'écran pour les comptes sans abonnement, comme dans l'app ChatGPT : il ouvre la page Abonnement. Il **se désactive** dans Réglages → Apparence → Écran d'accueil.
+- **Suggestions en liste** comme sur l'accueil de l'app ChatGPT (Créer une image, Écrire ou modifier, Rechercher sur le Web), au choix en pastilles de verre comme avant, et **salutation « Comment puis-je t'aider ? » optionnelle**.
+
+### Modifié
+
+- **Barre de saisie** : le bouton + rejoint la capsule de verre, comme dans l'app ChatGPT, et la question devient « Demander à ChatGPT ».
+- L'accueil d'un nouveau chat est vide par défaut, comme dans l'app ChatGPT ; la salutation se rallume dans Apparence.
+- « Afficher les suggestions » quitte Général pour la nouvelle section **Écran d'accueil** d'Apparence, où Général renvoie désormais.
+
 ## [1.4.0] – 2026-09-15
 
 ### Ajouté

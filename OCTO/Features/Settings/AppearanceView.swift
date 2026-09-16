@@ -17,6 +17,31 @@ struct AppearanceView: View {
             }
 
             Section {
+                Toggle(isOn: $settings.showsUpgradeButton) {
+                    Label("Upgrade button", systemImage: "sparkle")
+                }
+                Toggle(isOn: $settings.showsGreeting) {
+                    Label("Greeting", systemImage: "hand.wave")
+                }
+                Toggle(isOn: $settings.showsSuggestions) {
+                    Label("Suggestions", systemImage: "lightbulb")
+                }
+                if settings.showsSuggestions {
+                    Picker(selection: $settings.suggestionStyle) {
+                        ForEach(SuggestionStyle.allCases) { style in
+                            Text(verbatim: style.title).tag(style)
+                        }
+                    } label: {
+                        Label("Suggestion style", systemImage: "list.bullet")
+                    }
+                }
+            } header: {
+                Text("Home screen")
+            } footer: {
+                Text("“Upgrade” shows in the top bar of accounts without a subscription, like in ChatGPT, and opens your plan. A new chat is empty in the ChatGPT app: the greeting is OCTO's own.")
+            }
+
+            Section {
                 LabeledContent {
                     Text(verbatim: settings.accent.title)
                 } label: {
@@ -206,6 +231,15 @@ extension ChatTextSize {
         case .standard: return String(localized: "Default")
         case .large: return String(localized: "Large")
         case .extraLarge: return String(localized: "Extra large")
+        }
+    }
+}
+
+extension SuggestionStyle {
+    var title: String {
+        switch self {
+        case .list: return String(localized: "List")
+        case .chips: return String(localized: "Chips")
         }
     }
 }

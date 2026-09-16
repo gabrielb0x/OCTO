@@ -69,19 +69,10 @@ struct SettingsView: View {
 
                     Section("Account") {
                         if let email = app.accountEmail {
-                            LabeledContent {
-                                Text(verbatim: email)
-                                    .lineLimit(1)
-                            } label: {
-                                Label("Email address", systemImage: "envelope")
-                            }
+                            ContactRow(title: "Email address", systemImage: "envelope", value: email, kind: .email)
                         }
                         if let phone = app.account.profile?.phoneNumber {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Label("Phone number", systemImage: "phone")
-                                Text(verbatim: phone)
-                                    .foregroundStyle(Theme.secondaryText)
-                            }
+                            ContactRow(title: "Phone number", systemImage: "phone", value: phone, kind: .phone)
                         }
                         NavigationLink(value: SettingsRoute.subscription) {
                             LabeledContent {
@@ -211,12 +202,24 @@ struct SettingsView: View {
             VStack(spacing: 10) {
                 AccountAvatar(name: app.account.profile?.name, email: app.accountEmail, image: app.account.avatar, size: 76)
                 VStack(spacing: 3) {
-                    Text(verbatim: app.accountName)
+                    Text(verbatim: app.shieldedAccountName)
                         .font(.title3.weight(.semibold))
                         .lineLimit(1)
                     Text(verbatim: app.planName)
                         .font(.subheadline)
                         .foregroundStyle(Theme.secondaryText)
+                }
+                if app.showsUpgradeOffer {
+                    Button {
+                        path.append(.subscription)
+                    } label: {
+                        Label("Upgrade", systemImage: "sparkle")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(app.settings.accentStyle.link)
+                            .padding(.horizontal, 6)
+                    }
+                    .buttonStyle(.glass)
+                    .padding(.top, 4)
                 }
             }
             .frame(maxWidth: .infinity)

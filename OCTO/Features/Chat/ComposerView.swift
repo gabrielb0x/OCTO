@@ -32,21 +32,13 @@ struct ComposerView: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             if showsSuggestions {
-                SuggestionChips { suggestion in
-                    session.draft = suggestion
-                    isFocused = true
-                }
-                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                suggestions
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
 
-            GlassEffectContainer(spacing: 10) {
-                HStack(alignment: .bottom, spacing: 10) {
-                    attachMenu
-                    field
-                }
-            }
+            field
         }
         .readableWidth()
         .padding(.horizontal, 14)
@@ -86,6 +78,20 @@ struct ComposerView: View {
 
     // MARK: Pieces
 
+    /// The starter prompts of a new chat: the list of the ChatGPT app, or glass chips.
+    @ViewBuilder
+    private var suggestions: some View {
+        switch app.settings.suggestionStyle {
+        case .list:
+            SuggestionList(supportsWebSearch: session.model.supportsWebSearch, onSelect: apply)
+        case .chips:
+            SuggestionChips { prompt in
+                session.draft = prompt
+                isFocused = true
+            }
+        }
+    }
+
     private var attachMenu: some View {
         Menu {
             if UIImagePickerController.isSourceTypeAvailable(.camera) {
@@ -115,16 +121,17 @@ struct ComposerView: View {
             }
         } label: {
             Image(systemName: "plus")
-                .font(.system(size: 21, weight: .regular))
+                .font(.system(size: 20, weight: .regular))
                 .foregroundStyle(Theme.primaryText)
-                .frame(width: Self.barHeight, height: Self.barHeight)
-                .contentShape(Circle())
+                .frame(width: 46, height: Self.barHeight)
+                .contentShape(Rectangle())
         }
-        .glassEffect(.regular.interactive(), in: .circle)
         .accessibilityLabel(Text("Add attachments"))
     }
 
-    /// The glass capsule: round while it holds one line, a rounded rectangle as the message grows.
+    /// The glass capsule of the ChatGPT app, holding the + button, what you write, dictation and
+    /// the voice, send or stop button. Round while it holds one line, a rounded rectangle as the
+    /// message grows.
     private var field: some View {
         VStack(alignment: .leading, spacing: 0) {
             if !session.pendingAttachments.isEmpty {
@@ -146,6 +153,7 @@ struct ComposerView: View {
                     .transition(.opacity)
             } else {
                 HStack(alignment: .bottom, spacing: 0) {
+                    attachMenu
                     if isWebSearchOn {
                         webSearchChip
                     }
@@ -154,7 +162,7 @@ struct ComposerView: View {
                         .lineLimit(1...8)
                         .focused($isFocused)
                         .autocorrectionDisabled(!app.settings.correctsSpelling)
-                        .padding(.leading, isWebSearchOn ? 6 : 18)
+                        .padding(.leading, isWebSearchOn ? 6 : 2)
                         .padding(.vertical, 14)
                         .onKeyPress(.return, phases: .down) { press in
                             handleReturn(press)
@@ -174,7 +182,7 @@ struct ComposerView: View {
 
     private var placeholder: LocalizedStringKey {
         if session.isTemporary { return "Temporary message" }
-        return isWebSearchOn ? "Search the web" : "Ask anything"
+        return isWebSearchOn ? "Search the web" : "Ask ChatGPT"
     }
 
     private var webSearchChip: some View {
@@ -236,6 +244,17 @@ struct ComposerView: View {
     }
 
     // MARK: Actions
+
+    /// A tapped suggestion starts the message, or turns on web search, and opens the keyboard.
+    private func apply(_ suggestion: ChatSuggestion) {
+        switch suggestion.action {
+        case .prompt(let text):
+            session.draft = text
+        case .webSearch:
+            session.setWebSearch(true)
+        }
+        isFocused = true
+    }
 
     private func trailingAction() {
         if session.isStreaming {
@@ -514,6 +533,64 @@ struct PendingAttachmentView: View {
                 thumbnail = ImageProcessing.thumbnail(from: data, maxPixelSize: 200)
             }
         }
+    }
+}
+
+/// One starter prompt of a new chat.
+struct ChatSuggestion: Identifiable {
+    enum Action {
+        /// Starts the message, which you finish yourself.
+        case prompt(String)
+        /// Turns on web search, like the "Search the web" row of the ChatGPT app.
+        case webSearch
+    }
+
+    let title: String
+    let systemImage: String
+    let action: Action
+
+    var id: String { title }
+}
+
+/// The starter prompts of the ChatGPT app: an icon and a few words, one per line above the message bar.
+struct SuggestionList: View {
+    let supportsWebSearch: Bool
+    let onSelect: (ChatSuggestion) -> Void
+
+    private var suggestions: [ChatSuggestion] {
+        var list = [
+            ChatSuggestion(title: String(localized: "Create an image"), systemImage: "photo", action: .prompt(String(localized: "Create an image of") + " ")),
+            ChatSuggestion(title: String(localized: "Write or edit"), systemImage: "pencil", action: .prompt(String(localized: "Help me write") + " ")),
+        ]
+        if supportsWebSearch {
+            list.append(ChatSuggestion(title: String(localized: "Search the web"), systemImage: "globe", action: .webSearch))
+        }
+        return list
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(suggestions) { suggestion in
+                Button {
+                    onSelect(suggestion)
+                } label: {
+                    HStack(spacing: 16) {
+                        Image(systemName: suggestion.systemImage)
+                            .font(.system(size: 19, weight: .regular))
+                            .frame(width: 26)
+                        Text(verbatim: suggestion.title)
+                            .font(.body)
+                        Spacer(minLength: 0)
+                    }
+                    .foregroundStyle(Theme.primaryText)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 10)
+                    .contentShape(.rect(cornerRadius: 14))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

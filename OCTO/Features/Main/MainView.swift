@@ -11,6 +11,8 @@ struct MainView: View {
     @State private var isDragging = false
     @State private var dragTranslation: CGFloat = 0
     @State private var showSettings = false
+    /// The page the settings sheet opens on: "Upgrade" goes straight to Subscription.
+    @State private var settingsPath: [SettingsRoute] = []
 
     init(app: AppModel) {
         var initialSession: ChatSession?
@@ -36,7 +38,7 @@ struct MainView: View {
                     onRename: rename,
                     onSetPinned: setPinned,
                     onDelete: delete,
-                    onOpenSettings: { showSettings = true }
+                    onOpenSettings: { openSettings() }
                 )
                 .frame(width: sidebarWidth)
                 .offset(x: -sidebarWidth * 0.3 * (1 - progress))
@@ -48,7 +50,8 @@ struct MainView: View {
                     onOpenSidebar: { setSidebar(open: true) },
                     onNewChat: { startNewChat(temporary: app.settings.temporaryChatsByDefault) },
                     onToggleTemporary: { startNewChat(temporary: !session.isTemporary) },
-                    onDelete: { delete(session.id) }
+                    onDelete: { delete(session.id) },
+                    onUpgrade: { openSettings(at: [.subscription]) }
                 )
                 .frame(width: proxy.size.width)
                 .overlay {
@@ -85,7 +88,7 @@ struct MainView: View {
             #if OCTO_DEMO
             SettingsView(initialPath: DemoContent.settingsPath(for: app.demoScene), initialSection: DemoContent.settingsSection(for: app.demoScene))
             #else
-            SettingsView()
+            SettingsView(initialPath: settingsPath)
             #endif
         }
         .alert("Couldn't update your ChatGPT account", isPresented: syncErrorIsPresented) {
@@ -122,6 +125,11 @@ struct MainView: View {
     }
 
     // MARK: Navigation
+
+    private func openSettings(at path: [SettingsRoute] = []) {
+        settingsPath = path
+        showSettings = true
+    }
 
     private func open(_ id: UUID) {
         if id != session.id {

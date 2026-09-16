@@ -129,6 +129,19 @@ final class AppModel {
         account.profile?.email ?? auth.account?.email
     }
 
+    /// Whether the email address and the phone number of the account can be read right now.
+    var contactShield: ContactShield {
+        ContactShield(visibility: settings.contactVisibility, isScreenCaptured: protection.isScreenCaptured)
+    }
+
+    /// The name shown in the sidebar and above Settings. An account without a name shows its email
+    /// address, which is hidden like the other personal details when the settings ask for it.
+    var shieldedAccountName: String {
+        let name = accountName
+        guard contactShield.isMasked, let email = accountEmail, name == email else { return name }
+        return ContactMasking.email(email)
+    }
+
     /// The session to the ChatGPT account; nil in screenshot builds.
     var accountService: AccountService? {
         store.service
@@ -145,6 +158,11 @@ final class AppModel {
     /// Like in ChatGPT, only subscribers choose their model.
     var allowsModelChoice: Bool {
         (developer.isEnabled && developer.forcesModelPicker) || ChatGPTPlan.allowsModelChoice(planType)
+    }
+
+    /// Like ChatGPT, an account without a subscription is offered one, unless Appearance says no.
+    var showsUpgradeOffer: Bool {
+        settings.showsUpgradeButton && ChatGPTPlan.isPaid(planType) == false
     }
 
     var planName: String {

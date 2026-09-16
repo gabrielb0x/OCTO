@@ -132,7 +132,7 @@ struct SidebarView: View {
             HStack(spacing: 12) {
                 AccountAvatar(name: app.account.profile?.name, email: app.accountEmail, image: app.account.avatar, size: 36)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(verbatim: app.accountName)
+                    Text(verbatim: app.shieldedAccountName)
                         .font(.subheadline.weight(.semibold))
                         .lineLimit(1)
                     Text(verbatim: app.planName)

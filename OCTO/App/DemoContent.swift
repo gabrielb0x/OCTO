@@ -49,6 +49,11 @@ enum DemoContent {
         app.settings.chatFont = .system
         app.settings.revealSpeed = .normal
         app.settings.temporaryChatsByDefault = false
+        app.settings.showsSuggestions = true
+        app.settings.suggestionStyle = .list
+        app.settings.showsUpgradeButton = true
+        app.settings.showsGreeting = false
+        app.settings.contactVisibility = .tapToReveal
         app.developer.isEnabled = [.developer, .network, .messageDetails].contains(scene)
         app.developer.showsMessageDetails = scene == .messageDetails
         app.developer.showsPerformanceOverlay = scene == .messageDetails

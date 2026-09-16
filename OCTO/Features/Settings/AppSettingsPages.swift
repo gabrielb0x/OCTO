@@ -29,8 +29,8 @@ struct GeneralSettingsView: View {
                 Toggle(isOn: $settings.sendsWithReturn) {
                     Label("Send with Return", systemImage: "return")
                 }
-                Toggle(isOn: $settings.showsSuggestions) {
-                    Label("Show suggestions", systemImage: "lightbulb")
+                NavigationLink(value: SettingsRoute.appearance) {
+                    Label("Home screen", systemImage: "square.text.square")
                 }
             }
 
@@ -360,12 +360,7 @@ struct SecuritySettingsView: View {
                     Label("Method", systemImage: "person.badge.key")
                 }
                 if let email = app.accountEmail {
-                    LabeledContent {
-                        Text(verbatim: email)
-                            .lineLimit(1)
-                    } label: {
-                        Label("Email address", systemImage: "envelope")
-                    }
+                    ContactRow(title: "Email address", systemImage: "envelope", value: email, kind: .email)
                 }
                 if let signedInAt = app.auth.signedInAt {
                     LabeledContent {

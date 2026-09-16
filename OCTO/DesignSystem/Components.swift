@@ -113,6 +113,109 @@ struct AccountAvatar: View {
     }
 }
 
+/// "Upgrade" in the top bar, the way the ChatGPT app offers it to accounts without a subscription.
+/// It opens the Subscription page, and Settings → Appearance can take it away.
+struct UpgradePill: View {
+    let action: () -> Void
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: "sparkle")
+                    .font(.system(size: 13, weight: .semibold))
+                Text("Upgrade")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .foregroundStyle(app.settings.accentStyle.link)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .contentShape(.capsule)
+        }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: .capsule)
+        .accessibilityHint(Text("Shows the plan of your ChatGPT account"))
+    }
+}
+
+/// A row of Settings holding something personal — the email address, the phone number — shown the
+/// way Privacy asks: readable, behind dots until you tap them, hidden while the screen is
+/// recorded, or never shown at all.
+struct ContactRow: View {
+    enum Kind {
+        case email
+        case phone
+    }
+
+    let title: LocalizedStringKey
+    let systemImage: String
+    let value: String
+    let kind: Kind
+
+    @Environment(AppModel.self) private var app
+    @State private var isRevealed = false
+
+    var body: some View {
+        let shield = app.contactShield
+        let isHidden = shield.isMasked && !isRevealed
+        LabeledContent {
+            HStack(spacing: 7) {
+                Text(verbatim: isHidden ? masked : value)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                if shield.canReveal {
+                    Image(systemName: isRevealed ? "eye.slash" : "eye")
+                        .font(.caption)
+                        .foregroundStyle(Theme.tertiaryText)
+                }
+            }
+        } label: {
+            Label(title, systemImage: systemImage)
+        }
+        .contentShape(.rect)
+        .onTapGesture {
+            guard shield.canReveal else { return }
+            withAnimation(.smooth(duration: 0.2)) {
+                isRevealed.toggle()
+            }
+        }
+        .contextMenu {
+            if shield.allowsCopy {
+                Button {
+                    Clipboard.copy(value, settings: app.settings, cleansLinks: false)
+                    app.toasts.show(String(localized: "Copied"))
+                } label: {
+                    Label("Copy", systemImage: "doc.on.doc")
+                }
+            }
+        }
+        // A revealed value goes back behind its dots on its own, and as soon as the screen is captured.
+        .task(id: isRevealed) {
+            guard isRevealed else { return }
+            try? await Task.sleep(for: .seconds(30))
+            guard !Task.isCancelled else { return }
+            withAnimation(.smooth(duration: 0.2)) {
+                isRevealed = false
+            }
+        }
+        .onChange(of: app.protection.isScreenCaptured) { _, isCaptured in
+            if isCaptured {
+                isRevealed = false
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(shield.canReveal ? .isButton : [])
+        .accessibilityHint(shield.canReveal ? Text(isRevealed ? LocalizedStringKey("Hides it again") : LocalizedStringKey("Shows it")) : Text(""))
+    }
+
+    private var masked: String {
+        switch kind {
+        case .email: return ContactMasking.email(value)
+        case .phone: return ContactMasking.phone(value)
+        }
+    }
+}
+
 /// A settings page for something only the ChatGPT apps can do: what it is, and a way there.
 struct ChatGPTOnlyPage: View {
     let title: LocalizedStringKey
