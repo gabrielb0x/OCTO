@@ -58,11 +58,13 @@ public struct CheckoutPricing: Codable, Equatable, Sendable {
         plans.first { $0.key == key }
     }
 
-    /// The two-letter country of the pricing address. ChatGPT prices in dollars anywhere it
-    /// doesn't know, so an unknown region asks for the United States.
+    /// The two-letter country of the pricing address. Only a real region code is used: anything
+    /// else asks for the prices ChatGPT shows in the United States, rather than keeping whatever
+    /// letters it holds and inventing a country out of them.
     public static func countryCode(for region: String?) -> String {
-        let letters = (region ?? "").uppercased().filter { $0.isLetter && $0.isASCII }
-        return letters.count == 2 ? letters : "US"
+        let value = (region ?? "").trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        let isRegionCode = value.count == 2 && value.allSatisfy { $0.isASCII && $0.isLetter }
+        return isRegionCode ? value : "US"
     }
 
     public static func parse(_ data: Data) -> CheckoutPricing? {
