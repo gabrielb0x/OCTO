@@ -141,8 +141,11 @@ import Testing
         #expect(pricing.plan("plus")?.monthly?.amount == 23)
         #expect(pricing.plan("plus")?.monthly?.includesTax == true)
         #expect(pricing.plan("plus")?.yearly?.amount == 19.17)
-        #expect(pricing.plan("go")?.yearly == nil)
         #expect(pricing.plan("business")?.monthly?.includesTax == false)
+        // Go is sold by the month only: chained on its own so `yearly` isn't a double optional.
+        let go = try #require(pricing.plan("go"))
+        #expect(go.monthly?.amount == 8)
+        #expect(go.yearly == nil)
         // The free plan costs nothing, so it isn't a plan to buy; the currency keys aren't plans either.
         #expect(pricing.plan("free") == nil)
         #expect(pricing.plan("symbol_code") == nil)
