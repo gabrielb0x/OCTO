@@ -10,6 +10,13 @@ public enum ResponseStreamUpdate: Equatable, Sendable {
     case textDelta(String)
     case webSearchStarted
     case webSearchFinished(query: String?)
+    /// The model started drawing an image with the hosted image generation tool.
+    case imageGenerationStarted
+    /// A finished image, as the base64 data the tool returns.
+    case imageGenerated(base64: String)
+    /// The backend refused the image generation tool: the reply is written without it.
+    /// Reported by the client, never by the stream.
+    case imageGenerationUnsupported
     case citations([Citation])
     case completed(TokenUsage?)
     case incomplete(reason: String?)
@@ -44,6 +51,7 @@ public enum ResponseStreamDecoder {
             switch JSONValue.string(item?["type"]) {
             case "reasoning": return [.reasoningStarted]
             case "web_search_call": return [.webSearchStarted]
+            case "image_generation_call": return [.imageGenerationStarted]
             default: return []
             }
 
@@ -74,6 +82,9 @@ public enum ResponseStreamDecoder {
                 let query = JSONValue.string(action?["query"])
                     ?? (action?["queries"] as? [Any])?.compactMap { JSONValue.string($0) }.first
                 return [.webSearchFinished(query: query)]
+            case "image_generation_call":
+                guard let result = JSONValue.string(item["result"]), !result.isEmpty else { return [] }
+                return [.imageGenerated(base64: result)]
             case "message":
                 let parts = item["content"] as? [[String: Any]] ?? []
                 let citations = parts.flatMap { part in

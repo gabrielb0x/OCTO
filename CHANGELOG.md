@@ -2,6 +2,22 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [1.7.0] – 2026-09-16
+
+### Ajouté
+
+- **Glisser vers la droite n'importe où dans le chat ouvre tes chats.** Plus besoin de viser le bord de l'écran ni le bouton en haut à gauche : le geste marche sur toute la conversation, comme dans l'app ChatGPT, et glisser vers la gauche referme le panneau. Un glissement est jugé une seule fois, au départ : faire défiler la conversation ou un bloc de code ne déclenche plus le panneau par accident.
+- **Création d'images.** « Créer une image » apparaît dans le menu + de la barre de message et dans le menu du modèle, avec une pastille dans la barre quand c'est activé, et la suggestion « Créer une image » de l'accueil l'active toute seule. OCTO demande alors l'outil d'images à l'API Responses du **backend Codex de ton forfait**, et l'image arrive dans la conversation, gardée avec le chat comme une photo envoyée. **Le backend Codex ne propose que les outils des clients Codex** : s'il refuse l'outil, OCTO repose la question sans lui, te répond quand même avec des mots et te le dit, au lieu de faire échouer la réponse.
+
+### Modifié
+
+- **Les réglages ne se répètent plus.** Les lignes qui ne faisaient que renvoyer ailleurs sont parties : « Écran d'accueil » dans Général (c'était Apparence), la section « Ton compte ChatGPT » dans Confidentialité (Appareils, Gestion des données et Vérification de l'âge sont déjà dans Sécurité et connexion et dans la première page), le raccourci Dictée de Confidentialité (il est dans Voix), « Couleur d'accentuation » en double avec Apparence, « Masquer le contenu dans le sélecteur d'apps » en double entre Protection et Confidentialité, et l'adresse e-mail comme « Se déconnecter » en double dans Sécurité et connexion. Chaque réglage vit maintenant à un seul endroit.
+- **Quand le texte d'une ligne est rouge, son icône l'est aussi** : « Se déconnecter », « Supprimer tous les chats », « Retirer les chats téléchargés », « Désactiver le mode développeur » et « Copier le jeton d'accès ». iOS ne colorait que le texte et laissait l'icône dans la couleur d'accentuation.
+
+### Corrigé
+
+- **La dictée sur l'appareil vérifie enfin si tu l'as désactivée sur ton iPhone.** iOS signale la dictée coupée dans Réglages → Général → Clavier comme une *restriction*, et aucune demande d'autorisation ne la rétablit : OCTO le dit clairement, propose d'ouvrir les Réglages, et l'écran Voix affiche l'avertissement avant même d'essayer, réactualisé au retour des Réglages. Le mode vocal, qui écoute avec la même reconnaissance, dit la même chose.
+
 ## [1.6.1] – 2026-09-16
 
 ### Corrigé

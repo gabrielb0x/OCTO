@@ -578,6 +578,18 @@ final class ConversationStore {
         }
     }
 
+    /// Keeps an image ChatGPT drew, next to the photos sent in the chats.
+    func storeGeneratedImage(_ data: Data) -> MessageAttachment? {
+        guard let name = files.saveAttachment(data, fileExtension: "png") else { return nil }
+        return MessageAttachment(
+            kind: .image,
+            storedFileName: name,
+            displayName: String(localized: "Image created by ChatGPT"),
+            mimeType: "image/png",
+            byteCount: data.count
+        )
+    }
+
     nonisolated func payload(for attachment: MessageAttachment) -> AttachmentPayload? {
         guard let url = files.attachmentURL(attachment.storedFileName), let data = try? Data(contentsOf: url) else { return nil }
         switch attachment.kind {

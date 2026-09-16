@@ -9,6 +9,8 @@ struct MainView: View {
     @State private var session: ChatSession
     @State private var isSidebarOpen = false
     @State private var isDragging = false
+    /// True once a slide has been judged not to be a drawer one, until the finger lifts.
+    @State private var dragRejected = false
     @State private var dragTranslation: CGFloat = 0
     @State private var showSettings = false
     /// The page the settings sheet opens on: "Upgrade" goes straight to Subscription.
@@ -54,6 +56,8 @@ struct MainView: View {
                     onUpgrade: { openSettings(at: [.subscription]) }
                 )
                 .frame(width: proxy.size.width)
+                // Sliding right anywhere on the chat brings the chats out, as in the ChatGPT app.
+                .simultaneousGesture(drawerGesture(sidebarWidth: sidebarWidth))
                 .overlay {
                     if progress > 0.001 {
                         Color.black
@@ -62,15 +66,6 @@ struct MainView: View {
                             .contentShape(Rectangle())
                             .onTapGesture { setSidebar(open: false) }
                             .gesture(drawerGesture(sidebarWidth: sidebarWidth))
-                    }
-                }
-                .overlay(alignment: .leading) {
-                    if !isSidebarOpen {
-                        Color.clear
-                            .frame(width: 20)
-                            .contentShape(Rectangle())
-                            .gesture(drawerGesture(sidebarWidth: sidebarWidth))
-                            .padding(.top, 60)
                     }
                 }
                 // Masking with a shape that ignores the safe area keeps the chat drawing under the
@@ -212,18 +207,26 @@ struct MainView: View {
     }
 
     private func drawerGesture(sidebarWidth: CGFloat) -> some Gesture {
-        DragGesture(minimumDistance: 12, coordinateSpace: .global)
+        DragGesture(minimumDistance: 18, coordinateSpace: .global)
             .onChanged { value in
-                let dx = value.translation.width
-                let dy = value.translation.height
                 if !isDragging {
-                    guard abs(dx) > abs(dy) * 1.6, isSidebarOpen ? dx < 0 : dx > 0 else { return }
+                    // Decided once per slide: a sideways one moves the drawer, and everything else
+                    // — scrolling the chat, a code block sliding under a finger — is left alone
+                    // until the finger lifts.
+                    guard !dragRejected else { return }
+                    let dx = value.translation.width
+                    let dy = value.translation.height
+                    guard abs(dx) > abs(dy) * 1.6, isSidebarOpen ? dx < 0 : dx > 0 else {
+                        dragRejected = true
+                        return
+                    }
                     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                     isDragging = true
                 }
-                dragTranslation = dx
+                dragTranslation = value.translation.width
             }
             .onEnded { value in
+                dragRejected = false
                 guard isDragging else { return }
                 let projected = value.predictedEndTranslation.width
                 let shouldOpen = isSidebarOpen ? projected > -sidebarWidth / 2 : projected > sidebarWidth / 2

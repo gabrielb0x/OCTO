@@ -48,7 +48,7 @@ struct DataControlsView: View {
                     confirmDeleteAll = true
                 } label: {
                     HStack {
-                        Label("Delete all chats", systemImage: "trash")
+                        DestructiveLabel(title: "Delete all chats", systemImage: "trash")
                         if isDeleting {
                             Spacer()
                             ProgressView()

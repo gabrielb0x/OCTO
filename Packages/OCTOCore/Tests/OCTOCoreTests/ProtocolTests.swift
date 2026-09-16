@@ -20,6 +20,13 @@ import Testing
         #expect(Citation(url: "https://www.example.com/a").host == "example.com")
     }
 
+    @Test func decodesGeneratedImages() {
+        #expect(ResponseStreamDecoder.updates(fromEventData: #"{"type":"response.output_item.added","item":{"type":"image_generation_call","id":"ig_1"}}"#) == [.imageGenerationStarted])
+        let done = #"{"type":"response.output_item.done","item":{"type":"image_generation_call","id":"ig_1","result":"iVBORw0KGgo="}}"#
+        #expect(ResponseStreamDecoder.updates(fromEventData: done) == [.imageGenerated(base64: "iVBORw0KGgo=")])
+        #expect(ResponseStreamDecoder.updates(fromEventData: #"{"type":"response.output_item.done","item":{"type":"image_generation_call","result":""}}"#).isEmpty)
+    }
+
     @Test func decodesFailures() {
         let failed = ResponseStreamDecoder.updates(fromEventData: #"{"type":"response.failed","response":{"error":{"code":"context_length_exceeded","message":"Too long"}}}"#)
         #expect(failed == [.failed(ResponseStreamFailure(code: "context_length_exceeded", message: "Too long"))])
@@ -145,6 +152,26 @@ import Testing
         let reasoning = try #require(json["reasoning"] as? [String: Any])
         #expect(JSONValue.string(reasoning["effort"]) == "high")
         #expect(JSONValue.string(reasoning["summary"]) == "auto")
+    }
+
+    @Test func encodesTheImageGenerationTool() throws {
+        let request = ResponsesRequest(model: "gpt-5.5", instructions: nil, input: [], tools: [.webSearch(externalWebAccess: nil), .imageGeneration])
+        let json = try #require(JSONValue.object(try request.encoded()))
+        let tools = try #require(json["tools"] as? [[String: Any]])
+        #expect(tools.map { JSONValue.string($0["type"]) } == ["web_search", "image_generation"])
+        #expect(!tools[0].keys.contains("external_web_access"))
+        #expect(tools[1].count == 1)
+    }
+
+    /// The Codex backend only offers the tools of the Codex clients: a refusal that names the tool
+    /// is what tells the app to write the reply without it.
+    @Test func spotsAToolTheBackendDoesNotOffer() {
+        #expect(ResponsesTool.isUnsupported("image_generation", message: "Unsupported tool type: image_generation"))
+        #expect(ResponsesTool.isUnsupported("image_generation", message: "tools[0]: unknown variant `image_generation`"))
+        #expect(ResponsesTool.isUnsupported("image_generation", message: "Tool not allowed for this client"))
+        #expect(!ResponsesTool.isUnsupported("image_generation", message: "You've reached your usage limit."))
+        #expect(!ResponsesTool.isUnsupported("image_generation", message: "The model is invalid."))
+        #expect(!ResponsesTool.isUnsupported("image_generation", message: nil))
     }
 
     @Test func buildsInputFromHistory() {

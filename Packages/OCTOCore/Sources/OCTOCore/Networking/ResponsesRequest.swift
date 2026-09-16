@@ -112,6 +112,17 @@ public enum ResponsesContent: Encodable, Equatable, Sendable {
 public enum ResponsesTool: Encodable, Equatable, Sendable {
     /// Hosted web search. `externalWebAccess` is only sent to the ChatGPT backend.
     case webSearch(externalWebAccess: Bool?)
+    /// Hosted image generation. The Codex backend only offers the tools of the Codex clients, so
+    /// it may turn this one down: the request is then sent again without it.
+    case imageGeneration
+
+    /// The name the Responses API gives the tool.
+    public var type: String {
+        switch self {
+        case .webSearch: return "web_search"
+        case .imageGeneration: return "image_generation"
+        }
+    }
 
     private enum CodingKeys: String, CodingKey {
         case type
@@ -120,11 +131,19 @@ public enum ResponsesTool: Encodable, Equatable, Sendable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        switch self {
-        case .webSearch(let externalWebAccess):
-            try container.encode("web_search", forKey: .type)
+        try container.encode(type, forKey: .type)
+        if case .webSearch(let externalWebAccess) = self {
             try container.encodeIfPresent(externalWebAccess, forKey: .externalWebAccess)
         }
+    }
+
+    /// True when a rejected request blames a tool the backend doesn't offer. Such a request is
+    /// worth sending again without that tool, rather than failing the whole reply.
+    public static func isUnsupported(_ type: String, message: String?) -> Bool {
+        guard let message = message?.lowercased() else { return false }
+        guard message.contains(type) || message.contains("tool") else { return false }
+        let complaints = ["unsupported", "not supported", "unknown", "unrecognized", "invalid", "not allowed", "not available", "unavailable"]
+        return complaints.contains { message.contains($0) }
     }
 }
 

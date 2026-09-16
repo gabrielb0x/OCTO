@@ -72,6 +72,8 @@ final class DictationController {
 
     private(set) var state: State = .idle
     private(set) var errorMessage: String?
+    /// True when the way out of the last error is the Settings app.
+    private(set) var errorOpensSettings = false
     /// Loudness of the microphone over the last moments, 0...1, oldest first.
     private(set) var levels: [Double] = []
     private(set) var recordingStartedAt: Date?
@@ -99,19 +101,31 @@ final class DictationController {
         let speechStatus = await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { continuation.resume(returning: $0) }
         }
-        guard speechStatus == .authorized else {
-            fail(String(localized: "Allow speech recognition in Settings to dictate."))
+        // Dictation turned off in iOS Settings comes back as a restriction, not as a refusal: it's
+        // worth saying so, since no permission prompt will ever fix it.
+        let recognizer = SFSpeechRecognizer(locale: Locale.current) ?? SFSpeechRecognizer()
+        switch DictationAvailability.check(
+            authorization: SpeechAuthorization(speechStatus),
+            hasRecognizer: recognizer != nil,
+            isRecognizerAvailable: recognizer?.isAvailable ?? false
+        ) {
+        case .available:
+            break
+        case .turnedOffOnDevice:
+            fail(String(localized: "Dictation is turned off on this iPhone. Turn it on in Settings → General → Keyboard, or dictate with ChatGPT."), opensSettings: true)
             return
-        }
-        guard await AVAudioApplication.requestRecordPermission() else {
-            fail(String(localized: "Allow microphone access in Settings to dictate."))
+        case .permissionDenied:
+            fail(String(localized: "Allow speech recognition in Settings to dictate."), opensSettings: true)
             return
-        }
-        guard state == .starting else { return }
-        guard let recognizer = SFSpeechRecognizer(locale: Locale.current) ?? SFSpeechRecognizer(), recognizer.isAvailable else {
+        case .unavailable:
             fail(String(localized: "Speech recognition is not available right now."))
             return
         }
+        guard await AVAudioApplication.requestRecordPermission() else {
+            fail(String(localized: "Allow microphone access in Settings to dictate."), opensSettings: true)
+            return
+        }
+        guard state == .starting, let recognizer else { return }
 
         do {
             let audioSession = AVAudioSession.sharedInstance()
@@ -159,7 +173,7 @@ final class DictationController {
         state = .starting
         errorMessage = nil
         guard await AVAudioApplication.requestRecordPermission() else {
-            fail(String(localized: "Allow microphone access in Settings to dictate."))
+            fail(String(localized: "Allow microphone access in Settings to dictate."), opensSettings: true)
             return
         }
         guard state == .starting else { return }
@@ -293,6 +307,7 @@ final class DictationController {
 
     func clearError() {
         errorMessage = nil
+        errorOpensSettings = false
     }
 
     private func stopListening() {
@@ -316,8 +331,9 @@ final class DictationController {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
-    private func fail(_ message: String) {
+    private func fail(_ message: String, opensSettings: Bool = false) {
         errorMessage = message
+        errorOpensSettings = opensSettings
         state = .idle
     }
 
@@ -346,6 +362,30 @@ final class DictationController {
             }
             result.keep(task)
         }
+    }
+}
+
+extension SpeechAuthorization {
+    init(_ status: SFSpeechRecognizerAuthorizationStatus) {
+        switch status {
+        case .authorized: self = .authorized
+        case .denied: self = .denied
+        case .restricted: self = .restricted
+        case .notDetermined: self = .notDetermined
+        @unknown default: self = .notDetermined
+        }
+    }
+}
+
+extension DictationAvailability {
+    /// What iOS says about dictation on this device right now, without asking for anything.
+    static var current: DictationAvailability {
+        let recognizer = SFSpeechRecognizer(locale: Locale.current) ?? SFSpeechRecognizer()
+        return check(
+            authorization: SpeechAuthorization(SFSpeechRecognizer.authorizationStatus()),
+            hasRecognizer: recognizer != nil,
+            isRecognizerAvailable: recognizer?.isAvailable ?? false
+        )
     }
 }
 

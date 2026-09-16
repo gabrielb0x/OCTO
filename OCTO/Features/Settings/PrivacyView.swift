@@ -97,31 +97,10 @@ struct PrivacyView: View {
                 Toggle(isOn: $settings.checksForUpdates) {
                     Label("Check for updates", systemImage: "arrow.down.app")
                 }
-                NavigationLink(value: SettingsRoute.voice) {
-                    LabeledContent {
-                        Text(verbatim: settings.transcriptionEngine.title)
-                    } label: {
-                        Label("Dictation", systemImage: "mic")
-                    }
-                }
             } header: {
                 Text("Network")
             } footer: {
                 Text("Links of replies open, copy and share without their tracking parameters, such as utm_source=chatgpt.com. The update check asks GitHub for the latest release, without any identifier. Dictation with ChatGPT sends your recording to OpenAI; dictation on the device sends nothing.")
-            }
-
-            Section {
-                NavigationLink(value: SettingsRoute.devices) {
-                    Label("Devices", systemImage: "laptopcomputer.and.iphone")
-                }
-                NavigationLink(value: SettingsRoute.dataControls) {
-                    Label("Data controls", systemImage: "hand.raised")
-                }
-                NavigationLink(value: SettingsRoute.ageVerification) {
-                    Label("Age verification", systemImage: "checkmark.shield")
-                }
-            } header: {
-                Text("Your ChatGPT account")
             }
 
             Section {

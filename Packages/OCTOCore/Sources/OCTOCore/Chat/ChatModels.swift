@@ -157,6 +157,8 @@ public struct Conversation: Codable, Hashable, Sendable, Identifiable {
     public var modelID: String?
     public var reasoningEffort: String?
     public var webSearchEnabled: Bool
+    /// Asks for an image with the reply, when the backend offers image generation.
+    public var imageGenerationEnabled: Bool
     public var messages: [ChatMessage]
     /// Id of the chat in the ChatGPT account; nil for chats created in OCTO.
     public var remoteID: String?
@@ -174,6 +176,7 @@ public struct Conversation: Codable, Hashable, Sendable, Identifiable {
         modelID: String? = nil,
         reasoningEffort: String? = nil,
         webSearchEnabled: Bool = false,
+        imageGenerationEnabled: Bool = false,
         messages: [ChatMessage] = [],
         remoteID: String? = nil,
         projectID: String? = nil,
@@ -187,6 +190,7 @@ public struct Conversation: Codable, Hashable, Sendable, Identifiable {
         self.modelID = modelID
         self.reasoningEffort = reasoningEffort
         self.webSearchEnabled = webSearchEnabled
+        self.imageGenerationEnabled = imageGenerationEnabled
         self.messages = messages
         self.remoteID = remoteID
         self.projectID = projectID
@@ -195,7 +199,7 @@ public struct Conversation: Codable, Hashable, Sendable, Identifiable {
 
     private enum CodingKeys: String, CodingKey {
         case id, title, createdAt, updatedAt, isPinned, modelID, reasoningEffort, webSearchEnabled, messages
-        case remoteID, projectID, remoteUpdatedAt
+        case imageGenerationEnabled, remoteID, projectID, remoteUpdatedAt
     }
 
     public init(from decoder: Decoder) throws {
@@ -208,6 +212,7 @@ public struct Conversation: Codable, Hashable, Sendable, Identifiable {
         modelID = try container.decodeIfPresent(String.self, forKey: .modelID)
         reasoningEffort = try container.decodeIfPresent(String.self, forKey: .reasoningEffort)
         webSearchEnabled = try container.decodeIfPresent(Bool.self, forKey: .webSearchEnabled) ?? false
+        imageGenerationEnabled = try container.decodeIfPresent(Bool.self, forKey: .imageGenerationEnabled) ?? false
         messages = try container.decodeIfPresent([ChatMessage].self, forKey: .messages) ?? []
         remoteID = try container.decodeIfPresent(String.self, forKey: .remoteID)
         projectID = try container.decodeIfPresent(String.self, forKey: .projectID)

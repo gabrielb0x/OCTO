@@ -28,6 +28,24 @@ import Testing
     }
 }
 
+@Suite struct DictationAvailabilityTests {
+    @Test func tellsDictationTurnedOffApartFromARefusedPermission() {
+        #expect(DictationAvailability.check(authorization: .authorized, hasRecognizer: true, isRecognizerAvailable: true) == .available)
+        // iOS reports dictation turned off in its settings as a restriction: asking again changes nothing.
+        #expect(DictationAvailability.check(authorization: .restricted, hasRecognizer: true, isRecognizerAvailable: true) == .turnedOffOnDevice)
+        #expect(DictationAvailability.check(authorization: .denied, hasRecognizer: true, isRecognizerAvailable: true) == .permissionDenied)
+        #expect(DictationAvailability.check(authorization: .authorized, hasRecognizer: false, isRecognizerAvailable: false) == .unavailable)
+        #expect(DictationAvailability.check(authorization: .authorized, hasRecognizer: true, isRecognizerAvailable: false) == .unavailable)
+        // Nothing has been asked yet, so there is nothing to warn about.
+        #expect(DictationAvailability.check(authorization: .notDetermined, hasRecognizer: true, isRecognizerAvailable: true) == .available)
+
+        #expect(DictationAvailability.turnedOffOnDevice.isFixedInSystemSettings)
+        #expect(DictationAvailability.permissionDenied.isFixedInSystemSettings)
+        #expect(!DictationAvailability.unavailable.isFixedInSystemSettings)
+        #expect(!DictationAvailability.turnedOffOnDevice.isAvailable)
+    }
+}
+
 @Suite struct SystemPromptTests {
     @Test func presentsItselfAsChatGPTWithTheAccountPersonalization() {
         let personal = PersonalContext(

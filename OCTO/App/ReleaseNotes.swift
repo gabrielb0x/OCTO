@@ -20,21 +20,26 @@ struct ReleaseNotes: Identifiable, Equatable {
 
     /// Notes of the version being shipped. Keep in sync with CHANGELOG.md.
     static var current: ReleaseNotes {
-        ReleaseNotes(version: "1.6.1", changes: [
+        ReleaseNotes(version: "1.7.0", changes: [
             Change(
-                systemImage: "magnifyingglass",
-                title: String(localized: "Search finds every chat"),
-                detail: String(localized: "The sidebar asks ChatGPT too, which searches inside your messages: chats this iPhone never opened show up, with the passage that matched.")
+                systemImage: "hand.draw",
+                title: String(localized: "Slide to your chats"),
+                detail: String(localized: "Sliding right anywhere on a chat brings out your chats, like in the ChatGPT app. No need to aim for the edge or the button.")
             ),
             Change(
-                systemImage: "laptopcomputer.and.iphone",
-                title: String(localized: "Every device signed in"),
-                detail: String(localized: "Security and login lists the devices on your ChatGPT account, where they last connected from, and how your account is protected.")
+                systemImage: "photo",
+                title: String(localized: "Ask for an image"),
+                detail: String(localized: "“Create an image” asks the Codex backend of your plan to draw one, and it lands in the chat. When your plan doesn't offer it, ChatGPT answers in words and says so.")
             ),
             Change(
-                systemImage: "externaldrive",
-                title: String(localized: "What your files take up"),
-                detail: String(localized: "Storage now shows what the files of your chats take in your ChatGPT account, next to what OCTO takes on this iPhone.")
+                systemImage: "list.bullet.indent",
+                title: String(localized: "Settings without the maze"),
+                detail: String(localized: "Rows that only led to another page are gone: each setting is in one place, and a red row now has a red icon too.")
+            ),
+            Change(
+                systemImage: "mic.slash",
+                title: String(localized: "Dictation says when it's off"),
+                detail: String(localized: "OCTO asks iOS whether dictation is turned off on this iPhone, and shows where to turn it back on instead of writing nothing down.")
             ),
         ])
     }

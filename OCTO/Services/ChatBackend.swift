@@ -9,9 +9,13 @@ struct ChatStreamRequest: Sendable {
     var reasoningSummaries: Bool
     var verbosity: String?
     var webSearch: Bool
+    /// Asks for the hosted image generation tool, which the Codex backend may not offer.
+    var imageGeneration = false
     var cacheKey: String
     /// Set after the backend refused top-level instructions: they are sent as a developer message instead.
     var instructionsAsDeveloperMessage = false
+    /// Set after the backend refused image generation: the reply is written without it.
+    var imageGenerationRefused = false
 }
 
 enum ChatBackendError: LocalizedError {
@@ -109,6 +113,16 @@ final class ChatBackend: Sendable {
             if http.statusCode == 401, attempt == 0 {
                 return try await run(request, continuation: continuation, attempt: attempt + 1)
             }
+            // The Codex backend only offers the tools of the Codex clients. When it turns image
+            // generation down, the question still deserves an answer: it's asked again without it.
+            if http.statusCode == 400, request.imageGeneration, !request.imageGenerationRefused,
+               ResponsesTool.isUnsupported(ResponsesTool.imageGeneration.type, message: payload.message) {
+                DevLog.log("codex", "Image generation isn't offered by the backend: replying without it", level: .warning)
+                continuation.yield(.imageGenerationUnsupported)
+                var fallback = request
+                fallback.imageGenerationRefused = true
+                return try await run(fallback, continuation: continuation, attempt: attempt + 1)
+            }
             if http.statusCode == 400, !request.instructionsAsDeveloperMessage,
                (payload.message ?? "").lowercased().contains("instruction") {
                 var fallback = request
@@ -165,11 +179,19 @@ final class ChatBackend: Sendable {
             instructions = nil
         }
 
+        var tools: [ResponsesTool] = []
+        if request.webSearch {
+            tools.append(.webSearch(externalWebAccess: true))
+        }
+        if request.imageGeneration, !request.imageGenerationRefused {
+            tools.append(.imageGeneration)
+        }
+
         let body = ResponsesRequest(
             model: request.modelID,
             instructions: instructions,
             input: input,
-            tools: request.webSearch ? [.webSearch(externalWebAccess: true)] : [],
+            tools: tools,
             reasoning: request.reasoningEffort.map { ResponsesReasoning(effort: $0, summary: request.reasoningSummaries ? "auto" : nil) },
             promptCacheKey: request.cacheKey,
             text: request.verbosity.map { ResponsesTextOptions(verbosity: $0) }

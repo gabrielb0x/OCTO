@@ -106,7 +106,7 @@ struct SettingsView: View {
                         }
                         .pickerStyle(.menu)
                         .id(SettingsSection.theme)
-                        accentRow
+                        // The accent color lives in Appearance, next to the palette that changes it.
                         row(.appearance, "Appearance", systemImage: "paintbrush")
                     }
 
@@ -141,7 +141,7 @@ struct SettingsView: View {
                         Button(role: .destructive) {
                             confirmSignOut = true
                         } label: {
-                            Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
+                            DestructiveLabel(title: "Sign out", systemImage: "rectangle.portrait.and.arrow.right")
                         }
                     } footer: {
                         Button {
@@ -289,43 +289,6 @@ struct SettingsView: View {
                 }
                 .foregroundStyle(Theme.primaryText)
             }
-        }
-    }
-
-    /// Accent color, shown like ChatGPT with a dot next to its name.
-    @ViewBuilder
-    private var accentRow: some View {
-        @Bindable var settings = app.settings
-        LabeledContent {
-            Menu {
-                Picker(selection: $settings.accent) {
-                    ForEach(AccentChoice.allCases) { choice in
-                        Label {
-                            Text(verbatim: choice.title)
-                        } icon: {
-                            if let swatch = settings.accentStyle(for: choice).swatch {
-                                Image(uiImage: swatch)
-                            }
-                        }
-                        .tag(choice)
-                    }
-                } label: {
-                    Text("Accent color")
-                }
-                .pickerStyle(.inline)
-            } label: {
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(settings.accentStyle.color ?? Theme.primaryText)
-                        .frame(width: 10, height: 10)
-                    Text(verbatim: settings.accent.title)
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.caption.weight(.semibold))
-                }
-                .foregroundStyle(Theme.secondaryText)
-            }
-        } label: {
-            Label("Accent color", systemImage: "paintpalette")
         }
     }
 

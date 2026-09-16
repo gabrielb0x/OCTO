@@ -85,8 +85,24 @@ final class VoiceConversation {
             SFSpeechRecognizer.requestAuthorization { continuation.resume(returning: $0) }
         }
         guard isRunning else { return }
-        guard speechStatus == .authorized else {
+        // Voice mode listens with the same recognition as dictation: when it's turned off on the
+        // iPhone, saying so beats "not available right now".
+        let recognizer = SFSpeechRecognizer(locale: Locale.current) ?? SFSpeechRecognizer()
+        switch DictationAvailability.check(
+            authorization: SpeechAuthorization(speechStatus),
+            hasRecognizer: recognizer != nil,
+            isRecognizerAvailable: recognizer?.isAvailable ?? false
+        ) {
+        case .available:
+            break
+        case .turnedOffOnDevice:
+            fail(String(localized: "Dictation is turned off on this iPhone. Voice mode needs it: turn it on in Settings → General → Keyboard."))
+            return
+        case .permissionDenied:
             fail(String(localized: "Allow speech recognition in Settings to use voice mode."))
+            return
+        case .unavailable:
+            fail(String(localized: "Speech recognition is not available right now."))
             return
         }
         let microphoneAllowed = await AVAudioApplication.requestRecordPermission()
@@ -95,10 +111,7 @@ final class VoiceConversation {
             fail(String(localized: "Allow microphone access in Settings to use voice mode."))
             return
         }
-        guard let recognizer = SFSpeechRecognizer(locale: Locale.current) ?? SFSpeechRecognizer(), recognizer.isAvailable else {
-            fail(String(localized: "Speech recognition is not available right now."))
-            return
-        }
+        guard let recognizer else { return }
         self.recognizer = recognizer
 
         do {

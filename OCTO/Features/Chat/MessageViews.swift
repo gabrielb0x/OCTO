@@ -246,6 +246,10 @@ private struct AssistantMessageContent: View {
                 SearchStatusView(queries: searchQueries, isSearching: activity == .searching)
             }
 
+            if activity == .drawing {
+                ImageStatusView()
+            }
+
             if !message.attachments.isEmpty {
                 AttachmentGallery(attachments: message.attachments, alignment: .leading)
             }
@@ -461,6 +465,21 @@ struct SearchStatusView: View {
             } else if let query = queries.last {
                 Text(verbatim: String(localized: "Searched for “\(query)”"))
             }
+        }
+        .font(.subheadline.weight(.medium))
+        .foregroundStyle(Theme.secondaryText)
+        .lineLimit(1)
+    }
+}
+
+/// Shown while ChatGPT draws an image, until it arrives in the reply.
+struct ImageStatusView: View {
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "photo")
+                .symbolEffect(.pulse)
+            Text(verbatim: String(localized: "Creating an image"))
+                .shimmering()
         }
         .font(.subheadline.weight(.medium))
         .foregroundStyle(Theme.secondaryText)

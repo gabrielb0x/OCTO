@@ -178,7 +178,7 @@ struct DeveloperView: View {
                 Button(role: .destructive) {
                     confirmDisable = true
                 } label: {
-                    Label("Turn off developer mode", systemImage: "hammer.circle")
+                    DestructiveLabel(title: "Turn off developer mode", systemImage: "hammer.circle")
                 }
             }
         }
@@ -424,9 +424,8 @@ struct SessionInspectorView: View {
                     Button {
                         confirmCopy = true
                     } label: {
-                        Label("Copy the access token", systemImage: "doc.on.doc")
+                        DestructiveLabel(title: "Copy the access token", systemImage: "doc.on.doc")
                     }
-                    .foregroundStyle(Theme.danger)
                 } footer: {
                     Text("Anyone with this token can use your ChatGPT account until it expires. Never share it.")
                 }

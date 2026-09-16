@@ -29,9 +29,6 @@ struct GeneralSettingsView: View {
                 Toggle(isOn: $settings.sendsWithReturn) {
                     Label("Send with Return", systemImage: "return")
                 }
-                NavigationLink(value: SettingsRoute.appearance) {
-                    Label("Home screen", systemImage: "square.text.square")
-                }
             }
 
             Section {
@@ -142,7 +139,11 @@ struct NotificationSettingsView: View {
 
 struct VoiceSettingsView: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
     @State private var voices: [AVSpeechSynthesisVoice] = []
+    /// What iOS says about dictation on the device, looked at again on the way back from Settings.
+    @State private var dictationOnDevice: DictationAvailability = .available
 
     var body: some View {
         @Bindable var settings = app.settings
@@ -205,6 +206,19 @@ struct VoiceSettingsView: View {
                 } label: {
                     Label("Dictation", systemImage: "mic")
                 }
+                // Dictation turned off in iOS Settings stops the recognition of the device: better
+                // said here than discovered when nothing gets written down.
+                if !dictationOnDevice.isAvailable {
+                    Label(Self.title(for: dictationOnDevice), systemImage: "mic.slash")
+                        .foregroundStyle(Theme.warning)
+                    if dictationOnDevice.isFixedInSystemSettings {
+                        Button("Open iOS Settings") {
+                            if let url = URL(string: UIApplication.openSettingsURLString) {
+                                openURL(url)
+                            }
+                        }
+                    }
+                }
             } header: {
                 Text("Dictation")
             } footer: {
@@ -229,9 +243,23 @@ struct VoiceSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             voices = Self.voicesForAppLanguage()
+            dictationOnDevice = .current
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                dictationOnDevice = .current
+            }
         }
         .onDisappear {
             app.speech.stop()
+        }
+    }
+
+    private static func title(for availability: DictationAvailability) -> LocalizedStringKey {
+        switch availability {
+        case .turnedOffOnDevice: return "Dictation is turned off on this iPhone"
+        case .permissionDenied: return "Speech recognition is turned off for OCTO"
+        case .unavailable, .available: return "Dictation on this device isn't available right now"
         }
     }
 
@@ -306,14 +334,7 @@ struct ProtectionSettingsView: View {
                         .foregroundStyle(Theme.warning)
                 }
             }
-
-            Section {
-                Toggle(isOn: $settings.hidesContentInAppSwitcher) {
-                    Label("Hide content in the app switcher", systemImage: "eye.slash")
-                }
-            } footer: {
-                Text("Covers your chats as soon as OCTO leaves the screen, so they don't show in the app switcher.")
-            }
+            // Hiding the chats in the app switcher is in Privacy, with the other screen switches.
         }
         .navigationTitle("Protection")
         .navigationBarTitleDisplayMode(.inline)
@@ -349,18 +370,15 @@ struct SecuritySettingsView: View {
     @Environment(AppModel.self) private var app
     @State private var session: CredentialVault.SessionInfo?
     @State private var isRefreshing = false
-    @State private var confirmSignOut = false
 
     var body: some View {
         Form {
+            // The email address is on the first page of Settings, with the rest of the account.
             Section("Sign-in") {
                 LabeledContent {
                     Text(signInMethodTitle)
                 } label: {
                     Label("Method", systemImage: "person.badge.key")
-                }
-                if let email = app.accountEmail {
-                    ContactRow(title: "Email address", systemImage: "envelope", value: email, kind: .email)
                 }
                 if let signedInAt = app.auth.signedInAt {
                     LabeledContent {
@@ -415,30 +433,14 @@ struct SecuritySettingsView: View {
             } header: {
                 Text("Session")
             } footer: {
-                Text("Your sign-in tokens stay in the keychain of this device and are refreshed automatically.")
-            }
-
-            Section {
-                Button(role: .destructive) {
-                    confirmSignOut = true
-                } label: {
-                    Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
-                }
-            } footer: {
-                Text("Signing out revokes the session of this device. To sign out everywhere, use ChatGPT.")
+                // Signing out is at the bottom of the first page of Settings, as in the ChatGPT app.
+                Text("Your sign-in tokens stay in the keychain of this device and are refreshed automatically. Signing out, at the bottom of Settings, revokes the session of this device; to sign out everywhere, use ChatGPT.")
             }
         }
         .navigationTitle("Security and login")
         .navigationBarTitleDisplayMode(.inline)
         .task {
             session = await app.auth.vault.sessionInfo()
-        }
-        .confirmationDialog("Sign out?", isPresented: $confirmSignOut, titleVisibility: .visible) {
-            Button("Sign out", role: .destructive) {
-                Task { await app.signOut() }
-            }
-        } message: {
-            Text("The chats of your ChatGPT account will be removed from this device.")
         }
     }
 
@@ -524,7 +526,7 @@ struct StorageSettingsView: View {
                 Button(role: .destructive) {
                     confirmRemoval = true
                 } label: {
-                    Label("Remove downloaded chats", systemImage: "arrow.down.circle.dotted")
+                    DestructiveLabel(title: "Remove downloaded chats", systemImage: "arrow.down.circle.dotted")
                 }
             } footer: {
                 Text("Frees the space of chats downloaded from your account. They stay in your history and download again when you open them. Chats continued in OCTO are kept.")

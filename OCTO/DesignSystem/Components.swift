@@ -212,6 +212,24 @@ struct ContactRow: View {
     }
 }
 
+/// The label of a row that undoes something: signing out, deleting, turning off. iOS reddens the
+/// text of a destructive button in a list but leaves its icon in the tint color; here the icon is
+/// red too, as it is throughout the Settings app.
+struct DestructiveLabel: View {
+    let title: LocalizedStringKey
+    let systemImage: String
+
+    var body: some View {
+        Label {
+            Text(title)
+                .foregroundStyle(Theme.danger)
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(Theme.danger)
+        }
+    }
+}
+
 /// A settings page for something only the ChatGPT apps can do: what it is, and a way there.
 struct ChatGPTOnlyPage: View {
     let title: LocalizedStringKey

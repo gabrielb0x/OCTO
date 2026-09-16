@@ -301,11 +301,14 @@ struct ModelMenu: View {
                 }
             }
 
-            if current.supportsWebSearch {
-                Section {
+            Section {
+                if current.supportsWebSearch {
                     Toggle(isOn: Binding(get: { session.conversation.webSearchEnabled }, set: { session.setWebSearch($0) })) {
                         Label("Web search", systemImage: "globe")
                     }
+                }
+                Toggle(isOn: Binding(get: { session.conversation.imageGenerationEnabled }, set: { session.setImageGeneration($0) })) {
+                    Label("Create an image", systemImage: "photo")
                 }
             }
         } label: {

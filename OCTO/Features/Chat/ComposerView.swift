@@ -8,6 +8,7 @@ import UniformTypeIdentifiers
 /// holding the text field, dictation and the voice, send or stop button.
 struct ComposerView: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.openURL) private var openURL
     @Bindable var session: ChatSession
     let onStartVoice: () -> Void
 
@@ -31,6 +32,10 @@ struct ComposerView: View {
         session.conversation.webSearchEnabled && session.model.supportsWebSearch
     }
 
+    private var isImageOn: Bool {
+        session.conversation.imageGenerationEnabled
+    }
+
     var body: some View {
         VStack(spacing: 10) {
             if showsSuggestions {
@@ -47,6 +52,7 @@ struct ComposerView: View {
         .animation(.smooth(duration: 0.25), value: session.pendingAttachments)
         .animation(.smooth(duration: 0.25), value: showsSuggestions)
         .animation(.smooth(duration: 0.2), value: isWebSearchOn)
+        .animation(.smooth(duration: 0.2), value: isImageOn)
         .animation(.smooth(duration: 0.2), value: dictation.showsRecording)
         .photosPicker(isPresented: $showPhotoPicker, selection: $photoSelection, maxSelectionCount: 4, matching: .images)
         .onChange(of: photoSelection) { _, items in
@@ -67,6 +73,13 @@ struct ComposerView: View {
             Text(importError ?? "")
         }
         .alert("Dictation unavailable", isPresented: dictationErrorIsPresented) {
+            if dictation.errorOpensSettings {
+                Button("Open iOS Settings") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        openURL(url)
+                    }
+                }
+            }
             Button("OK", role: .cancel) {}
         } message: {
             Text(dictation.errorMessage ?? "")
@@ -113,8 +126,11 @@ struct ComposerView: View {
             } label: {
                 Label("Files", systemImage: "paperclip")
             }
+            Divider()
+            Toggle(isOn: Binding(get: { session.conversation.imageGenerationEnabled }, set: { session.setImageGeneration($0) })) {
+                Label("Create an image", systemImage: "photo")
+            }
             if session.model.supportsWebSearch {
-                Divider()
                 Toggle(isOn: Binding(get: { session.conversation.webSearchEnabled }, set: { session.setWebSearch($0) })) {
                     Label("Web search", systemImage: "globe")
                 }
@@ -157,12 +173,15 @@ struct ComposerView: View {
                     if isWebSearchOn {
                         webSearchChip
                     }
+                    if isImageOn {
+                        imageChip
+                    }
                     TextField(placeholder, text: $session.draft, axis: .vertical)
                         .font(.body)
                         .lineLimit(1...8)
                         .focused($isFocused)
                         .autocorrectionDisabled(!app.settings.correctsSpelling)
-                        .padding(.leading, isWebSearchOn ? 6 : 2)
+                        .padding(.leading, isWebSearchOn || isImageOn ? 6 : 2)
                         .padding(.vertical, 14)
                         .onKeyPress(.return, phases: .down) { press in
                             handleReturn(press)
@@ -182,6 +201,7 @@ struct ComposerView: View {
 
     private var placeholder: LocalizedStringKey {
         if session.isTemporary { return "Temporary message" }
+        if isImageOn { return "Describe an image" }
         return isWebSearchOn ? "Search the web" : "Ask ChatGPT"
     }
 
@@ -201,6 +221,24 @@ struct ComposerView: View {
         .buttonStyle(.plain)
         .transition(.scale.combined(with: .opacity))
         .accessibilityLabel(Text("Turn off web search"))
+    }
+
+    private var imageChip: some View {
+        Button {
+            session.setImageGeneration(false)
+        } label: {
+            Image(systemName: "photo")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(app.settings.accentStyle.link)
+                .frame(width: 34, height: 34)
+                .background(app.settings.accentStyle.link.opacity(0.18), in: Circle())
+                .padding(.leading, isWebSearchOn ? 4 : 8)
+                .frame(height: Self.barHeight)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .transition(.scale.combined(with: .opacity))
+        .accessibilityLabel(Text("Turn off image creation"))
     }
 
     private var dictationButton: some View {
@@ -252,6 +290,9 @@ struct ComposerView: View {
             session.draft = text
         case .webSearch:
             session.setWebSearch(true)
+        case .createImage(let text):
+            session.setImageGeneration(true)
+            session.draft = text
         }
         isFocused = true
     }
@@ -548,6 +589,8 @@ struct ChatSuggestion: Identifiable {
         case prompt(String)
         /// Turns on web search, like the "Search the web" row of the ChatGPT app.
         case webSearch
+        /// Turns on image creation and starts the message.
+        case createImage(String)
     }
 
     let title: String
@@ -564,7 +607,7 @@ struct SuggestionList: View {
 
     private var suggestions: [ChatSuggestion] {
         var list = [
-            ChatSuggestion(title: String(localized: "Create an image"), systemImage: "photo", action: .prompt(String(localized: "Create an image of") + " ")),
+            ChatSuggestion(title: String(localized: "Create an image"), systemImage: "photo", action: .createImage(String(localized: "Create an image of") + " ")),
             ChatSuggestion(title: String(localized: "Write or edit"), systemImage: "pencil", action: .prompt(String(localized: "Help me write") + " ")),
         ]
         if supportsWebSearch {

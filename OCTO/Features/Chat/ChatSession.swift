@@ -12,6 +12,8 @@ final class ChatSession: Identifiable {
         case waiting
         case thinking
         case searching
+        /// Drawing an image with the image generation tool.
+        case drawing
         case writing
     }
 
@@ -118,6 +120,7 @@ final class ChatSession: Identifiable {
             downloaded.modelID = conversation.modelID ?? downloaded.modelID
             downloaded.reasoningEffort = conversation.reasoningEffort ?? downloaded.reasoningEffort
             downloaded.webSearchEnabled = conversation.webSearchEnabled
+            downloaded.imageGenerationEnabled = conversation.imageGenerationEnabled
             conversation = downloaded
         } catch {
             DevLog.log("chats", "Downloading \(conversation.remoteID ?? "?") failed: \(DevLog.describe(error))", level: error.isCancellation ? .debug : .error)
@@ -143,6 +146,11 @@ final class ChatSession: Identifiable {
 
     func setWebSearch(_ enabled: Bool) {
         conversation.webSearchEnabled = enabled
+        persist()
+    }
+
+    func setImageGeneration(_ enabled: Bool) {
+        conversation.imageGenerationEnabled = enabled
         persist()
     }
 
@@ -295,6 +303,7 @@ final class ChatSession: Identifiable {
         let effort = model.resolvedEffort(preferred: app.allowsModelChoice ? conversation.reasoningEffort : nil)
         let instructions = SystemPrompt.make(personal: app.account.personalContext, spokenReplies: isVoiceConversation)
         let webSearch = conversation.webSearchEnabled && model.supportsWebSearch
+        let imageGeneration = conversation.imageGenerationEnabled
         let summaries = app.settings.showReasoning && model.supportsReasoningSummaries
         let cacheKey = conversation.id.uuidString
         DevLog.log("reply", "Started with \(model.id), thinking \(effort ?? "none"), web search \(webSearch ? "on" : "off"), \(history.count) messages")
@@ -311,6 +320,7 @@ final class ChatSession: Identifiable {
                 reasoningSummaries: summaries,
                 verbosity: nil,
                 webSearch: webSearch,
+                imageGeneration: imageGeneration,
                 cacheKey: cacheKey
             )
             await self?.consume(backend.stream(request), reply: reply)
@@ -349,6 +359,13 @@ final class ChatSession: Identifiable {
                 case .webSearchFinished(let query):
                     reply.addSearchQuery(query)
                     if activity == .searching { activity = .thinking }
+                case .imageGenerationStarted:
+                    activity = .drawing
+                case .imageGenerated(let base64):
+                    addGeneratedImage(base64: base64, to: reply.messageID)
+                    if activity == .drawing { activity = .thinking }
+                case .imageGenerationUnsupported:
+                    imageGenerationWasRefused()
                 case .citations(let citations):
                     reply.addCitations(citations)
                 case .completed(let usage):
@@ -368,6 +385,27 @@ final class ChatSession: Identifiable {
             await reply.finishRevealing()
             finishTurn(reply, status: failure == nil ? .complete : .failed, error: failure)
         }
+    }
+
+    /// Keeps an image the reply drew with the chat, like a photo sent in a message.
+    private func addGeneratedImage(base64: String, to messageID: UUID) {
+        guard let app, let data = Data(base64Encoded: base64), let attachment = app.store.storeGeneratedImage(data) else {
+            DevLog.log("reply", "An image came back but couldn't be saved", level: .warning)
+            return
+        }
+        updateMessage(messageID) { message in
+            message.attachments.append(attachment)
+        }
+        DevLog.log("reply", "Kept an image of \(data.count) bytes")
+        persist()
+    }
+
+    /// The backend doesn't offer image generation: the chat stops asking for it, and the reply
+    /// that's being written is a written one.
+    private func imageGenerationWasRefused() {
+        guard conversation.imageGenerationEnabled else { return }
+        conversation.imageGenerationEnabled = false
+        app?.toasts.show(String(localized: "Codex can't create images: ChatGPT is answering in words."), style: .warning, systemImage: "photo")
     }
 
     private func finishTurn(_ reply: LiveReply, status: ChatMessage.Status, error: Error?) {
