@@ -389,6 +389,7 @@ struct APIConsoleView: View {
         "accounts/sessions",
         "accounts/security_settings/info",
         "accounts/mfa_info",
+        "bazaar/profile",
         "files/library/storage/usage",
         "checkout_pricing_config/configs/\(CheckoutPricing.countryCode(for: Locale.current.region?.identifier))",
         "codex/models?client_version=\(CodexBackend.clientVersion)",

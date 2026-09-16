@@ -63,8 +63,7 @@ final class AppModel {
 
         // Keychain items survive app deletion: start clean on a fresh install.
         if !isDemo, !UserDefaults.standard.bool(forKey: ReleaseNotes.launchedBeforeKey) {
-            Keychain.remove(CredentialVault.chatGPTAccount)
-            Keychain.remove(CredentialVault.legacyAPIKeyAccount)
+            AuthManager.forgetEverything()
             UserDefaults.standard.set(true, forKey: ReleaseNotes.launchedBeforeKey)
         }
 
@@ -83,14 +82,18 @@ final class AppModel {
         protection = AppProtection(settings: settings, isDemo: isDemo)
         notifications = ReplyNotifications(isDemo: isDemo)
         updates = UpdateChecker(isDemo: isDemo)
+        // Each account keeps its chats and its cached data in its own folder, so switching from one
+        // to another never mixes two histories.
         #if OCTO_DEMO
-        let folderName = isDemo ? "Demo" : "OCTO"
-        let files = ConversationFiles(folderName: folderName, startEmpty: isDemo)
-        let accountCache = AccountCache(folderName: folderName)
+        let folderName = isDemo ? "Demo" : AccountStorage.folderName
+        let directory = AccountStorage.directory(forAccount: isDemo ? nil : auth.currentAccountKey, folderName: folderName)
+        let files = ConversationFiles(directory: directory, startEmpty: isDemo)
+        let accountCache = AccountCache(directory: directory)
         let accountService: AccountService? = isDemo ? nil : AccountService(vault: auth.vault, session: session)
         #else
-        let files = ConversationFiles()
-        let accountCache = AccountCache()
+        let directory = AccountStorage.directory(forAccount: auth.currentAccountKey)
+        let files = ConversationFiles(directory: directory)
+        let accountCache = AccountCache(directory: directory)
         let accountService: AccountService? = AccountService(vault: auth.vault, session: session)
         #endif
         store = ConversationStore(files: files)
@@ -187,6 +190,22 @@ final class AppModel {
         async let accountRefresh: Void = account.refresh()
         async let chatsRefresh: Void = store.syncWithAccount()
         _ = await (modelsRefresh, accountRefresh, chatsRefresh)
+        describeCurrentAccount()
+    }
+
+    /// Keeps the account list showing each account's real name, address and plan, so switching
+    /// doesn't mean picking between two identical rows. The plan is the account's own, never the
+    /// one developer mode pretends to be on.
+    private func describeCurrentAccount() {
+        guard !isDemo else { return }
+        auth.describe(
+            Account(
+                email: accountEmail,
+                planType: account.subscription?.planType ?? auth.account?.planType,
+                userID: auth.account?.userID
+            ),
+            name: account.profile?.name
+        )
     }
 
     /// Like "Restore purchases" in ChatGPT: new tokens, then the subscription and models of the plan.
@@ -283,29 +302,82 @@ final class AppModel {
     }
     #endif
 
+    // MARK: Accounts
+
+    /// The ChatGPT accounts signed in on this device, in the order they were added.
+    var accounts: [StoredAccount] { auth.accounts }
+
+    var currentAccountKey: String? { auth.currentAccountKey }
+
     func didSignIn() async {
+        useStorageOfCurrentAccount()
         models = Self.cachedModels()
         DevLog.log("auth", "Signed in (\(auth.signInMethod?.rawValue ?? "unknown"))")
         await refreshAccount(force: true)
     }
 
+    /// Switches to another account signed in on this device: its chats, its settings and its
+    /// subscription, each read from that account's own folder.
+    func switchAccount(to key: String) async {
+        guard !isDemo, key != auth.currentAccountKey else { return }
+        leaveCurrentAccount()
+        guard await auth.switchAccount(to: key) else { return }
+        useStorageOfCurrentAccount()
+        models = Self.cachedModels()
+        usage = nil
+        // Cookies and connections of the previous account go too.
+        await session.reset()
+        await refreshAccount(force: true)
+        toasts.show(String(localized: "Switched to \(accountName)"))
+    }
+
+    /// Signs the account in use out of this device, and falls back to another one — or to the
+    /// sign-in screen when it was the last.
     func signOut() async {
+        leaveCurrentAccount()
+        usage = nil
+        account.clear()
+        store.removeAccountChats()
+        await auth.signOut()
+        useStorageOfCurrentAccount()
+        await session.reset()
+        guard auth.currentAccountKey != nil else { return }
+        models = Self.cachedModels()
+        await refreshAccount(force: true)
+    }
+
+    /// Signs an account other than the one in use out. What it downloaded is forgotten; the chats
+    /// written in OCTO stay in its folder, since those exist nowhere else.
+    func signOut(accountKey: String) async {
+        guard accountKey != auth.currentAccountKey else {
+            await signOut()
+            return
+        }
+        await auth.signOut(accountKey: accountKey)
+        AccountStorage.removeAccountCache(for: accountKey)
+    }
+
+    /// Lets go of everything held for the account being left: replies still being written, what is
+    /// being read aloud, and the network log, which holds that account's data.
+    private func leaveCurrentAccount() {
         for session in liveSessions.values {
             session.stop()
         }
         liveSessions.removeAll()
         speech.stop()
-        usage = nil
-        lastAccountRefresh = nil
         toasts.dismiss()
-        account.clear()
-        store.removeAccountChats()
-        // The network log holds account data.
+        lastAccountRefresh = nil
         developer.console.clearNetwork()
-        DevLog.log("auth", "Signed out")
-        await auth.signOut()
-        // Cookies and connections of the old session go too.
-        await session.reset()
+        store.files.flush()
+    }
+
+    /// Points the chats and the cached account data at the folder of the account in use.
+    private func useStorageOfCurrentAccount() {
+        guard !isDemo else { return }
+        let directory = AccountStorage.directory(forAccount: auth.currentAccountKey)
+        guard directory != store.files.rootDirectory else { return }
+        store.use(files: ConversationFiles(directory: directory))
+        account.use(cache: AccountCache(directory: directory))
     }
 
     // MARK: Sessions

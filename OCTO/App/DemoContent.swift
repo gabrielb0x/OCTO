@@ -29,6 +29,8 @@ enum DemoScene: String, CaseIterable {
     case storage
     case memory
     case update
+    case accounts
+    case ads
 
     static var current: DemoScene? {
         UserDefaults.standard.string(forKey: "OCTODemoScene").flatMap(DemoScene.init(rawValue:))
@@ -72,7 +74,19 @@ enum DemoContent {
         app.auth.useDemoAccount(Account(email: "gabriel@example.com", planType: planType, userID: "user-demo"))
         app.account.useDemo(AccountSnapshot(
             profile: AccountProfile(userID: "user-demo", name: "Gabriel", email: "gabriel@example.com", phoneNumber: "+33 6 00 00 00 00", mfaEnabled: true),
-            settings: AccountSettings(referencesSavedMemories: true, referencesChatHistory: true, trainingAllowed: false, voiceTrainingAllowed: false, videoTrainingAllowed: false, codexTrainingAllowed: false, voiceName: "ember"),
+            settings: AccountSettings(
+                referencesSavedMemories: true,
+                referencesChatHistory: true,
+                trainingAllowed: false,
+                voiceTrainingAllowed: false,
+                videoTrainingAllowed: false,
+                codexTrainingAllowed: false,
+                voiceName: "ember",
+                adsPersonalizationEnabled: true,
+                adsHistoryEnabled: true,
+                adsPersonalizationConsentSet: true,
+                freeAdsOptOut: false
+            ),
             instructions: CustomInstructions(
                 nickname: "Gabriel",
                 occupation: localized("Student", "Étudiant"),
@@ -145,6 +159,34 @@ enum DemoContent {
         if scene == .subscription {
             app.useDemoUsage(UsageSnapshot.parse(Data(demoUsageJSON.utf8)))
         }
+        if scene == .accounts {
+            app.auth.useDemoAccounts([
+                StoredAccount(
+                    key: "user-demo",
+                    userID: "user-demo",
+                    email: "gabriel@example.com",
+                    name: "Gabriel",
+                    planType: planType,
+                    addedAt: Date(timeIntervalSince1970: 1_700_000_000)
+                ),
+                StoredAccount(
+                    key: "user-demo-work",
+                    userID: "user-demo-work",
+                    email: "gabriel.pro@example.com",
+                    name: localized("Gabriel (work)", "Gabriel (travail)"),
+                    planType: "pro",
+                    addedAt: Date(timeIntervalSince1970: 1_720_000_000)
+                ),
+                StoredAccount(
+                    key: "user-demo-school",
+                    userID: "user-demo-school",
+                    email: "gabriel.etu@example.com",
+                    name: localized("Gabriel (school)", "Gabriel (école)"),
+                    planType: "free",
+                    addedAt: Date(timeIntervalSince1970: 1_740_000_000)
+                ),
+            ])
+        }
         app.store.useDemoProjects([
             ChatProject(id: projectID, name: localized("School", "Cours"), iconName: "graduation-cap", colorHex: "#0285FF"),
         ])
@@ -196,6 +238,8 @@ enum DemoContent {
         case .devices?: return [.devices]
         case .storage?: return [.storage]
         case .memory?: return [.memory]
+        case .accounts?: return [.accounts]
+        case .ads?: return [.ads]
         default: return []
         }
     }
@@ -213,7 +257,7 @@ enum DemoContent {
         case .upgrade?:
             try? await Task.sleep(for: .milliseconds(500))
             openUpgrade()
-        case .settings?, .settingsApp?, .subscription?, .about?, .developer?, .network?, .appearance?, .privacy?, .dataControls?, .ageVerification?, .devices?, .storage?, .memory?:
+        case .settings?, .settingsApp?, .subscription?, .about?, .developer?, .network?, .appearance?, .privacy?, .dataControls?, .ageVerification?, .devices?, .storage?, .memory?, .accounts?, .ads?:
             try? await Task.sleep(for: .milliseconds(500))
             openSettings()
         case .deleteToast?:

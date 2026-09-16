@@ -211,18 +211,10 @@ struct MemoryView: View {
     var body: some View {
         List {
             Section {
-                LabeledContent {
-                    onOffText(app.account.settings?.referencesSavedMemories)
-                } label: {
-                    Label("Reference saved memories", systemImage: "brain")
-                }
-                LabeledContent {
-                    onOffText(app.account.settings?.referencesChatHistory)
-                } label: {
-                    Label("Reference chat history", systemImage: "clock.arrow.circlepath")
-                }
+                AccountSettingToggle(feature: .referencesSavedMemories, title: "Reference saved memories", systemImage: "brain")
+                AccountSettingToggle(feature: .referencesChatHistory, title: "Reference chat history", systemImage: "clock.arrow.circlepath")
             } footer: {
-                Text("When “Reference saved memories” is on, your saved memories are sent with the messages you write in OCTO. OCTO can't reference your chat history.")
+                Text("These are the switches of your ChatGPT account, changed here as they would be in ChatGPT. When “Reference saved memories” is on, your saved memories are sent with the messages you write in OCTO. OCTO can't reference your chat history.")
             }
 
             if let snapshot = app.account.memories {
@@ -313,14 +305,6 @@ struct MemoryView: View {
             if app.account.memories == nil {
                 await app.account.refresh()
             }
-        }
-    }
-
-    private func onOffText(_ value: Bool?) -> Text {
-        switch value {
-        case true?: return Text("On")
-        case false?: return Text("Off")
-        case nil: return Text(verbatim: "–")
         }
     }
 

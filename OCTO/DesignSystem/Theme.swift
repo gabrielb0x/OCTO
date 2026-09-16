@@ -23,7 +23,11 @@ enum Theme {
     /// Content drawn on `prominentFill`.
     static let onProminent = dynamic(light: .white, dark: .black)
     static let link = dynamic(light: UIColor(red: 0.16, green: 0.39, blue: 0.85, alpha: 1), dark: UIColor(red: 0.49, green: 0.67, blue: 1.0, alpha: 1))
-    static let danger = dynamic(light: UIColor(red: 0.86, green: 0.2, blue: 0.18, alpha: 1), dark: UIColor(red: 1.0, green: 0.42, blue: 0.40, alpha: 1))
+    /// The red of everything that undoes something. Saturated on purpose: a row that signs you out
+    /// or deletes your chats should read as red before it's tapped, not as a warmer shade of text.
+    static let danger = dynamic(light: UIColor(red: 0.84, green: 0.05, blue: 0.05, alpha: 1), dark: UIColor(red: 1.0, green: 0.27, blue: 0.24, alpha: 1))
+    /// Tint laid over the row of a destructive action, so the whole row carries the warning.
+    static let dangerSurface = dynamic(light: UIColor(red: 0.84, green: 0.05, blue: 0.05, alpha: 0.07), dark: UIColor(red: 1.0, green: 0.27, blue: 0.24, alpha: 0.12))
     static let success = dynamic(light: UIColor(red: 0.1, green: 0.6, blue: 0.32, alpha: 1), dark: UIColor(red: 0.36, green: 0.84, blue: 0.55, alpha: 1))
     static let warning = dynamic(light: UIColor(red: 0.85, green: 0.47, blue: 0.0, alpha: 1), dark: UIColor(red: 1.0, green: 0.66, blue: 0.2, alpha: 1))
 

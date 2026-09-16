@@ -20,26 +20,26 @@ struct ReleaseNotes: Identifiable, Equatable {
 
     /// Notes of the version being shipped. Keep in sync with CHANGELOG.md.
     static var current: ReleaseNotes {
-        ReleaseNotes(version: "1.8.0", changes: [
+        ReleaseNotes(version: "1.9.0", changes: [
             Change(
-                systemImage: "sparkles",
-                title: String(localized: "The plans, like in ChatGPT"),
-                detail: String(localized: "“Upgrade” now lays out ChatGPT's plans: the Go and Plus picker, and what each one adds to a free account.")
+                systemImage: "person.2",
+                title: String(localized: "Several ChatGPT accounts"),
+                detail: String(localized: "Add your other accounts and switch between them from Settings → Accounts, or by holding your name in the chat list. Each one keeps its own chats on this device.")
             ),
             Change(
-                systemImage: "tag",
-                title: String(localized: "The real prices"),
-                detail: String(localized: "The prices come from ChatGPT for the country you're in, in your currency. OCTO sells nothing: the button opens ChatGPT, which takes the payment.")
+                systemImage: "megaphone",
+                title: String(localized: "Ads, really managed"),
+                detail: String(localized: "Ads management turns personalized ads and the ad history off in your account, deletes the advertising data ChatGPT keeps, and lets a free account trade its ads for fewer messages.")
             ),
             Change(
-                systemImage: "trash",
-                title: String(localized: "Delete what you'd rather not keep"),
-                detail: String(localized: "Swipe to delete a saved memory in Memory, or an archived chat in Data controls: both leave your ChatGPT account.")
+                systemImage: "brain",
+                title: String(localized: "Memory switches that work"),
+                detail: String(localized: "“Reference saved memories” and “Reference chat history” are switches now, saved straight to your ChatGPT account instead of only being shown.")
             ),
             Change(
-                systemImage: "person.crop.circle",
-                title: String(localized: "Settings without the pill"),
-                detail: String(localized: "The glass “Upgrade” button under your account is gone. The offer stays where ChatGPT puts it: above a chat, and in the Subscription page.")
+                systemImage: "exclamationmark.triangle",
+                title: String(localized: "Red means red"),
+                detail: String(localized: "Signing out, deleting your chats and the other rows that undo something wear a stronger red, over the whole row.")
             ),
         ])
     }

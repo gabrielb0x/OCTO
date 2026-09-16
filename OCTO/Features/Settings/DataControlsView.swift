@@ -56,6 +56,7 @@ struct DataControlsView: View {
                     }
                 }
                 .disabled(isDeleting || app.store.summaries.isEmpty)
+                .destructiveRow()
             } footer: {
                 Text("Your chats come from your ChatGPT account and are kept on this device so they open instantly.")
             }

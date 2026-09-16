@@ -35,6 +35,15 @@ enum Keychain {
         SecItemDelete(baseQuery(account) as CFDictionary)
     }
 
+    /// Removes everything OCTO ever stored, whichever account it belonged to. Keychain items
+    /// outlive the app being deleted, so a fresh install starts from nothing.
+    static func removeAll() {
+        SecItemDelete([
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+        ] as CFDictionary)
+    }
+
     static func value<T: Decodable>(_ type: T.Type, for account: String) -> T? {
         guard let data = data(for: account) else { return nil }
         return try? JSONDecoder().decode(type, from: data)

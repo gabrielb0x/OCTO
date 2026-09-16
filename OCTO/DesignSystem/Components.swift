@@ -214,7 +214,8 @@ struct ContactRow: View {
 
 /// The label of a row that undoes something: signing out, deleting, turning off. iOS reddens the
 /// text of a destructive button in a list but leaves its icon in the tint color; here the icon is
-/// red too, as it is throughout the Settings app.
+/// red too, as it is throughout the Settings app, and the text carries a little more weight so the
+/// row reads as dangerous at a glance.
 struct DestructiveLabel: View {
     let title: LocalizedStringKey
     let systemImage: String
@@ -222,10 +223,65 @@ struct DestructiveLabel: View {
     var body: some View {
         Label {
             Text(title)
+                .fontWeight(.semibold)
                 .foregroundStyle(Theme.danger)
         } icon: {
             Image(systemName: systemImage)
+                .fontWeight(.semibold)
                 .foregroundStyle(Theme.danger)
+        }
+    }
+}
+
+extension View {
+    /// Lays a red tint over the row of a destructive action, on top of the usual row background,
+    /// so the warning covers the whole row instead of just its words.
+    func destructiveRow() -> some View {
+        listRowBackground(
+            ZStack {
+                Color(uiColor: .secondarySystemGroupedBackground)
+                Theme.dangerSurface
+            }
+        )
+    }
+}
+
+/// A switch for one setting of the ChatGPT account, the way ChatGPT's own settings work: it shows
+/// what the account has saved, changes it there right away, and comes back to where it was when
+/// the account refuses. There is nothing to change until the account has said what it holds.
+struct AccountSettingToggle: View {
+    @Environment(AppModel.self) private var app
+    let feature: AccountSettingFeature
+    let title: LocalizedStringKey
+    let systemImage: String
+
+    var body: some View {
+        let value = app.account.settings?[feature]
+        let isSaving = app.account.savingSettings.contains(feature)
+        return Toggle(isOn: Binding(get: { value ?? false }, set: change)) {
+            HStack(spacing: 10) {
+                Label(title, systemImage: systemImage)
+                if isSaving {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+            }
+        }
+        .disabled(value == nil || isSaving)
+    }
+
+    private func change(to value: Bool) {
+        Task {
+            do {
+                try await app.account.setSetting(feature, to: value)
+                app.toasts.show(value
+                    ? String(localized: "Turned on in your ChatGPT account")
+                    : String(localized: "Turned off in your ChatGPT account"))
+            } catch let error where !error.isCancellation {
+                app.toasts.show(ChatSession.describe(error), style: .failure)
+            } catch {
+                // Leaving the page cancels nothing: the account keeps what was sent.
+            }
         }
     }
 }

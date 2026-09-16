@@ -15,6 +15,10 @@ public enum ChatGPTAccountAPI {
     public static var dataUsagePolicyURL: URL { url("accounts/data_usage_for_training") }
     public static var ageStatusURL: URL { url("settings/is_adult") }
 
+    /// The advertising profile ChatGPT builds for the account ("bazaar" is its own name for ads).
+    /// `DELETE` clears it, as ChatGPT's own ads screen does, and answers `204 No Content`.
+    public static var adsProfileURL: URL { url("bazaar/profile") }
+
     /// `PATCH`, without a body, saves one setting of the account the way ChatGPT's settings do,
     /// e.g. `settings/account_user_setting?feature=training_allowed&value=false`.
     public static func accountUserSettingURL(_ feature: AccountSettingFeature, value: Bool) -> URL {

@@ -12,6 +12,7 @@ struct SidebarView: View {
     let onSetPinned: (UUID, Bool) -> Void
     let onDelete: (UUID) -> Void
     let onOpenSettings: () -> Void
+    let onOpenAccounts: () -> Void
 
     @State private var query = ""
     @State private var renameTarget: ConversationSummary?
@@ -161,7 +162,38 @@ struct SidebarView: View {
         .glassEffect(.regular.interactive(), in: .capsule)
         .padding(.horizontal, 12)
         .padding(.bottom, 8)
+        // Holding the account switches between the accounts signed in, without going through Settings.
+        .contextMenu {
+            ForEach(app.accounts) { account in
+                Button {
+                    guard account.key != app.currentAccountKey else { return }
+                    Task { await app.switchAccount(to: account.key) }
+                } label: {
+                    if account.key == app.currentAccountKey {
+                        Label(accountTitle(account), systemImage: "checkmark")
+                    } else {
+                        Text(verbatim: accountTitle(account))
+                    }
+                }
+            }
+            Divider()
+            Button(action: onOpenAccounts) {
+                Label("Accounts", systemImage: "person.2")
+            }
+            Button(action: onOpenSettings) {
+                Label("Settings", systemImage: "gearshape")
+            }
+        }
         .accessibilityLabel(Text("Settings"))
+        .accessibilityHint(Text("Hold to switch account"))
+    }
+
+    /// The name of an account in the switcher, behind dots when it is only an address and Privacy
+    /// asks for it.
+    private func accountTitle(_ account: StoredAccount) -> String {
+        let name = account.displayName
+        guard app.contactShield.isMasked, let email = account.email, name == email else { return name }
+        return ContactMasking.email(email)
     }
 
     // MARK: Sections

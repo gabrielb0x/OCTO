@@ -180,6 +180,7 @@ struct DeveloperView: View {
                 } label: {
                     DestructiveLabel(title: "Turn off developer mode", systemImage: "hammer.circle")
                 }
+                .destructiveRow()
             }
         }
         .navigationTitle("Developer mode")
@@ -426,6 +427,7 @@ struct SessionInspectorView: View {
                     } label: {
                         DestructiveLabel(title: "Copy the access token", systemImage: "doc.on.doc")
                     }
+                    .destructiveRow()
                 } footer: {
                     Text("Anyone with this token can use your ChatGPT account until it expires. Never share it.")
                 }

@@ -49,7 +49,9 @@ enum AuthError: LocalizedError, Equatable {
     }
 }
 
-/// Owns the ChatGPT credentials and refreshes them, coalescing concurrent refreshes.
+/// Owns the ChatGPT credentials of the account in use and refreshes them, coalescing concurrent
+/// refreshes. Each account has its own keychain item, so signing into a second one leaves the
+/// first one's tokens untouched; switching accounts points the vault at another item.
 actor CredentialVault {
     struct Credential: Sendable {
         let accessToken: String
@@ -65,17 +67,43 @@ actor CredentialVault {
         let accessTokenExpiresAt: Date?
     }
 
-    static let chatGPTAccount = "chatgpt.credentials"
+    /// Written by OCTO 1.8 and earlier, which knew a single account.
+    static let legacyAccount = "chatgpt.credentials"
     /// Written by OCTO 1.0 when signed in with an OpenAI API key, which is no longer offered.
     static let legacyAPIKeyAccount = "openai.apikey"
 
+    /// The keychain item holding one account's tokens.
+    static func keychainAccount(for key: String) -> String {
+        "chatgpt.credentials.\(key)"
+    }
+
     private let session: URLSession
+    /// The keychain item in use; nil when no account is signed in.
+    private var keychainAccount: String?
     private var chatGPT: StoredChatGPTCredentials?
     private var refreshTask: Task<StoredChatGPTCredentials, Error>?
 
-    init(session: URLSession) {
+    init(session: URLSession, accountKey: String?) {
         self.session = session
-        chatGPT = Keychain.value(StoredChatGPTCredentials.self, for: Self.chatGPTAccount)
+        if let accountKey {
+            let item = Self.keychainAccount(for: accountKey)
+            keychainAccount = item
+            chatGPT = Keychain.value(StoredChatGPTCredentials.self, for: item)
+        }
+    }
+
+    /// Switches to another account's tokens, or to none at all.
+    func use(accountKey: String?) {
+        refreshTask?.cancel()
+        refreshTask = nil
+        guard let accountKey else {
+            keychainAccount = nil
+            chatGPT = nil
+            return
+        }
+        let item = Self.keychainAccount(for: accountKey)
+        keychainAccount = item
+        chatGPT = Keychain.value(StoredChatGPTCredentials.self, for: item)
     }
 
     func credential(forceRefresh: Bool = false) async throws -> Credential {
@@ -92,17 +120,21 @@ actor CredentialVault {
     }
 
     func store(_ credentials: StoredChatGPTCredentials) {
+        guard let keychainAccount else { return }
         chatGPT = credentials
-        Keychain.setValue(credentials, for: Self.chatGPTAccount)
+        Keychain.setValue(credentials, for: keychainAccount)
     }
 
-    /// Clears everything and returns the refresh token so it can be revoked.
+    /// Clears the account in use and returns its refresh token so it can be revoked.
     func clear() -> String? {
         let refreshToken = chatGPT?.refreshToken
         refreshTask?.cancel()
         refreshTask = nil
         chatGPT = nil
-        Keychain.remove(Self.chatGPTAccount)
+        if let keychainAccount {
+            Keychain.remove(keychainAccount)
+        }
+        keychainAccount = nil
         return refreshToken
     }
 
@@ -119,10 +151,10 @@ actor CredentialVault {
 
     /// Makes the next request refresh the tokens, to try the refresh from the developer tools.
     func markStale() {
-        guard var current = chatGPT else { return }
+        guard var current = chatGPT, let keychainAccount else { return }
         current.lastRefresh = .distantPast
         chatGPT = current
-        Keychain.setValue(current, for: Self.chatGPTAccount)
+        Keychain.setValue(current, for: keychainAccount)
     }
 
     private func refresh() async throws -> StoredChatGPTCredentials {
@@ -136,16 +168,20 @@ actor CredentialVault {
         defer { refreshTask = nil }
         do {
             let updated = try await task.value
-            if chatGPT != nil {
+            // The account may have been switched or signed out while the refresh was in flight:
+            // the answer then belongs to an account that is no longer the one in use.
+            if chatGPT != nil, let keychainAccount {
                 chatGPT = updated
-                Keychain.setValue(updated, for: Self.chatGPTAccount)
+                Keychain.setValue(updated, for: keychainAccount)
             }
             DevLog.log("auth", "Tokens refreshed")
             return updated
         } catch AuthError.sessionExpired {
             DevLog.log("auth", "Refresh token refused: session expired", level: .error)
+            if let keychainAccount {
+                Keychain.remove(keychainAccount)
+            }
             chatGPT = nil
-            Keychain.remove(Self.chatGPTAccount)
             throw AuthError.sessionExpired
         }
     }
@@ -194,21 +230,28 @@ final class AuthManager {
     }
 
     private(set) var state: State
+    /// The ChatGPT accounts signed in on this device, and which one is in use.
+    private(set) var roster: AccountRoster
 
     let vault: CredentialVault
     private let session: URLSession
     private let anchorProvider = PresentationAnchorProvider()
 
-    private static let signInMethodKey = "auth.signInMethod"
-    private static let signedInAtKey = "auth.signedInAt"
+    private static let rosterKey = "auth.accounts"
+    private static let legacySignInMethodKey = "auth.signInMethod"
+    private static let legacySignedInAtKey = "auth.signedInAt"
 
     init(session: URLSession) {
         self.session = session
-        vault = CredentialVault(session: session)
         // Signing in with an API key was removed: forget a key saved by an earlier version.
         Keychain.remove(CredentialVault.legacyAPIKeyAccount)
 
-        if let credentials = Keychain.value(StoredChatGPTCredentials.self, for: CredentialVault.chatGPTAccount) {
+        let roster = Self.loadRoster()
+        self.roster = roster
+        vault = CredentialVault(session: session, accountKey: roster.currentKey)
+
+        if let key = roster.currentKey,
+           let credentials = Keychain.value(StoredChatGPTCredentials.self, for: CredentialVault.keychainAccount(for: key)) {
             state = .signedIn(Self.account(idToken: credentials.idToken, accessToken: credentials.accessToken))
         } else {
             state = .signedOut
@@ -220,12 +263,21 @@ final class AuthManager {
         return nil
     }
 
+    /// The accounts signed in on this device, in the order they were added.
+    var accounts: [StoredAccount] { roster.ordered }
+
+    var currentAccountKey: String? { roster.currentKey }
+
+    var hasSeveralAccounts: Bool { roster.accounts.count > 1 }
+
     var signInMethod: SignInMethod? {
-        UserDefaults.standard.string(forKey: Self.signInMethodKey).flatMap(SignInMethod.init(rawValue:))
+        guard let key = roster.currentKey else { return nil }
+        return UserDefaults.standard.string(forKey: Self.signInMethodKey(key)).flatMap(SignInMethod.init(rawValue:))
     }
 
     var signedInAt: Date? {
-        UserDefaults.standard.object(forKey: Self.signedInAtKey) as? Date
+        guard let key = roster.currentKey else { return nil }
+        return UserDefaults.standard.object(forKey: Self.signedInAtKey(key)) as? Date
     }
 
     /// Refreshes the tokens now and picks up changes to the account they carry, such as a new plan.
@@ -237,8 +289,17 @@ final class AuthManager {
             throw AuthError.sessionExpired
         }
         if let info = await vault.sessionInfo() {
-            state = .signedIn(Self.account(idToken: info.idToken, accessToken: info.accessToken))
+            let account = Self.account(idToken: info.idToken, accessToken: info.accessToken)
+            state = .signedIn(account)
+            describe(account)
         }
+    }
+
+    /// Keeps the account list in step with what the account itself says about it.
+    func describe(_ account: Account, name: String? = nil) {
+        guard let key = roster.currentKey else { return }
+        roster.update(key, email: account.email, name: name, planType: account.planType)
+        saveRoster()
     }
 
     #if OCTO_DEMO
@@ -246,20 +307,35 @@ final class AuthManager {
     func useDemoAccount(_ account: Account?) {
         state = account.map { .signedIn($0) } ?? .signedOut
     }
+
+    /// A few accounts for the account-switching screenshot.
+    func useDemoAccounts(_ demoAccounts: [StoredAccount]) {
+        var roster = AccountRoster()
+        for account in demoAccounts {
+            roster.add(account)
+        }
+        if let first = demoAccounts.first {
+            roster.select(first.key)
+        }
+        self.roster = roster
+    }
     #endif
 
     // MARK: Browser sign-in
 
-    func signInWithChatGPT() async throws {
+    /// Signs in with ChatGPT. When another account is being added, the sign-in page opens without
+    /// the Safari cookies of the account already signed in — otherwise ChatGPT would hand back the
+    /// same account without ever asking which one you meant.
+    func signInWithChatGPT(addingAccount: Bool = false) async throws {
         let pkce = PKCE.generate()
         let expectedState = PKCE.randomState()
         let url = OpenAIAuth.authorizeURL(codeChallenge: pkce.challenge, state: expectedState)
-        let code = try await authorize(url: url, expectedState: expectedState)
+        let code = try await authorize(url: url, expectedState: expectedState, ephemeral: addingAccount)
         let tokens = try await exchange(code: code, verifier: pkce.verifier, redirectURI: OpenAIAuth.redirectURI)
         await complete(with: tokens, method: .browser)
     }
 
-    private func authorize(url: URL, expectedState: String) async throws -> String {
+    private func authorize(url: URL, expectedState: String, ephemeral: Bool) async throws -> String {
         let server = LoopbackCallbackServer()
         let sessionBox = WebAuthenticationSessionBox()
         defer { server.stop() }
@@ -314,7 +390,7 @@ final class AuthManager {
                 }
             }
             webSession.presentationContextProvider = anchorProvider
-            webSession.prefersEphemeralWebBrowserSession = false
+            webSession.prefersEphemeralWebBrowserSession = ephemeral
             sessionBox.session = webSession
             if !webSession.start() {
                 resumer.resume(throwing: AuthError.authorizationFailed(String(localized: "Could not open the sign-in page.")))
@@ -372,15 +448,65 @@ final class AuthManager {
         throw AuthError.deviceCodeExpired
     }
 
-    // MARK: Session
+    // MARK: Accounts
 
-    func signOut() async {
-        let refreshToken = await vault.clear()
-        state = .signedOut
-        UserDefaults.standard.removeObject(forKey: Self.signInMethodKey)
-        UserDefaults.standard.removeObject(forKey: Self.signedInAtKey)
+    /// Switches to another account already signed in on this device. False when it isn't one, or
+    /// when it is already the one in use.
+    @discardableResult
+    func switchAccount(to key: String) async -> Bool {
+        guard key != roster.currentKey, roster.contains(key) else { return false }
+        guard Keychain.value(StoredChatGPTCredentials.self, for: CredentialVault.keychainAccount(for: key)) != nil else {
+            // Its tokens are gone from the keychain: the account can't be used, so it leaves the list.
+            DevLog.log("auth", "No tokens left for \(key): removing it from the account list", level: .warning)
+            roster.remove(key)
+            saveRoster()
+            return false
+        }
+        roster.select(key)
+        saveRoster()
+        await vault.use(accountKey: key)
+        if let info = await vault.sessionInfo() {
+            state = .signedIn(Self.account(idToken: info.idToken, accessToken: info.accessToken))
+        }
+        DevLog.log("auth", "Switched to \(key)")
+        return true
+    }
+
+    /// Signs one account out and revokes its session. Without a key it is the account in use.
+    /// Returns the account now in use, or nil when that was the last one.
+    @discardableResult
+    func signOut(accountKey: String? = nil) async -> String? {
+        guard let key = accountKey ?? roster.currentKey else { return nil }
+        let isCurrent = key == roster.currentKey
+        let refreshToken: String?
+        if isCurrent {
+            refreshToken = await vault.clear()
+        } else {
+            let item = CredentialVault.keychainAccount(for: key)
+            refreshToken = Keychain.value(StoredChatGPTCredentials.self, for: item)?.refreshToken
+            Keychain.remove(item)
+        }
+        UserDefaults.standard.removeObject(forKey: Self.signInMethodKey(key))
+        UserDefaults.standard.removeObject(forKey: Self.signedInAtKey(key))
+
+        let next = roster.remove(key)
+        saveRoster()
+        if isCurrent {
+            await vault.use(accountKey: next)
+            if let info = await vault.sessionInfo() {
+                state = .signedIn(Self.account(idToken: info.idToken, accessToken: info.accessToken))
+            } else {
+                state = .signedOut
+            }
+        }
+        DevLog.log("auth", "Signed \(key) out")
+        await revoke(refreshToken)
+        return next
+    }
+
+    /// Best effort: makes the refresh token unusable so the session can't be resumed.
+    private func revoke(_ refreshToken: String?) async {
         guard let refreshToken else { return }
-        // Best effort: revoke the refresh token so it cannot be reused.
         var request = URLRequest(url: OpenAIAuth.revokeURL)
         request.httpMethod = "POST"
         request.timeoutInterval = 10
@@ -389,6 +515,8 @@ final class AuthManager {
         request.httpBody = OpenAIAuth.revokeBody(refreshToken: refreshToken)
         _ = try? await session.recordedData(for: request)
     }
+
+    // MARK: Private
 
     private func exchange(code: String, verifier: String, redirectURI: String) async throws -> OAuthTokenResponse {
         var request = URLRequest(url: OpenAIAuth.tokenURL)
@@ -409,20 +537,92 @@ final class AuthManager {
         return tokens
     }
 
+    /// Files the tokens under the account they belong to, and makes it the account in use.
+    /// Signing into an account already on this device updates it instead of adding it twice.
     private func complete(with tokens: OAuthTokenResponse, method: SignInMethod) async {
         guard let accessToken = tokens.accessToken, let refreshToken = tokens.refreshToken else { return }
         let idToken = tokens.idToken ?? ""
         let claims = ChatGPTAccountClaims(idToken: idToken, accessToken: accessToken)
-        await vault.store(StoredChatGPTCredentials(
+        let key = AccountKey.make(userID: claims.userID, accountID: claims.accountID, email: claims.email)
+        let credentials = StoredChatGPTCredentials(
             idToken: idToken,
             accessToken: accessToken,
             refreshToken: refreshToken,
             accountID: claims.accountID,
             lastRefresh: Date()
+        )
+        Keychain.setValue(credentials, for: CredentialVault.keychainAccount(for: key))
+        await vault.use(accountKey: key)
+        UserDefaults.standard.set(method.rawValue, forKey: Self.signInMethodKey(key))
+        UserDefaults.standard.set(Date(), forKey: Self.signedInAtKey(key))
+        roster.add(StoredAccount(
+            key: key,
+            userID: claims.userID,
+            accountID: claims.accountID,
+            email: claims.email,
+            planType: claims.planType
         ))
-        UserDefaults.standard.set(method.rawValue, forKey: Self.signInMethodKey)
-        UserDefaults.standard.set(Date(), forKey: Self.signedInAtKey)
-        state = .signedIn(Self.account(idToken: idToken, accessToken: accessToken))
+        saveRoster()
+        state = .signedIn(Account(email: claims.email, planType: claims.planType, userID: claims.userID))
+    }
+
+    private static func signInMethodKey(_ key: String) -> String { "auth.signInMethod.\(key)" }
+    private static func signedInAtKey(_ key: String) -> String { "auth.signedInAt.\(key)" }
+
+    private func saveRoster() {
+        guard let data = try? JSONEncoder().encode(roster) else { return }
+        UserDefaults.standard.set(data, forKey: Self.rosterKey)
+    }
+
+    /// The account list, or the single account of OCTO 1.8 and earlier moved into it.
+    private static func loadRoster(defaults: UserDefaults = .standard) -> AccountRoster {
+        if let data = defaults.data(forKey: rosterKey),
+           let roster = try? JSONDecoder().decode(AccountRoster.self, from: data) {
+            return roster
+        }
+        guard let legacy = Keychain.value(StoredChatGPTCredentials.self, for: CredentialVault.legacyAccount) else {
+            return AccountRoster()
+        }
+        let claims = ChatGPTAccountClaims(idToken: legacy.idToken, accessToken: legacy.accessToken)
+        let key = AccountKey.make(userID: claims.userID, accountID: claims.accountID, email: claims.email)
+        // Its tokens, its chats and how it signed in move to the account's own place.
+        Keychain.setValue(legacy, for: CredentialVault.keychainAccount(for: key))
+        Keychain.remove(CredentialVault.legacyAccount)
+        AccountStorage.migrateLegacyLayout(to: key)
+        if let method = defaults.string(forKey: legacySignInMethodKey) {
+            defaults.set(method, forKey: signInMethodKey(key))
+            defaults.removeObject(forKey: legacySignInMethodKey)
+        }
+        if let date = defaults.object(forKey: legacySignedInAtKey) as? Date {
+            defaults.set(date, forKey: signedInAtKey(key))
+            defaults.removeObject(forKey: legacySignedInAtKey)
+        }
+
+        var roster = AccountRoster()
+        roster.add(StoredAccount(
+            key: key,
+            userID: claims.userID,
+            accountID: claims.accountID,
+            email: claims.email,
+            planType: claims.planType
+        ))
+        if let data = try? JSONEncoder().encode(roster) {
+            defaults.set(data, forKey: rosterKey)
+        }
+        DevLog.log("auth", "Moved the account signed in before 1.9 into the account list")
+        return roster
+    }
+
+    /// Forgets every account, for a fresh install.
+    static func forgetEverything(defaults: UserDefaults = .standard) {
+        defaults.removeObject(forKey: rosterKey)
+        defaults.removeObject(forKey: legacySignInMethodKey)
+        defaults.removeObject(forKey: legacySignedInAtKey)
+        for key in defaults.dictionaryRepresentation().keys
+        where key.hasPrefix("auth.signInMethod.") || key.hasPrefix("auth.signedInAt.") {
+            defaults.removeObject(forKey: key)
+        }
+        Keychain.removeAll()
     }
 
     private static func account(idToken: String?, accessToken: String?) -> Account {

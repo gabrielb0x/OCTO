@@ -64,6 +64,15 @@ public struct AccountSettings: Codable, Equatable, Sendable {
     public var codexTrainingAllowed: Bool?
     public var voiceName: String?
     public var voiceLanguage: String?
+    /// Ads picked from what the account does ("bazaar" is ChatGPT's own name for its ads).
+    public var adsPersonalizationEnabled: Bool?
+    /// ChatGPT keeps a history of the ads the account was shown and interacted with.
+    public var adsHistoryEnabled: Bool?
+    /// Whether the account has already answered ChatGPT's question about personalized ads.
+    /// Read only: it's set by answering in ChatGPT, not by a switch.
+    public var adsPersonalizationConsentSet: Bool?
+    /// A free account that chose fewer messages over ads.
+    public var freeAdsOptOut: Bool?
 
     public init(
         referencesSavedMemories: Bool? = nil,
@@ -73,7 +82,11 @@ public struct AccountSettings: Codable, Equatable, Sendable {
         videoTrainingAllowed: Bool? = nil,
         codexTrainingAllowed: Bool? = nil,
         voiceName: String? = nil,
-        voiceLanguage: String? = nil
+        voiceLanguage: String? = nil,
+        adsPersonalizationEnabled: Bool? = nil,
+        adsHistoryEnabled: Bool? = nil,
+        adsPersonalizationConsentSet: Bool? = nil,
+        freeAdsOptOut: Bool? = nil
     ) {
         self.referencesSavedMemories = referencesSavedMemories
         self.referencesChatHistory = referencesChatHistory
@@ -83,6 +96,10 @@ public struct AccountSettings: Codable, Equatable, Sendable {
         self.codexTrainingAllowed = codexTrainingAllowed
         self.voiceName = voiceName
         self.voiceLanguage = voiceLanguage
+        self.adsPersonalizationEnabled = adsPersonalizationEnabled
+        self.adsHistoryEnabled = adsHistoryEnabled
+        self.adsPersonalizationConsentSet = adsPersonalizationConsentSet
+        self.freeAdsOptOut = freeAdsOptOut
     }
 
     public subscript(feature: AccountSettingFeature) -> Bool? {
@@ -92,6 +109,11 @@ public struct AccountSettings: Codable, Equatable, Sendable {
             case .voiceTrainingAllowed: return voiceTrainingAllowed
             case .videoTrainingAllowed: return videoTrainingAllowed
             case .codexTrainingAllowed: return codexTrainingAllowed
+            case .referencesSavedMemories: return referencesSavedMemories
+            case .referencesChatHistory: return referencesChatHistory
+            case .adsPersonalization: return adsPersonalizationEnabled
+            case .adsHistory: return adsHistoryEnabled
+            case .freeAdsOptOut: return freeAdsOptOut
             }
         }
         set {
@@ -100,6 +122,11 @@ public struct AccountSettings: Codable, Equatable, Sendable {
             case .voiceTrainingAllowed: voiceTrainingAllowed = newValue
             case .videoTrainingAllowed: videoTrainingAllowed = newValue
             case .codexTrainingAllowed: codexTrainingAllowed = newValue
+            case .referencesSavedMemories: referencesSavedMemories = newValue
+            case .referencesChatHistory: referencesChatHistory = newValue
+            case .adsPersonalization: adsPersonalizationEnabled = newValue
+            case .adsHistory: adsHistoryEnabled = newValue
+            case .freeAdsOptOut: freeAdsOptOut = newValue
             }
         }
     }
@@ -114,7 +141,11 @@ public struct AccountSettings: Codable, Equatable, Sendable {
             videoTrainingAllowed: JSONValue.bool(settings["video_training_allowed"]),
             codexTrainingAllowed: JSONValue.bool(settings["codex_training_allowed_v2"]) ?? JSONValue.bool(settings["codex_training_allowed"]),
             voiceName: JSONValue.string(settings["voice_name"]),
-            voiceLanguage: JSONValue.string(settings["voice_main_language"])
+            voiceLanguage: JSONValue.string(settings["voice_main_language"]),
+            adsPersonalizationEnabled: JSONValue.bool(settings["bazaar_personalization_enabled"]),
+            adsHistoryEnabled: JSONValue.bool(settings["bazaar_history_enabled"]),
+            adsPersonalizationConsentSet: JSONValue.bool(settings["bazaar_personalization_consent_set"]),
+            freeAdsOptOut: JSONValue.bool(settings["free_ads_opt_out"])
         )
     }
 }
@@ -127,6 +158,16 @@ public enum AccountSettingFeature: String, CaseIterable, Sendable {
     case videoTrainingAllowed = "video_training_allowed"
     /// Codex's "Improve the model for everyone".
     case codexTrainingAllowed = "codex_training_allowed_v2"
+    /// "Reference saved memories": ChatGPT's own name for the setting is "sunshine".
+    case referencesSavedMemories = "sunshine"
+    /// "Reference chat history", named "moonshine".
+    case referencesChatHistory = "moonshine"
+    /// Ads chosen from what the account does.
+    case adsPersonalization = "bazaar_personalization_enabled"
+    /// The history of the ads the account was shown.
+    case adsHistory = "bazaar_history_enabled"
+    /// A free account trading ads for fewer messages.
+    case freeAdsOptOut = "free_ads_opt_out"
 }
 
 /// Whether the account's policy lets its data be used for training at all

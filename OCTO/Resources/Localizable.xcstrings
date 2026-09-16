@@ -7764,6 +7764,376 @@
           }
         }
       }
+    },
+    "Accounts": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comptes"
+          }
+        }
+      }
+    },
+    "Switch account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changer de compte"
+          }
+        }
+      }
+    },
+    "Add an account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter un compte"
+          }
+        }
+      }
+    },
+    "Add with a code": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter avec un code"
+          }
+        }
+      }
+    },
+    "Adding an account opens ChatGPT's sign-in page without the account you're already signed into, so you can choose another one. Signing in again to an account already here finds its chats where it left them.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter un compte ouvre la page de connexion de ChatGPT sans le compte auquel tu es déjà connecté, pour pouvoir en choisir un autre. Te reconnecter à un compte déjà présent retrouve ses chats là où il les avait laissés."
+          }
+        }
+      }
+    },
+    "ChatGPT account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compte ChatGPT"
+          }
+        }
+      }
+    },
+    "Couldn't add the account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d'ajouter le compte"
+          }
+        }
+      }
+    },
+    "Each account keeps its own chats on this device. Switching doesn't touch what's in your ChatGPT accounts.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque compte garde ses propres chats sur cet appareil. Changer de compte ne touche à rien dans tes comptes ChatGPT."
+          }
+        }
+      }
+    },
+    "OCTO will forget %@ on this device and its session will be revoked. Its chats stay in your ChatGPT account.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO oubliera %@ sur cet appareil et sa session sera révoquée. Ses chats restent dans ton compte ChatGPT."
+          }
+        }
+      }
+    },
+    "Sign this account out?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déconnecter ce compte ?"
+          }
+        }
+      }
+    },
+    "Switch to this account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basculer sur ce compte"
+          }
+        }
+      }
+    },
+    "Switched to %@": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basculé sur %@"
+          }
+        }
+      }
+    },
+    "Hold to switch account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garde le doigt appuyé pour changer de compte"
+          }
+        }
+      }
+    },
+    "The chats of this ChatGPT account will be removed from this device, and OCTO will switch to another account you're signed into.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les chats de ce compte ChatGPT seront retirés de cet appareil, et OCTO basculera sur un autre compte auquel tu es connecté."
+          }
+        }
+      }
+    },
+    "No ads in OCTO": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune publicité dans OCTO"
+          }
+        }
+      }
+    },
+    "OCTO never shows ads and sends nothing to advertisers: no telemetry, no analytics, no third-party code. The switches below are your ChatGPT account's own, read from it and changed in it.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO n'affiche aucune publicité et n'envoie rien aux annonceurs : aucune télémétrie, aucun outil d'analyse, aucun code tiers. Les interrupteurs ci-dessous sont ceux de ton compte ChatGPT, lus dedans et modifiés dedans."
+          }
+        }
+      }
+    },
+    "In ChatGPT": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans ChatGPT"
+          }
+        }
+      }
+    },
+    "Personalized ads": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publicités personnalisées"
+          }
+        }
+      }
+    },
+    "Keep an ad history": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garder un historique des publicités"
+          }
+        }
+      }
+    },
+    "Personalized ads are chosen from what you do in ChatGPT. The history is the list of ads you were shown and interacted with. Turning them off doesn't remove what's already been kept — deleting your advertising data does.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les publicités personnalisées sont choisies à partir de ce que tu fais dans ChatGPT. L'historique est la liste des publicités qui t'ont été montrées et avec lesquelles tu as interagi. Les désactiver n'efface pas ce qui a déjà été gardé — supprimer tes données publicitaires, si."
+          }
+        }
+      }
+    },
+    "Free plan": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forfait gratuit"
+          }
+        }
+      }
+    },
+    "No ads, fewer messages": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sans publicités, moins de messages"
+          }
+        }
+      }
+    },
+    "Stays on the free plan and turns its ads off, in exchange for fewer messages a day. You can switch it back at any time.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reste en forfait gratuit et coupe ses publicités, en échange de moins de messages par jour. Tu peux revenir en arrière à tout moment."
+          }
+        }
+      }
+    },
+    "Delete advertising data": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer les données publicitaires"
+          }
+        }
+      }
+    },
+    "Deletes the advertising profile ChatGPT built for your account. This can't be undone, and ChatGPT starts a new one as you keep using it.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprime le profil publicitaire que ChatGPT a construit pour ton compte. Cette action est irréversible, et ChatGPT en recommence un au fil de ton utilisation."
+          }
+        }
+      }
+    },
+    "Delete your advertising data?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer tes données publicitaires ?"
+          }
+        }
+      }
+    },
+    "The advertising profile ChatGPT keeps for your account will be deleted. This can't be undone.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le profil publicitaire que ChatGPT garde pour ton compte sera supprimé. Cette action est irréversible."
+          }
+        }
+      }
+    },
+    "Your advertising data has been deleted": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tes données publicitaires ont été supprimées"
+          }
+        }
+      }
+    },
+    "These are the switches of your ChatGPT account, changed here as they would be in ChatGPT. When “Reference saved memories” is on, your saved memories are sent with the messages you write in OCTO. OCTO can't reference your chat history.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce sont les interrupteurs de ton compte ChatGPT, modifiés ici comme ils le seraient dans ChatGPT. Quand « Consulter les souvenirs enregistrés » est activé, tes souvenirs enregistrés sont envoyés avec les messages que tu écris dans OCTO. OCTO ne peut pas consulter ton historique de chats."
+          }
+        }
+      }
+    },
+    "Several ChatGPT accounts": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plusieurs comptes ChatGPT"
+          }
+        }
+      }
+    },
+    "Add your other accounts and switch between them from Settings → Accounts, or by holding your name in the chat list. Each one keeps its own chats on this device.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoute tes autres comptes et passe de l'un à l'autre depuis Réglages → Comptes, ou en gardant le doigt sur ton nom dans la liste des chats. Chacun garde ses propres chats sur cet appareil."
+          }
+        }
+      }
+    },
+    "Ads, really managed": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les publicités, vraiment gérées"
+          }
+        }
+      }
+    },
+    "Ads management turns personalized ads and the ad history off in your account, deletes the advertising data ChatGPT keeps, and lets a free account trade its ads for fewer messages.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestion des publicités coupe les publicités personnalisées et leur historique dans ton compte, supprime les données publicitaires que ChatGPT garde, et permet à un compte gratuit d'échanger ses publicités contre moins de messages."
+          }
+        }
+      }
+    },
+    "Memory switches that work": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les réglages de mémoire deviennent modifiables"
+          }
+        }
+      }
+    },
+    "“Reference saved memories” and “Reference chat history” are switches now, saved straight to your ChatGPT account instead of only being shown.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "« Consulter les souvenirs enregistrés » et « Consulter l'historique des chats » sont maintenant des interrupteurs, enregistrés directement dans ton compte ChatGPT au lieu d'être seulement affichés."
+          }
+        }
+      }
+    },
+    "Red means red": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le rouge est vraiment rouge"
+          }
+        }
+      }
+    },
+    "Signing out, deleting your chats and the other rows that undo something wear a stronger red, over the whole row.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se déconnecter, supprimer tes chats et les autres lignes qui défont quelque chose portent un rouge plus marqué, sur toute la ligne."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

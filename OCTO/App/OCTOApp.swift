@@ -30,6 +30,9 @@ struct RootView: View {
                     .transition(.opacity)
             case .signedIn:
                 MainView(app: app)
+                    // Switching accounts builds the screen again, so the open chat is never one
+                    // belonging to the account you just left.
+                    .id(app.auth.currentAccountKey ?? "signed-in")
                     .transition(.opacity)
             }
         }

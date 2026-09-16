@@ -27,14 +27,14 @@ struct AccountSnapshot: Codable {
 final class AccountCache: @unchecked Sendable {
     let directory: URL
 
-    init(folderName: String = "OCTO") {
-        let fileManager = FileManager.default
-        let base = (try? fileManager.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true))
-            ?? fileManager.temporaryDirectory
-        directory = base
-            .appendingPathComponent(folderName, isDirectory: true)
-            .appendingPathComponent("Account", isDirectory: true)
-        try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+    convenience init(folderName: String = AccountStorage.folderName) {
+        self.init(directory: AccountStorage.root(folderName: folderName))
+    }
+
+    /// The cached data of one account, in that account's own folder.
+    init(directory accountDirectory: URL) {
+        directory = accountDirectory.appendingPathComponent("Account", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     }
 
     var snapshotURL: URL { directory.appendingPathComponent("account.json") }
@@ -107,7 +107,7 @@ final class AccountStore {
     private(set) var state: LoadState = .idle
     private(set) var lastRefresh: Date?
 
-    @ObservationIgnored let cache: AccountCache
+    @ObservationIgnored private(set) var cache: AccountCache
     @ObservationIgnored private let service: AccountService?
     @ObservationIgnored private var avatarURL: URL?
     @ObservationIgnored private var lastDevicesRefresh: Date?
@@ -286,6 +286,19 @@ final class AccountStore {
         saveSnapshot()
     }
 
+    /// Clears the advertising profile ChatGPT keeps for the account, then reads the settings back,
+    /// so the ads switches show what the account kept.
+    func deleteAdsProfile() async throws {
+        guard let service else { return }
+        let generation = self.generation
+        try await service.deleteAdsProfile()
+        guard generation == self.generation else { return }
+        if let fresh = try? await service.settings(), generation == self.generation, savingSettings.isEmpty {
+            settings = fresh
+            saveSnapshot()
+        }
+    }
+
     /// What ChatGPT charges for its plans, for the Upgrade screen. Asked for by that screen only.
     func refreshPricing(ifOlderThan interval: TimeInterval = 0) async {
         guard let service else { return }
@@ -348,8 +361,27 @@ final class AccountStore {
         }
     }
 
-    /// Forgets the account on sign-out.
+    /// Reads another account's cached data, when you switch to it: what was known about the
+    /// previous account is dropped from memory — but left in its own folder, so switching back
+    /// shows it again right away — and the new account is read from its folder.
+    func use(cache: AccountCache) {
+        resetState()
+        self.cache = cache
+        if let snapshot = cache.loadSnapshot() {
+            apply(snapshot)
+            state = .loaded
+        }
+        avatar = cache.loadAvatar().flatMap { UIImage(data: $0) }
+    }
+
+    /// Forgets the account on sign-out, cached files included.
     func clear() {
+        resetState()
+        cache.clear()
+    }
+
+    /// Drops what is held about the account in memory, without touching its folder.
+    private func resetState() {
         generation += 1
         profile = nil
         avatar = nil
@@ -374,7 +406,6 @@ final class AccountStore {
         lastFileStorageRefresh = nil
         lastPricingRefresh = nil
         state = .idle
-        cache.clear()
     }
 
     #if OCTO_DEMO

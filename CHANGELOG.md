@@ -2,6 +2,25 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [1.9.0] – 2026-09-16
+
+### Ajouté
+
+- **Plusieurs comptes ChatGPT, et on passe de l'un à l'autre.** **Réglages → Comptes** liste les comptes connectés sur cet iPhone, avec leur photo, leur adresse et leur forfait ; une pression suffit pour changer. « Ajouter un compte » ouvre la page de connexion de ChatGPT **sans les cookies du compte déjà connecté** — sinon ChatGPT rendait le même compte sans jamais demander lequel tu voulais — et la connexion par code marche aussi. Se reconnecter à un compte déjà présent le met à jour au lieu de l'ajouter deux fois.
+- **Chaque compte garde ses propres chats.** Les conversations, les pièces jointes et les données du compte vivent dans un dossier par compte (`Accounts/<compte>/`), donc changer de compte ne mélange jamais deux historiques. Les jetons aussi ont chacun leur entrée dans le trousseau : ajouter un compte ne touche pas à celui d'à côté. Le compte déjà connecté avant la 1.9 est déplacé dans son dossier au premier lancement, sans rien perdre.
+- **Changer de compte depuis la liste des chats** : garde le doigt sur ton nom en bas du panneau, et choisis un autre compte, « Comptes » ou « Réglages ».
+- **Gestion des publicités, pour de vrai.** L'écran ne se contente plus de renvoyer vers ChatGPT : **Publicités personnalisées** et **Historique des publicités** sont des interrupteurs lus et modifiés dans ton compte (`bazaar_personalization_enabled`, `bazaar_history_enabled`).
+- **Supprimer tes données publicitaires.** Un bouton efface le profil publicitaire que ChatGPT construit pour ton compte (`DELETE bazaar/profile`), avec une confirmation. C'est définitif.
+- **Rester en gratuit, sans publicités.** Pour un compte sans abonnement, un interrupteur échange les publicités contre **moins de messages par jour** (`free_ads_opt_out`). C'est réversible à tout moment.
+- **Les réglages de mémoire deviennent modifiables.** « Référencer les souvenirs enregistrés » et « Référencer l'historique des chats » étaient affichés en lecture seule ; ce sont maintenant des interrupteurs enregistrés directement dans ton compte ChatGPT (`sunshine`, `moonshine`).
+- `bazaar/profile` rejoint les **raccourcis de la console** du mode développeur.
+
+### Modifié
+
+- **Le rouge est vraiment rouge.** Les lignes qui défont quelque chose — « Se déconnecter », « Supprimer tous les chats », « Retirer les chats téléchargés », « Supprimer les données publicitaires », « Désactiver le mode développeur », « Copier le jeton d'accès » — portent un rouge plus saturé, en demi-gras, et **toute la ligne** est teintée de rouge au lieu du seul texte.
+- **Se déconnecter ne te renvoie plus forcément à l'écran de connexion** : s'il te reste un autre compte, OCTO bascule dessus, et la confirmation le dit. Déconnecter un compte révoque sa session et oublie ce qu'OCTO avait téléchargé de lui ; ses chats restent dans ton compte ChatGPT.
+- L'adresse e-mail d'un compte dans la liste des comptes suit **Confidentialité → Ton adresse et ton numéro** : masquée derrière des points comme partout ailleurs.
+
 ## [1.8.0] – 2026-09-16
 
 ### Ajouté

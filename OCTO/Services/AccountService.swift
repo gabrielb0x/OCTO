@@ -133,6 +133,16 @@ final class AccountService: Sendable {
         try await fetch(ChatGPTAccountAPI.dataUsagePolicyURL, parse: TrainingPolicy.parse)
     }
 
+    /// Clears the advertising profile ChatGPT keeps for the account, the call its own ads screen
+    /// makes. It answers `204 No Content`, and an account with nothing kept answers `404`.
+    func deleteAdsProfile() async throws {
+        do {
+            _ = try await send(ChatGPTAccountAPI.adsProfileURL, method: "DELETE")
+        } catch AccountAPIError.notFound {
+            // Nothing was kept for this account, which is what deleting it aims for.
+        }
+    }
+
     // MARK: Devices & protection
 
     /// The devices signed into the ChatGPT account, as its own "Devices" screen lists them.

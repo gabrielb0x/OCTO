@@ -4,6 +4,7 @@ import UIKit
 
 /// Pages of the settings sheet.
 enum SettingsRoute: Hashable {
+    case accounts
     case personalization
     case memory
     case plugins
@@ -69,6 +70,7 @@ struct SettingsView: View {
                     }
 
                     Section("Account") {
+                        row(.accounts, app.auth.hasSeveralAccounts ? "Switch account" : "Accounts", systemImage: "person.2")
                         if let email = app.accountEmail {
                             ContactRow(title: "Email address", systemImage: "envelope", value: email, kind: .email)
                         }
@@ -143,6 +145,7 @@ struct SettingsView: View {
                         } label: {
                             DestructiveLabel(title: "Sign out", systemImage: "rectangle.portrait.and.arrow.right")
                         }
+                        .destructiveRow()
                     } footer: {
                         Button {
                             showsWhatsNew = true
@@ -193,7 +196,9 @@ struct SettingsView: View {
                     Task { await app.signOut() }
                 }
             } message: {
-                Text("The chats of your ChatGPT account will be removed from this device.")
+                Text(app.auth.hasSeveralAccounts
+                    ? LocalizedStringKey("The chats of this ChatGPT account will be removed from this device, and OCTO will switch to another account you're signed into.")
+                    : LocalizedStringKey("The chats of your ChatGPT account will be removed from this device."))
             }
         }
     }
@@ -289,6 +294,7 @@ struct SettingsView: View {
     @ViewBuilder
     private func destination(for route: SettingsRoute) -> some View {
         switch route {
+        case .accounts: AccountsView()
         case .personalization: PersonalizationView()
         case .memory: MemoryView()
         case .plugins: PluginsView()

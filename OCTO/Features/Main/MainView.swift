@@ -13,6 +13,8 @@ struct MainView: View {
     @State private var dragRejected = false
     @State private var dragTranslation: CGFloat = 0
     @State private var showSettings = false
+    /// The page Settings opens on, for the shortcuts that reach one directly.
+    @State private var settingsPath: [SettingsRoute] = []
     /// The plans of ChatGPT, offered like in its app by "Upgrade" in the top bar.
     @State private var showUpgrade = false
 
@@ -40,7 +42,8 @@ struct MainView: View {
                     onRename: rename,
                     onSetPinned: setPinned,
                     onDelete: delete,
-                    onOpenSettings: { openSettings() }
+                    onOpenSettings: { openSettings() },
+                    onOpenAccounts: { openSettings(path: [.accounts]) }
                 )
                 .frame(width: sidebarWidth)
                 .offset(x: -sidebarWidth * 0.3 * (1 - progress))
@@ -81,9 +84,12 @@ struct MainView: View {
         .background(Theme.sidebarBackground.ignoresSafeArea())
         .sheet(isPresented: $showSettings) {
             #if OCTO_DEMO
-            SettingsView(initialPath: DemoContent.settingsPath(for: app.demoScene), initialSection: DemoContent.settingsSection(for: app.demoScene))
+            SettingsView(
+                initialPath: settingsPath.isEmpty ? DemoContent.settingsPath(for: app.demoScene) : settingsPath,
+                initialSection: DemoContent.settingsSection(for: app.demoScene)
+            )
             #else
-            SettingsView()
+            SettingsView(initialPath: settingsPath)
             #endif
         }
         .sheet(isPresented: $showUpgrade) {
@@ -130,7 +136,8 @@ struct MainView: View {
 
     // MARK: Navigation
 
-    private func openSettings() {
+    private func openSettings(path: [SettingsRoute] = []) {
+        settingsPath = path
         showSettings = true
     }
 

@@ -24,14 +24,3 @@ struct RemoteControlView: View {
         )
     }
 }
-
-struct AdsSettingsView: View {
-    var body: some View {
-        ChatGPTOnlyPage(
-            title: "Ads management",
-            systemImage: "megaphone",
-            summary: "OCTO shows no ads and doesn't track you.",
-            details: "Ads and their personalization are managed with your ChatGPT account in ChatGPT. OCTO sends nothing to advertisers: no telemetry, no analytics, no third-party SDK."
-        )
-    }
-}

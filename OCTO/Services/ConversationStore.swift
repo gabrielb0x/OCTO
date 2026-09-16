@@ -42,11 +42,13 @@ final class ConversationFiles: @unchecked Sendable {
     let attachmentsDirectory: URL
     private let queue = DispatchQueue(label: "com.gabrielb0x.octo.storage", qos: .utility)
 
-    init(folderName: String = "OCTO", startEmpty: Bool = false) {
+    convenience init(folderName: String = AccountStorage.folderName, startEmpty: Bool = false) {
+        self.init(directory: AccountStorage.root(folderName: folderName), startEmpty: startEmpty)
+    }
+
+    /// The chats of one account, in that account's own folder.
+    init(directory root: URL, startEmpty: Bool = false) {
         let fileManager = FileManager.default
-        let base = (try? fileManager.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true))
-            ?? fileManager.temporaryDirectory
-        let root = base.appendingPathComponent(folderName, isDirectory: true)
         if startEmpty {
             try? fileManager.removeItem(at: root)
         }
@@ -209,7 +211,7 @@ final class ConversationStore {
     private(set) var searchHits: [RemoteSearchHit] = []
     private(set) var isSearchingAccount = false
 
-    let files: ConversationFiles
+    @ObservationIgnored private(set) var files: ConversationFiles
     /// Nil in screenshot builds, which never touch the network.
     @ObservationIgnored var service: AccountService?
     @ObservationIgnored private var cache: [UUID: Conversation] = [:]
@@ -537,6 +539,32 @@ final class ConversationStore {
                 accountBytes: account.bytes
             )
         }.value
+    }
+
+    /// Reads the chats of another account, when you switch to it. Everything held for the previous
+    /// account is dropped first, so nothing of one account shows up under another.
+    func use(files: ConversationFiles) {
+        generation += 1
+        syncTask?.cancel()
+        syncTask = nil
+        accountSearchTask?.cancel()
+        accountSearchTask = nil
+        accountSearchQuery = ""
+        searchHits = []
+        isSearchingAccount = false
+        self.files.flush()
+        self.files = files
+        cache.removeAll()
+        searchCorpus.removeAll()
+        corpusLoaded = false
+        summaries = files.loadIndex() ?? []
+        projects = files.loadProjects()
+        canLoadMore = false
+        nextOffset = 0
+        syncState = .idle
+        lastSync = nil
+        syncError = nil
+        sortSummaries()
     }
 
     /// Forgets the account's chats on sign-out. Chats started in OCTO stay on the device.

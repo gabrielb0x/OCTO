@@ -528,6 +528,7 @@ struct StorageSettingsView: View {
                 } label: {
                     DestructiveLabel(title: "Remove downloaded chats", systemImage: "arrow.down.circle.dotted")
                 }
+                .destructiveRow()
             } footer: {
                 Text("Frees the space of chats downloaded from your account. They stay in your history and download again when you open them. Chats continued in OCTO are kept.")
             }
