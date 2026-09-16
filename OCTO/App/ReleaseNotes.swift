@@ -20,7 +20,7 @@ struct ReleaseNotes: Identifiable, Equatable {
 
     /// Notes of the version being shipped. Keep in sync with CHANGELOG.md.
     static var current: ReleaseNotes {
-        ReleaseNotes(version: "1.5.0", changes: [
+        ReleaseNotes(version: "1.5.1", changes: [
             Change(
                 systemImage: "eye.slash",
                 title: String(localized: "Your email stays yours"),

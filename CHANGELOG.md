@@ -2,6 +2,17 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [1.5.1] – 2026-09-16
+
+### Modifié
+
+- Le bouton **« Mettre à niveau » passe à gauche**, juste à côté du bouton qui ouvre les chats, comme dans l'app ChatGPT, au lieu du centre de la barre du haut.
+- **Envoyer un message avec le bouton range le clavier**, et la conversation revient en bas sur la question qui vient d'être posée. La touche Retour, elle, garde le clavier pour enchaîner.
+
+### Corrigé
+
+- Après l'envoi d'un message, la conversation pouvait rester décalée : elle se replace une fois le clavier parti.
+
 ## [1.5.0] – 2026-09-16
 
 ### Ajouté

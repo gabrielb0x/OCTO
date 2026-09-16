@@ -113,27 +113,23 @@ struct AccountAvatar: View {
     }
 }
 
-/// "Upgrade" in the top bar, the way the ChatGPT app offers it to accounts without a subscription.
-/// It opens the Subscription page, and Settings → Appearance can take it away.
+/// "Upgrade" next to the chats button, the way the ChatGPT app offers it to accounts without a
+/// subscription. It opens the Subscription page, and Settings → Appearance can take it away.
+/// The glass around it is the toolbar's own, like every other button up there.
 struct UpgradePill: View {
     let action: () -> Void
     @Environment(AppModel.self) private var app
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 6) {
+            HStack(spacing: 5) {
                 Image(systemName: "sparkle")
                     .font(.system(size: 13, weight: .semibold))
                 Text("Upgrade")
                     .font(.subheadline.weight(.semibold))
             }
             .foregroundStyle(app.settings.accentStyle.link)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .contentShape(.capsule)
         }
-        .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: .capsule)
         .accessibilityHint(Text("Shows the plan of your ChatGPT account"))
     }
 }

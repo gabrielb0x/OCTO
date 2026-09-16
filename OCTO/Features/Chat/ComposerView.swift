@@ -260,7 +260,7 @@ struct ComposerView: View {
         if session.isStreaming {
             session.stop()
         } else if session.canSend {
-            send()
+            send(dismissingKeyboard: true)
         } else {
             dictation.stop()
             isFocused = false
@@ -268,9 +268,14 @@ struct ComposerView: View {
         }
     }
 
-    private func send() {
+    /// Tapping the send button also puts the keyboard away, so the whole reply is in sight.
+    /// The Return key keeps it up: you're likely writing another message right after.
+    private func send(dismissingKeyboard: Bool = false) {
         guard session.canSend else { return }
         dictation.stop()
+        if dismissingKeyboard {
+            isFocused = false
+        }
         session.send()
     }
 

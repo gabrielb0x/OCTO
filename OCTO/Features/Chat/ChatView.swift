@@ -141,6 +141,12 @@ struct ChatView: View {
                 withAnimation(.smooth(duration: 0.4)) {
                     scrollPosition.scrollTo(id: messageID, anchor: .top)
                 }
+                // Sending puts the keyboard away, which gives the chat back the height it took.
+                // Once it's gone, the question is placed again so the chat really ends at the bottom.
+                try? await Task.sleep(for: .milliseconds(350))
+                withAnimation(.smooth(duration: 0.2)) {
+                    scrollPosition.scrollTo(id: messageID, anchor: .top)
+                }
             }
         }
     }
@@ -158,6 +164,11 @@ struct ChatView: View {
 
     // MARK: Toolbar
 
+    /// Free accounts get the upgrade offer in the top bar in place of the model picker.
+    private var showsUpgrade: Bool {
+        !app.allowsModelChoice && app.showsUpgradeOffer
+    }
+
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
@@ -167,13 +178,22 @@ struct ChatView: View {
             .accessibilityLabel(Text("Open sidebar"))
         }
 
-        ToolbarItem(placement: .principal) {
-            // Without a subscription ChatGPT offers no choice of model: it offers to upgrade instead.
-            if app.allowsModelChoice {
-                ModelMenu(session: session)
-            } else if app.showsUpgradeOffer {
+        // The offer to upgrade sits next to the button that opens the chats, as in the ChatGPT app.
+        // The spacer keeps it out of the glass of that button.
+        if showsUpgrade {
+            ToolbarSpacer(.fixed, placement: .topBarLeading)
+            ToolbarItem(placement: .topBarLeading) {
                 UpgradePill(action: onUpgrade)
-            } else {
+            }
+        }
+
+        if app.allowsModelChoice {
+            ToolbarItem(placement: .principal) {
+                ModelMenu(session: session)
+            }
+        } else if !showsUpgrade {
+            // Without a subscription ChatGPT offers no choice of model, so there's no picker.
+            ToolbarItem(placement: .principal) {
                 Text(verbatim: "ChatGPT")
                     .font(.headline)
                     .foregroundStyle(Theme.primaryText)
