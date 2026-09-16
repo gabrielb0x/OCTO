@@ -24,7 +24,19 @@ jobs:
 
       - name: Run OCTOCore tests
         working-directory: Packages/OCTOCore
-        run: swift test
+        run: |
+          set -o pipefail
+          swift test 2>&1 | tee swift-test.log
+
+      # The raw log of a run needs admin rights to download, so what failed is repeated as
+      # annotations, which the checks API hands to anyone who can read the repository.
+      - name: Report failing tests
+        if: failure()
+        working-directory: Packages/OCTOCore
+        run: |
+          grep -E "✘|error:|Expectation failed|recorded an issue|Fatal error" swift-test.log \
+            | sed -E 's#^.*/(Packages|Sources|Tests)/#\1/#' | sort -u | head -20 \
+            | while IFS= read -r line; do echo "::error::${line}"; done || true
 
   ios:
     name: Build iOS app
