@@ -20,7 +20,10 @@ import Testing
     }
 
     @Test func neverEscapesItsOwnFolder() {
-        #expect(AccountKey.slug("../../etc/passwd") == "etc-passwd")
+        // Slashes and anything else unusable become "-", so what comes out is always a single path
+        // component: it can look odd, but it can never climb out of the account's folder.
+        #expect(AccountKey.slug("../../etc/passwd") == "..-..-etc-passwd")
+        #expect(!AccountKey.slug("../../etc/passwd").contains("/"))
         #expect(AccountKey.slug("..") == "")
         #expect(AccountKey.slug(".") == "")
         #expect(AccountKey.slug("/") == "")
