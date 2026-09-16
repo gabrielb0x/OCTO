@@ -204,6 +204,21 @@ struct UpgradeView: View {
         .padding(.horizontal, 22)
         .padding(.top, 12)
         .padding(.bottom, 4)
+        // The plans scroll under the button: they fade out into the bar instead of showing
+        // through the words below it.
+        .background {
+            VStack(spacing: 0) {
+                LinearGradient(
+                    colors: [Theme.background.opacity(0), Theme.background],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 26)
+                Theme.background
+            }
+            .padding(.top, -26)
+            .ignoresSafeArea(edges: .bottom)
+        }
     }
 
     // MARK: Prices
