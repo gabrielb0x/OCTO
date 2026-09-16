@@ -7334,6 +7334,16 @@
           }
         }
       }
+    },
+    "Signed-in devices": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appareils connectés"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

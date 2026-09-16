@@ -48,7 +48,8 @@ struct DevicesView: View {
                 }
             }
         } header: {
-            Text("Signed in")
+            // Not "Signed in": that string is already the account's last sign-in date elsewhere.
+            Text("Signed-in devices")
         } footer: {
             Text("Every device signed into your ChatGPT account, wherever it last connected from. If one isn't yours, change your password in ChatGPT: it signs the others out.")
         }

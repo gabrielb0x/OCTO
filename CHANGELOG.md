@@ -2,6 +2,12 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [1.6.1] – 2026-09-16
+
+### Corrigé
+
+- Dans **Appareils**, le titre de la liste affichait « Connexion le » : en anglais, il portait le même nom que la date de dernière connexion de Sécurité et connexion, et héritait donc de sa traduction. Il dit maintenant « Appareils connectés ».
+
 ## [1.6.0] – 2026-09-16
 
 ### Ajouté
