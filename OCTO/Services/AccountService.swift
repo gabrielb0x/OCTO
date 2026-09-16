@@ -82,6 +82,12 @@ final class AccountService: Sendable {
         return try await fetch(ChatGPTAccountAPI.accountCheckURL) { AccountSubscription.parse($0, accountID: accountID) }
     }
 
+    /// What ChatGPT charges where this device is, for the plans shown by Upgrade.
+    func checkoutPricing() async throws -> CheckoutPricing {
+        let url = ChatGPTAccountAPI.checkoutPricingURL(countryCode: Locale.current.region?.identifier ?? "")
+        return try await fetch(url, parse: CheckoutPricing.parse)
+    }
+
     func ageStatus() async throws -> AgeStatus {
         try await fetch(ChatGPTAccountAPI.ageStatusURL, parse: AgeStatus.parse)
     }
@@ -111,6 +117,15 @@ final class AccountService: Sendable {
 
     func memories() async throws -> MemoriesSnapshot {
         try await fetch(ChatGPTAccountAPI.memoriesURL, parse: MemoriesSnapshot.parse)
+    }
+
+    /// Forgets one saved memory of the account, like ChatGPT's own Memory screen.
+    func deleteMemory(id: String) async throws {
+        do {
+            _ = try await send(ChatGPTAccountAPI.memoryURL(id: id), method: "DELETE")
+        } catch AccountAPIError.notFound {
+            // Already gone from the account, which ChatGPT's own screen also counts as deleted.
+        }
     }
 
     /// Whether the account's policy lets its data be used for training at all.

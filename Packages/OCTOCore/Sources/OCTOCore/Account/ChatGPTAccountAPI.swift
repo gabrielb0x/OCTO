@@ -21,7 +21,17 @@ public enum ChatGPTAccountAPI {
         url("settings/account_user_setting", query: [("feature", feature.rawValue), ("value", value ? "true" : "false")])
     }
     public static var memoriesURL: URL { url("memories", query: [("include_memory_entries", "true")]) }
+
+    /// `DELETE` forgets one saved memory, as ChatGPT's own Memory screen does.
+    public static func memoryURL(id: String) -> URL {
+        url("memories/\(pathSegment(id))")
+    }
     public static var accountCheckURL: URL { url("accounts/check/v4-2023-04-27") }
+
+    /// What ChatGPT charges for its plans in a country, as its own plan picker reads it.
+    public static func checkoutPricingURL(countryCode: String) -> URL {
+        url("checkout_pricing_config/configs/\(CheckoutPricing.countryCode(for: countryCode))")
+    }
 
     /// Devices signed into the account, as ChatGPT's own "Devices" screen lists them.
     public static var devicesURL: URL { url("accounts/sessions") }

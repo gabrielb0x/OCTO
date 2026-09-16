@@ -141,6 +141,7 @@ struct ArchivedChatsView: View {
     @State private var chats: [RemoteConversationSummary] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
+    @State private var chatToDelete: RemoteConversationSummary?
 
     var body: some View {
         List {
@@ -170,6 +171,11 @@ struct ArchivedChatsView: View {
                             }
                         }
                         .swipeActions {
+                            Button(role: .destructive) {
+                                chatToDelete = chat
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
                             Button {
                                 unarchive(chat)
                             } label: {
@@ -183,15 +189,32 @@ struct ArchivedChatsView: View {
                             } label: {
                                 Label("Unarchive", systemImage: "tray.and.arrow.up")
                             }
+                            Button(role: .destructive) {
+                                chatToDelete = chat
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
                         }
                     }
                 } footer: {
-                    Text("Swipe a chat to put it back in your history.")
+                    Text("Swipe a chat to put it back in your history, or to delete it from your ChatGPT account.")
                 }
             }
         }
         .navigationTitle("Archived chats")
         .navigationBarTitleDisplayMode(.inline)
+        .confirmationDialog(
+            "Delete this archived chat?",
+            isPresented: deleteIsPresented,
+            titleVisibility: .visible,
+            presenting: chatToDelete
+        ) { chat in
+            Button("Delete", role: .destructive) {
+                delete(chat)
+            }
+        } message: { _ in
+            Text("This can't be undone.")
+        }
         .task {
             await load()
         }
@@ -229,5 +252,25 @@ struct ArchivedChatsView: View {
                 await load()
             }
         }
+    }
+
+    /// Deletes an archived chat in the ChatGPT account, and on the device when it was downloaded.
+    private func delete(_ chat: RemoteConversationSummary) {
+        guard let service = app.store.service else { return }
+        chats.removeAll { $0.id == chat.id }
+        Task {
+            do {
+                try await service.delete(conversationID: chat.id)
+                await app.store.syncWithAccount()
+                app.toasts.show(String(localized: "The chat has been deleted"))
+            } catch {
+                errorMessage = ChatSession.describe(error)
+                await load()
+            }
+        }
+    }
+
+    private var deleteIsPresented: Binding<Bool> {
+        Binding(get: { chatToDelete != nil }, set: { if !$0 { chatToDelete = nil } })
     }
 }

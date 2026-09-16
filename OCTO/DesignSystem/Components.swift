@@ -114,7 +114,7 @@ struct AccountAvatar: View {
 }
 
 /// "Upgrade" next to the chats button, the way the ChatGPT app offers it to accounts without a
-/// subscription. It opens the Subscription page, and Settings → Appearance can take it away.
+/// subscription. It shows the plans, and Settings → Appearance can take it away.
 /// The glass around it is the toolbar's own, like every other button up there.
 struct UpgradePill: View {
     let action: () -> Void
@@ -130,7 +130,7 @@ struct UpgradePill: View {
             }
             .foregroundStyle(app.settings.accentStyle.link)
         }
-        .accessibilityHint(Text("Shows the plan of your ChatGPT account"))
+        .accessibilityHint(Text("Shows the plans of ChatGPT and their prices"))
     }
 }
 

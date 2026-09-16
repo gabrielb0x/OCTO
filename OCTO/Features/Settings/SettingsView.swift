@@ -210,18 +210,6 @@ struct SettingsView: View {
                         .font(.subheadline)
                         .foregroundStyle(Theme.secondaryText)
                 }
-                if app.showsUpgradeOffer {
-                    Button {
-                        path.append(.subscription)
-                    } label: {
-                        Label("Upgrade", systemImage: "sparkle")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(app.settings.accentStyle.link)
-                            .padding(.horizontal, 6)
-                    }
-                    .buttonStyle(.glass)
-                    .padding(.top, 4)
-                }
             }
             .frame(maxWidth: .infinity)
             .listRowBackground(Color.clear)
@@ -340,6 +328,7 @@ struct SettingsView: View {
 struct SubscriptionView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.openURL) private var openURL
+    @State private var showsPlans = false
 
     var body: some View {
         List {
@@ -352,6 +341,16 @@ struct SubscriptionView: View {
                         .foregroundStyle(Theme.secondaryText)
                 }
                 .padding(.vertical, 6)
+
+                // An account without a subscription is offered the plans here, as ChatGPT does.
+                if ChatGPTPlan.isPaid(app.planType) == false {
+                    Button {
+                        showsPlans = true
+                    } label: {
+                        Label("See the plans", systemImage: "sparkles")
+                    }
+                    .foregroundStyle(app.settings.accentStyle.link)
+                }
 
                 if let subscription = app.account.subscription {
                     if let workspace = subscription.workspaceName {
@@ -438,6 +437,9 @@ struct SubscriptionView: View {
         }
         .navigationTitle("Subscription")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showsPlans) {
+            UpgradeView()
+        }
         .detachedRefreshable {
             await app.refreshUsage()
             await app.account.refresh()

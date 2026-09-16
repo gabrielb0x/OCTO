@@ -390,6 +390,7 @@ struct APIConsoleView: View {
         "accounts/security_settings/info",
         "accounts/mfa_info",
         "files/library/storage/usage",
+        "checkout_pricing_config/configs/\(CheckoutPricing.countryCode(for: Locale.current.region?.identifier))",
         "codex/models?client_version=\(CodexBackend.clientVersion)",
         "wham/usage",
     ]

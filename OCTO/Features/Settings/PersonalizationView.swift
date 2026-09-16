@@ -206,6 +206,7 @@ struct PersonalizationView: View {
 /// Memory settings of the ChatGPT account and the memories it saved.
 struct MemoryView: View {
     @Environment(AppModel.self) private var app
+    @State private var memoryToDelete: SavedMemory?
 
     var body: some View {
         List {
@@ -258,12 +259,26 @@ struct MemoryView: View {
                                 }
                             }
                             .padding(.vertical, 2)
+                            .swipeActions {
+                                Button(role: .destructive) {
+                                    memoryToDelete = memory
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    memoryToDelete = memory
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
                         }
                     }
                 } header: {
                     Text("Saved memories")
                 } footer: {
-                    Text("Memories are managed in ChatGPT.")
+                    Text("Swipe a memory to delete it from your ChatGPT account. New memories are saved by ChatGPT while you chat in its apps.")
                 }
             } else if case .failed(let message) = app.account.state {
                 Label(message, systemImage: "exclamationmark.triangle.fill")
@@ -279,6 +294,18 @@ struct MemoryView: View {
         }
         .navigationTitle("Memory")
         .navigationBarTitleDisplayMode(.inline)
+        .confirmationDialog(
+            "Delete this memory?",
+            isPresented: deleteIsPresented,
+            titleVisibility: .visible,
+            presenting: memoryToDelete
+        ) { memory in
+            Button("Delete", role: .destructive) {
+                delete(memory)
+            }
+        } message: { memory in
+            Text(verbatim: memory.content)
+        }
         .detachedRefreshable {
             await app.account.refresh()
         }
@@ -295,5 +322,21 @@ struct MemoryView: View {
         case false?: return Text("Off")
         case nil: return Text(verbatim: "–")
         }
+    }
+
+    /// Deletes the memory in the ChatGPT account; the row is already gone from the list.
+    private func delete(_ memory: SavedMemory) {
+        Task {
+            do {
+                try await app.account.deleteMemory(id: memory.id)
+                app.toasts.show(String(localized: "The memory has been deleted"))
+            } catch {
+                app.toasts.show(ChatSession.describe(error), style: .failure)
+            }
+        }
+    }
+
+    private var deleteIsPresented: Binding<Bool> {
+        Binding(get: { memoryToDelete != nil }, set: { if !$0 { memoryToDelete = nil } })
     }
 }

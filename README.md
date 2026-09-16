@@ -30,6 +30,8 @@
 | <img src="docs/screenshots/developer.png" width="250" alt="Mode développeur"> | <img src="docs/screenshots/network.png" width="250" alt="Inspecteur réseau"> | <img src="docs/screenshots/messageDetails.png" width="250" alt="Détails techniques sous les messages"> |
 | **Appareils connectés** | **Stockage** | **Mémoire** |
 | <img src="docs/screenshots/devices.png" width="250" alt="Appareils connectés au compte ChatGPT"> | <img src="docs/screenshots/storage.png" width="250" alt="Stockage sur l'appareil et dans le compte"> | <img src="docs/screenshots/memory.png" width="250" alt="Mémoire du compte ChatGPT"> |
+| **Forfaits ChatGPT** | | |
+| <img src="docs/screenshots/upgrade.png" width="250" alt="Les forfaits ChatGPT avec leurs prix"> | | |
 
 Ces captures sont prises automatiquement sur un simulateur iPhone 17 Pro par le workflow [`screenshots.yml`](.github/workflows/screenshots.yml), avec un compte et des chats de démonstration.
 

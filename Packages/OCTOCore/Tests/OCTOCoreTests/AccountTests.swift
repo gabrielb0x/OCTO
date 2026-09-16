@@ -10,6 +10,8 @@ import Testing
         #expect(ChatGPTAccountAPI.conversationsURL(offset: 28, limit: 28).absoluteString == "https://chatgpt.com/backend-api/conversations?offset=28&limit=28&order=updated&is_archived=false")
         #expect(ChatGPTAccountAPI.conversationURL(id: "6aa78bc8-756c-83eb-b946-e17ad6461b0a").absoluteString == "https://chatgpt.com/backend-api/conversation/6aa78bc8-756c-83eb-b946-e17ad6461b0a")
         #expect(ChatGPTAccountAPI.conversationURL(id: "../me").absoluteString == "https://chatgpt.com/backend-api/conversation/..%2Fme")
+        #expect(ChatGPTAccountAPI.memoryURL(id: "mem-1").absoluteString == "https://chatgpt.com/backend-api/memories/mem-1")
+        #expect(ChatGPTAccountAPI.memoryURL(id: "../me").absoluteString == "https://chatgpt.com/backend-api/memories/..%2Fme")
         #expect(ChatGPTAccountAPI.projectConversationsURL(projectID: "g-p-1", cursor: nil).absoluteString == "https://chatgpt.com/backend-api/gizmos/g-p-1/conversations?cursor=0&limit=50&owned_only=true")
 
         let headers = ChatGPTAccountAPI.headers(accessToken: "token", accountID: "account", userAgent: "agent", language: "fr-FR")
@@ -120,6 +122,39 @@ import Testing
         #expect(JSONValue.int(body["timezone_offset_min"]) == -120)
         #expect(body["conversation_id"] is NSNull)
         #expect(ChatGPTAccountAPI.conversationInitURL.absoluteString == "https://chatgpt.com/backend-api/conversation/init")
+    }
+
+    @Test func parsesCheckoutPricing() throws {
+        let json = #"""
+        {"country_code":"FR","currency_config":{
+          "free":{"month":{"tax":"inclusive","amount":0.0}},
+          "go":{"month":{"amount":8.0,"tax":"inclusive","psp_override":{"amount":6.67,"tax":"exclusive"}}},
+          "plus":{"month":{"amount":23.0,"tax":"inclusive"},"year":{"amount":19.17,"tax":"inclusive"}},
+          "pro":{"month":{"amount":229.0,"tax":"inclusive"}},
+          "business":{"month":{"amount":26.0,"tax":"exclusive"}},
+          "symbol_code":"EUR","symbol":"€","tax_percent":20.0,"minor_unit_exponent":2}}
+        """#
+        let pricing = try #require(CheckoutPricing.parse(Data(json.utf8)))
+        #expect(pricing.countryCode == "FR")
+        #expect(pricing.currencyCode == "EUR")
+        #expect(pricing.taxPercent == 20)
+        #expect(pricing.plan("plus")?.monthly?.amount == 23)
+        #expect(pricing.plan("plus")?.monthly?.includesTax == true)
+        #expect(pricing.plan("plus")?.yearly?.amount == 19.17)
+        #expect(pricing.plan("go")?.yearly == nil)
+        #expect(pricing.plan("business")?.monthly?.includesTax == false)
+        // The free plan costs nothing, so it isn't a plan to buy; the currency keys aren't plans either.
+        #expect(pricing.plan("free") == nil)
+        #expect(pricing.plan("symbol_code") == nil)
+        #expect(pricing.personalPlans.map(\.key) == ["go", "plus", "pro"])
+        // Cheapest first, whatever order the account listed them in.
+        #expect(pricing.plans.map(\.key) == ["go", "plus", "business", "pro"])
+        #expect(CheckoutPricing.parse(Data(#"{"country_code":"FR"}"#.utf8)) == nil)
+
+        #expect(ChatGPTAccountAPI.checkoutPricingURL(countryCode: "fr").absoluteString == "https://chatgpt.com/backend-api/checkout_pricing_config/configs/FR")
+        // An unknown or unusable region asks for the prices ChatGPT shows in the United States.
+        #expect(ChatGPTAccountAPI.checkoutPricingURL(countryCode: "").absoluteString.hasSuffix("/configs/US"))
+        #expect(ChatGPTAccountAPI.checkoutPricingURL(countryCode: "../me").absoluteString.hasSuffix("/configs/US"))
     }
 
     @Test func showsSubscriptionDatesOnlyWhileActive() throws {

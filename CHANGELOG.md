@@ -2,6 +2,21 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [1.8.0] – 2026-09-16
+
+### Ajouté
+
+- **Les forfaits ChatGPT, comme dans son app.** « Mettre à niveau » n'ouvre plus la page Abonnement : il affiche l'écran des forfaits — le sélecteur **Go / Plus**, le tableau qui compare le forfait au compte gratuit (modèle de base, modèles avancés, limites étendues pour les messages et les chargements, création d'images avancée avec Thinking, mémoire étendue, Codex et Deep Research, accès en exclusivité aux nouveautés) et le bouton de mise à niveau en bas.
+- **Les prix affichés sont les vrais.** OCTO lit la tarification de ChatGPT pour ton pays (`checkout_pricing_config/configs/{pays}`, l'adresse que le site interroge avant d'afficher ses forfaits) : le prix mensuel apparaît dans ta monnaie et dans ta langue, avec le prix par mois en paiement annuel quand le forfait le propose. **Go n'apparaît que là où ChatGPT le vend.** Les prix sont gardés avec le compte, donc l'écran s'ouvre déjà rempli la fois suivante.
+- **OCTO ne vend rien et n'encaisse rien** : le bouton ouvre ChatGPT, qui s'occupe du paiement, et l'écran le dit. On y arrive aussi depuis **Réglages → Abonnement → « Voir les forfaits »**.
+- **Supprimer un souvenir.** Dans **Réglages → Mémoire**, balaie un souvenir (ou garde le doigt dessus) pour le supprimer de ton compte ChatGPT. Une confirmation montre le souvenir concerné, la ligne disparaît tout de suite, et OCTO relit ce qui reste pour que la jauge de mémoire suive. C'est l'appel que fait l'écran Mémoire de ChatGPT, pas une suppression locale : le souvenir quitte vraiment ton compte.
+- **Supprimer un chat archivé.** Dans **Réglages → Gestion des données → Chats archivés**, un chat se désarchive comme avant, et se supprime aussi : balaie (ou garde le doigt dessus), confirme, et il quitte ton compte ChatGPT comme l'appareil.
+- La nouvelle adresse `checkout_pricing_config/configs/{pays}` rejoint les **raccourcis de la console** du mode développeur.
+
+### Modifié
+
+- **Le bouton « Mettre à niveau » sous ton compte dans les réglages est parti.** Cette pastille de verre sous ton nom alourdissait la première page des réglages ; l'offre reste là où ChatGPT la met, en haut du chat, et dans la page Abonnement.
+
 ## [1.7.0] – 2026-09-16
 
 ### Ajouté

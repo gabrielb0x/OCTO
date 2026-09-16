@@ -20,26 +20,26 @@ struct ReleaseNotes: Identifiable, Equatable {
 
     /// Notes of the version being shipped. Keep in sync with CHANGELOG.md.
     static var current: ReleaseNotes {
-        ReleaseNotes(version: "1.7.0", changes: [
+        ReleaseNotes(version: "1.8.0", changes: [
             Change(
-                systemImage: "hand.draw",
-                title: String(localized: "Slide to your chats"),
-                detail: String(localized: "Sliding right anywhere on a chat brings out your chats, like in the ChatGPT app. No need to aim for the edge or the button.")
+                systemImage: "sparkles",
+                title: String(localized: "The plans, like in ChatGPT"),
+                detail: String(localized: "“Upgrade” now lays out ChatGPT's plans: the Go and Plus picker, and what each one adds to a free account.")
             ),
             Change(
-                systemImage: "photo",
-                title: String(localized: "Ask for an image"),
-                detail: String(localized: "“Create an image” asks the Codex backend of your plan to draw one, and it lands in the chat. When your plan doesn't offer it, ChatGPT answers in words and says so.")
+                systemImage: "tag",
+                title: String(localized: "The real prices"),
+                detail: String(localized: "The prices come from ChatGPT for the country you're in, in your currency. OCTO sells nothing: the button opens ChatGPT, which takes the payment.")
             ),
             Change(
-                systemImage: "list.bullet.indent",
-                title: String(localized: "Settings without the maze"),
-                detail: String(localized: "Rows that only led to another page are gone: each setting is in one place, and a red row now has a red icon too.")
+                systemImage: "trash",
+                title: String(localized: "Delete what you'd rather not keep"),
+                detail: String(localized: "Swipe to delete a saved memory in Memory, or an archived chat in Data controls: both leave your ChatGPT account.")
             ),
             Change(
-                systemImage: "mic.slash",
-                title: String(localized: "Dictation says when it's off"),
-                detail: String(localized: "OCTO asks iOS whether dictation is turned off on this iPhone, and shows where to turn it back on instead of writing nothing down.")
+                systemImage: "person.crop.circle",
+                title: String(localized: "Settings without the pill"),
+                detail: String(localized: "The glass “Upgrade” button under your account is gone. The offer stays where ChatGPT puts it: above a chat, and in the Subscription page.")
             ),
         ])
     }

@@ -12,6 +12,7 @@ enum DemoScene: String, CaseIterable {
     case settings
     case settingsApp
     case subscription
+    case upgrade
     case about
     case developer
     case network
@@ -65,8 +66,9 @@ enum DemoContent {
             app.auth.useDemoAccount(nil)
             return
         }
-        // The subscription scene shows the free plan, where the feature limits are the interesting part.
-        let planType = scene == .freePlan || scene == .subscription ? "free" : "plus"
+        // The subscription scene shows the free plan, where the feature limits are the interesting
+        // part, and the plans are only offered to an account without a subscription.
+        let planType: String = [.freePlan, .subscription, .upgrade].contains(scene) ? "free" : "plus"
         app.auth.useDemoAccount(Account(email: "gabriel@example.com", planType: planType, userID: "user-demo"))
         app.account.useDemo(AccountSnapshot(
             profile: AccountProfile(userID: "user-demo", name: "Gabriel", email: "gabriel@example.com", phoneNumber: "+33 6 00 00 00 00", mfaEnabled: true),
@@ -93,6 +95,16 @@ enum DemoContent {
                 willRenew: planType != "free",
                 billingPeriod: planType == "free" ? nil : "monthly",
                 purchasePlatform: planType == "free" ? nil : "chatgpt_web"
+            ),
+            pricing: CheckoutPricing(
+                countryCode: "FR",
+                currencyCode: "EUR",
+                taxPercent: 20,
+                plans: [
+                    CheckoutPricing.Plan(key: "go", monthly: CheckoutPricing.Price(amount: 8)),
+                    CheckoutPricing.Plan(key: "plus", monthly: CheckoutPricing.Price(amount: 23), yearly: CheckoutPricing.Price(amount: 19.17)),
+                    CheckoutPricing.Plan(key: "pro", monthly: CheckoutPricing.Price(amount: 229)),
+                ]
             ),
             featureLimits: FeatureLimits(
                 defaultModelSlug: "auto",
@@ -193,11 +205,14 @@ enum DemoContent {
     }
 
     /// What a scene does once the main screen is up.
-    static func run(_ scene: DemoScene?, app: AppModel, openSidebar: () -> Void, openSettings: () -> Void) async {
+    static func run(_ scene: DemoScene?, app: AppModel, openSidebar: () -> Void, openSettings: () -> Void, openUpgrade: () -> Void) async {
         switch scene {
         case .sidebar?:
             try? await Task.sleep(for: .milliseconds(500))
             openSidebar()
+        case .upgrade?:
+            try? await Task.sleep(for: .milliseconds(500))
+            openUpgrade()
         case .settings?, .settingsApp?, .subscription?, .about?, .developer?, .network?, .appearance?, .privacy?, .dataControls?, .ageVerification?, .devices?, .storage?, .memory?:
             try? await Task.sleep(for: .milliseconds(500))
             openSettings()

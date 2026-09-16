@@ -13,8 +13,8 @@ struct MainView: View {
     @State private var dragRejected = false
     @State private var dragTranslation: CGFloat = 0
     @State private var showSettings = false
-    /// The page the settings sheet opens on: "Upgrade" goes straight to Subscription.
-    @State private var settingsPath: [SettingsRoute] = []
+    /// The plans of ChatGPT, offered like in its app by "Upgrade" in the top bar.
+    @State private var showUpgrade = false
 
     init(app: AppModel) {
         var initialSession: ChatSession?
@@ -53,7 +53,7 @@ struct MainView: View {
                     onNewChat: { startNewChat(temporary: app.settings.temporaryChatsByDefault) },
                     onToggleTemporary: { startNewChat(temporary: !session.isTemporary) },
                     onDelete: { delete(session.id) },
-                    onUpgrade: { openSettings(at: [.subscription]) }
+                    onUpgrade: { showUpgrade = true }
                 )
                 .frame(width: proxy.size.width)
                 // Sliding right anywhere on the chat brings the chats out, as in the ChatGPT app.
@@ -83,8 +83,11 @@ struct MainView: View {
             #if OCTO_DEMO
             SettingsView(initialPath: DemoContent.settingsPath(for: app.demoScene), initialSection: DemoContent.settingsSection(for: app.demoScene))
             #else
-            SettingsView(initialPath: settingsPath)
+            SettingsView()
             #endif
+        }
+        .sheet(isPresented: $showUpgrade) {
+            UpgradeView()
         }
         .alert("Couldn't update your ChatGPT account", isPresented: syncErrorIsPresented) {
             Button("OK", role: .cancel) {}
@@ -94,7 +97,13 @@ struct MainView: View {
         .task {
             await app.refreshAccount()
             #if OCTO_DEMO
-            await DemoContent.run(app.demoScene, app: app, openSidebar: { setSidebar(open: true) }, openSettings: { showSettings = true })
+            await DemoContent.run(
+                app.demoScene,
+                app: app,
+                openSidebar: { setSidebar(open: true) },
+                openSettings: { showSettings = true },
+                openUpgrade: { showUpgrade = true }
+            )
             #endif
         }
         .onChange(of: scenePhase) { _, phase in
@@ -121,8 +130,7 @@ struct MainView: View {
 
     // MARK: Navigation
 
-    private func openSettings(at path: [SettingsRoute] = []) {
-        settingsPath = path
+    private func openSettings() {
         showSettings = true
     }
 

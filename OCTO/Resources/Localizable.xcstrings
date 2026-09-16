@@ -753,16 +753,6 @@
         }
       }
     },
-    "Ask for an image": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Demande une image"
-          }
-        }
-      }
-    },
     "Attachments": {
       "localizations": {
         "fr": {
@@ -1899,16 +1889,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "La dictée sur l'appareil n'est pas disponible pour l'instant"
-          }
-        }
-      }
-    },
-    "Dictation says when it's off": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La dictée dit quand elle est coupée"
           }
         }
       }
@@ -3163,16 +3143,6 @@
         }
       }
     },
-    "Memories are managed in ChatGPT.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les souvenirs se gèrent dans ChatGPT."
-          }
-        }
-      }
-    },
     "Memory": {
       "localizations": {
         "fr": {
@@ -3779,16 +3749,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "OCTO demande %@ ou ton code quand il s'ouvre."
-          }
-        }
-      }
-    },
-    "OCTO asks iOS whether dictation is turned off on this iPhone, and shows where to turn it back on instead of writing nothing down.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OCTO demande à iOS si la dictée est désactivée sur cet iPhone, et montre où la réactiver au lieu de n'écrire rien du tout."
           }
         }
       }
@@ -4993,16 +4953,6 @@
         }
       }
     },
-    "Rows that only led to another page are gone: each setting is in one place, and a red row now has a red icon too.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les lignes qui ne faisaient que renvoyer ailleurs sont parties : chaque réglage est à un seul endroit, et une ligne rouge a maintenant une icône rouge elle aussi."
-          }
-        }
-      }
-    },
     "Save": {
       "localizations": {
         "fr": {
@@ -5253,16 +5203,6 @@
         }
       }
     },
-    "Settings without the maze": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Des réglages sans labyrinthe"
-          }
-        }
-      }
-    },
     "Share": {
       "localizations": {
         "fr": {
@@ -5359,16 +5299,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "L'affiche"
-          }
-        }
-      }
-    },
-    "Shows the plan of your ChatGPT account": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Affiche le forfait de ton compte ChatGPT"
           }
         }
       }
@@ -5599,26 +5529,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Depuis l'ouverture d'OCTO"
-          }
-        }
-      }
-    },
-    "Slide to your chats": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Glisse vers tes chats"
-          }
-        }
-      }
-    },
-    "Sliding right anywhere on a chat brings out your chats, like in the ChatGPT app. No need to aim for the edge or the button.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Glisser vers la droite n'importe où dans une conversation fait venir tes chats, comme dans l'app ChatGPT. Plus besoin de viser le bord ni le bouton."
           }
         }
       }
@@ -5869,16 +5779,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Résumer un texte"
-          }
-        }
-      }
-    },
-    "Swipe a chat to put it back in your history.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Balaie un chat pour le remettre dans ton historique."
           }
         }
       }
@@ -7515,22 +7415,352 @@
         }
       }
     },
-    "“Create an image” asks the Codex backend of your plan to draw one, and it lands in the chat. When your plan doesn't offer it, ChatGPT answers in words and says so.": {
+    "Shows the plans of ChatGPT and their prices": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "« Créer une image » demande au backend Codex de ton forfait d'en dessiner une, et elle arrive dans la conversation. Si ton forfait ne le propose pas, ChatGPT répond avec des mots et te le dit."
+            "value": "Affiche les forfaits de ChatGPT et leurs prix"
           }
         }
       }
     },
-    "“Upgrade” shows in the top bar of accounts without a subscription, like in ChatGPT, and opens your plan. A new chat is empty in the ChatGPT app: the greeting is OCTO's own.": {
+    "“Upgrade” shows in the top bar of accounts without a subscription, like in ChatGPT, and lays out its plans. A new chat is empty in the ChatGPT app: the greeting is OCTO's own.": {
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "« Mettre à niveau » s'affiche en haut pour les comptes sans abonnement, comme dans ChatGPT, et ouvre ton forfait. Un nouveau chat est vide dans l'app ChatGPT : la salutation est propre à OCTO."
+            "value": "« Mettre à niveau » s'affiche en haut pour les comptes sans abonnement, comme dans ChatGPT, et présente ses forfaits. Un nouveau chat est vide dans l'app ChatGPT : la salutation est propre à OCTO."
+          }
+        }
+      }
+    },
+    "Get ChatGPT %@": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obtenir ChatGPT %@"
+          }
+        }
+      }
+    },
+    "Access advanced intelligent features": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accédez à des fonctionnalités intelligentes avancées"
+          }
+        }
+      }
+    },
+    "Features": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonctionnalités"
+          }
+        }
+      }
+    },
+    "Base model": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modèle de base"
+          }
+        }
+      }
+    },
+    "Advanced models": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modèles avancés"
+          }
+        }
+      }
+    },
+    "Extended limits for messages and uploads": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limites étendues pour les messages et les chargements"
+          }
+        }
+      }
+    },
+    "Image creation": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Création d'images"
+          }
+        }
+      }
+    },
+    "Advanced image creation with Thinking": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Création d'images avancée avec Thinking"
+          }
+        }
+      }
+    },
+    "Extended memory": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mémoire étendue"
+          }
+        }
+      }
+    },
+    "Codex and Deep Research": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex et Deep Research"
+          }
+        }
+      }
+    },
+    "Early access to new features": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accès en exclusivité aux nouvelles fonctionnalités"
+          }
+        }
+      }
+    },
+    "Included": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inclus"
+          }
+        }
+      }
+    },
+    "Not included": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non inclus"
+          }
+        }
+      }
+    },
+    "Upgrade for %@": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passer à la version supérieure pour %@"
+          }
+        }
+      }
+    },
+    "Upgrade in ChatGPT": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mettre à niveau dans ChatGPT"
+          }
+        }
+      }
+    },
+    "Or %@ a month, billed yearly.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ou %@ par mois en paiement annuel."
+          }
+        }
+      }
+    },
+    "Monthly auto-renewal. Cancel anytime.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renouvellement automatique mensuel. Annulation possible à tout moment."
+          }
+        }
+      }
+    },
+    "ChatGPT's own prices where you are. OCTO sells nothing: upgrading opens ChatGPT, which takes the payment.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les prix de ChatGPT là où tu es. OCTO ne vend rien : la mise à niveau ouvre ChatGPT, qui s'occupe du paiement."
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
+          }
+        }
+      }
+    },
+    "See the plans": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir les forfaits"
+          }
+        }
+      }
+    },
+    "The plans, like in ChatGPT": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les forfaits, comme dans ChatGPT"
+          }
+        }
+      }
+    },
+    "“Upgrade” now lays out ChatGPT's plans: the Go and Plus picker, and what each one adds to a free account.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "« Mettre à niveau » présente maintenant les forfaits de ChatGPT : le sélecteur Go et Plus, et ce que chacun ajoute à un compte gratuit."
+          }
+        }
+      }
+    },
+    "The real prices": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les vrais prix"
+          }
+        }
+      }
+    },
+    "The prices come from ChatGPT for the country you're in, in your currency. OCTO sells nothing: the button opens ChatGPT, which takes the payment.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les prix viennent de ChatGPT pour ton pays, dans ta monnaie. OCTO ne vend rien : le bouton ouvre ChatGPT, qui s'occupe du paiement."
+          }
+        }
+      }
+    },
+    "Settings without the pill": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les réglages sans la pastille"
+          }
+        }
+      }
+    },
+    "The glass “Upgrade” button under your account is gone. The offer stays where ChatGPT puts it: above a chat, and in the Subscription page.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le bouton en verre « Mettre à niveau » sous ton compte a disparu. L'offre reste là où ChatGPT la met : au-dessus du chat, et dans la page Abonnement."
+          }
+        }
+      }
+    },
+    "Delete this memory?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer ce souvenir ?"
+          }
+        }
+      }
+    },
+    "Swipe a memory to delete it from your ChatGPT account. New memories are saved by ChatGPT while you chat in its apps.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balaie un souvenir pour le supprimer de ton compte ChatGPT. Les nouveaux souvenirs sont enregistrés par ChatGPT quand tu discutes dans ses apps."
+          }
+        }
+      }
+    },
+    "The memory has been deleted": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le souvenir a bien été supprimé"
+          }
+        }
+      }
+    },
+    "Delete this archived chat?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer ce chat archivé ?"
+          }
+        }
+      }
+    },
+    "Swipe a chat to put it back in your history, or to delete it from your ChatGPT account.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balaie un chat pour le remettre dans ton historique, ou pour le supprimer de ton compte ChatGPT."
+          }
+        }
+      }
+    },
+    "Delete what you'd rather not keep": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprime ce que tu ne veux plus garder"
+          }
+        }
+      }
+    },
+    "Swipe to delete a saved memory in Memory, or an archived chat in Data controls: both leave your ChatGPT account.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balaie pour supprimer un souvenir dans Mémoire, ou un chat archivé dans Gestion des données : les deux quittent ton compte ChatGPT."
           }
         }
       }

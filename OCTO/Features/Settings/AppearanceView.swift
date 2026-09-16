@@ -38,7 +38,7 @@ struct AppearanceView: View {
             } header: {
                 Text("Home screen")
             } footer: {
-                Text("“Upgrade” shows in the top bar of accounts without a subscription, like in ChatGPT, and opens your plan. A new chat is empty in the ChatGPT app: the greeting is OCTO's own.")
+                Text("“Upgrade” shows in the top bar of accounts without a subscription, like in ChatGPT, and lays out its plans. A new chat is empty in the ChatGPT app: the greeting is OCTO's own.")
             }
 
             Section {

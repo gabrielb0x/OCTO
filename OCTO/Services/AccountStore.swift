@@ -15,6 +15,7 @@ struct AccountSnapshot: Codable {
     var dataUsagePermitted: Bool?
     var avatarURL: URL?
     var subscription: AccountSubscription?
+    var pricing: CheckoutPricing?
     var featureLimits: FeatureLimits?
     var ageStatus: AgeStatus?
     var devices: AccountDevices?
@@ -83,6 +84,9 @@ final class AccountStore {
     private(set) var avatar: UIImage?
     private(set) var settings: AccountSettings?
     private(set) var subscription: AccountSubscription?
+    /// What ChatGPT charges for its plans where the device is, for the Upgrade screen. Only that
+    /// screen needs them, and they barely move, so they're read there instead of at every refresh.
+    private(set) var pricing: CheckoutPricing?
     private(set) var instructions: CustomInstructions?
     private(set) var personalities: [PersonalityOption] = []
     private(set) var traits: [PersonalityTrait] = []
@@ -108,6 +112,7 @@ final class AccountStore {
     @ObservationIgnored private var avatarURL: URL?
     @ObservationIgnored private var lastDevicesRefresh: Date?
     @ObservationIgnored private var lastFileStorageRefresh: Date?
+    @ObservationIgnored private var lastPricingRefresh: Date?
     /// Bumped on sign-out so late responses don't bring the old account back.
     @ObservationIgnored private var generation = 0
 
@@ -256,6 +261,47 @@ final class AccountStore {
         }
     }
 
+    /// Deletes one saved memory in the ChatGPT account. The row leaves right away and comes back
+    /// if the account refuses; what's left is read back, so the memory gauge follows.
+    func deleteMemory(id: String) async throws {
+        let previous = memories
+        if var snapshot = memories {
+            snapshot.memories.removeAll { $0.id == id }
+            memories = snapshot
+        }
+        guard let service else { return }
+        let generation = self.generation
+        do {
+            try await service.deleteMemory(id: id)
+        } catch {
+            if generation == self.generation {
+                memories = previous
+            }
+            throw error
+        }
+        guard generation == self.generation else { return }
+        if let fresh = try? await service.memories(), generation == self.generation {
+            memories = fresh
+        }
+        saveSnapshot()
+    }
+
+    /// What ChatGPT charges for its plans, for the Upgrade screen. Asked for by that screen only.
+    func refreshPricing(ifOlderThan interval: TimeInterval = 0) async {
+        guard let service else { return }
+        if interval > 0, let lastPricingRefresh, Date().timeIntervalSince(lastPricingRefresh) < interval { return }
+        lastPricingRefresh = Date()
+        let generation = self.generation
+        do {
+            let value = try await service.checkoutPricing()
+            guard generation == self.generation else { return }
+            pricing = value
+            saveSnapshot()
+        } catch {
+            DevLog.log("account", "pricing failed: \(DevLog.describe(error))", level: error.isCancellation ? .debug : .warning)
+        }
+    }
+
     func saveInstructions(_ draft: CustomInstructions) async throws {
         guard let service else {
             instructions = draft
@@ -309,6 +355,7 @@ final class AccountStore {
         avatar = nil
         settings = nil
         subscription = nil
+        pricing = nil
         instructions = nil
         personalities = []
         traits = []
@@ -325,6 +372,7 @@ final class AccountStore {
         lastRefresh = nil
         lastDevicesRefresh = nil
         lastFileStorageRefresh = nil
+        lastPricingRefresh = nil
         state = .idle
         cache.clear()
     }
@@ -365,6 +413,7 @@ final class AccountStore {
         profile = snapshot.profile
         settings = snapshot.settings
         subscription = snapshot.subscription
+        pricing = snapshot.pricing
         instructions = snapshot.instructions
         personalities = snapshot.personalities ?? []
         traits = snapshot.traits ?? []
@@ -389,6 +438,7 @@ final class AccountStore {
             dataUsagePermitted: dataUsagePermitted,
             avatarURL: avatarURL,
             subscription: subscription,
+            pricing: pricing,
             featureLimits: featureLimits,
             ageStatus: ageStatus,
             devices: devices,
