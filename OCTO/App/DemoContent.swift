@@ -69,8 +69,9 @@ enum DemoContent {
             return
         }
         // The subscription scene shows the free plan, where the feature limits are the interesting
-        // part, and the plans are only offered to an account without a subscription.
-        let planType: String = [.freePlan, .subscription, .upgrade].contains(scene) ? "free" : "plus"
+        // part, and the plans are only offered to an account without a subscription. Ads too: the
+        // trade of ads for fewer messages only exists without one, so a Plus account would hide it.
+        let planType: String = [.freePlan, .subscription, .upgrade, .ads].contains(scene) ? "free" : "plus"
         app.auth.useDemoAccount(Account(email: "gabriel@example.com", planType: planType, userID: "user-demo"))
         app.account.useDemo(AccountSnapshot(
             profile: AccountProfile(userID: "user-demo", name: "Gabriel", email: "gabriel@example.com", phoneNumber: "+33 6 00 00 00 00", mfaEnabled: true),
