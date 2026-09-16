@@ -52,11 +52,14 @@ import Testing
         #expect(roster.currentKey == "user-2")
         #expect(roster.accounts.count == 2)
 
-        #expect(roster.select("user-1", at: Date(timeIntervalSince1970: 100)))
+        // `#expect` can't call a mutating member, so the switch happens first.
+        let switched = roster.select("user-1", at: Date(timeIntervalSince1970: 100))
+        #expect(switched)
         #expect(roster.current?.key == "user-1")
         #expect(roster.current?.lastUsedAt == Date(timeIntervalSince1970: 100))
         // Switching to an account that isn't signed in changes nothing.
-        #expect(roster.select("user-9") == false)
+        let unknown = roster.select("user-9")
+        #expect(unknown == false)
         #expect(roster.currentKey == "user-1")
     }
 
@@ -83,13 +86,16 @@ import Testing
         roster.add(account("user-3", addedAt: 30, lastUsedAt: 70))
         roster.select("user-3")
 
-        #expect(roster.remove("user-3") == "user-2")
+        let afterCurrent = roster.remove("user-3")
+        #expect(afterCurrent == "user-2")
         #expect(roster.currentKey == "user-2")
         // Signing another one out leaves the current account alone.
-        #expect(roster.remove("user-1") == "user-2")
+        let afterOther = roster.remove("user-1")
+        #expect(afterOther == "user-2")
         #expect(roster.currentKey == "user-2")
         // The last one out brings the sign-in screen back.
-        #expect(roster.remove("user-2") == nil)
+        let afterLast = roster.remove("user-2")
+        #expect(afterLast == nil)
         #expect(roster.isEmpty)
         #expect(roster.currentKey == nil)
     }

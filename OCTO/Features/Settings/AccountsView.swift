@@ -103,7 +103,9 @@ struct AccountsView: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .disabled(isCurrent || switchingKey != nil || isAddingAccount)
+        // The account in use isn't disabled, or the row that matters most would be the faded one:
+        // tapping it simply does nothing.
+        .disabled(switchingKey != nil || isAddingAccount)
         .swipeActions {
             Button(role: .destructive) {
                 accountToSignOut = account

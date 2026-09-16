@@ -13,7 +13,7 @@ enum AccountStorage {
     static let folderName = "OCTO"
 
     /// `Application Support/OCTO`, holding every account's folder.
-    static func root(folderName: String = folderName) -> URL {
+    static func root(folderName: String = AccountStorage.folderName) -> URL {
         let fileManager = FileManager.default
         let base = (try? fileManager.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true))
             ?? fileManager.temporaryDirectory
@@ -22,7 +22,7 @@ enum AccountStorage {
 
     /// The folder of one account. Without an account — signed out — the root is used, where
     /// nothing is written until someone signs in.
-    static func directory(forAccount key: String?, folderName: String = folderName) -> URL {
+    static func directory(forAccount key: String?, folderName: String = AccountStorage.folderName) -> URL {
         let root = root(folderName: folderName)
         guard let key, !key.isEmpty else { return root }
         return root
@@ -37,7 +37,7 @@ enum AccountStorage {
     /// anything moved. Best effort: a folder that can't be moved is left where it is, and the
     /// account simply starts with an empty history rather than losing it.
     @discardableResult
-    static func migrateLegacyLayout(to key: String, folderName: String = folderName) -> Bool {
+    static func migrateLegacyLayout(to key: String, folderName: String = AccountStorage.folderName) -> Bool {
         let fileManager = FileManager.default
         let root = root(folderName: folderName)
         let destination = directory(forAccount: key, folderName: folderName)
@@ -70,7 +70,7 @@ enum AccountStorage {
 
     /// Forgets what was downloaded about an account — its profile, settings and picture — when it
     /// is signed out. The chats stay: those written in OCTO exist nowhere else.
-    static func removeAccountCache(for key: String, folderName: String = folderName) {
+    static func removeAccountCache(for key: String, folderName: String = AccountStorage.folderName) {
         let cache = directory(forAccount: key, folderName: folderName).appendingPathComponent("Account", isDirectory: true)
         try? FileManager.default.removeItem(at: cache)
     }

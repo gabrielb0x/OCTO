@@ -618,7 +618,10 @@ final class ConversationStore {
         )
     }
 
-    nonisolated func payload(for attachment: MessageAttachment) -> AttachmentPayload? {
+    /// Reads an attachment off the main actor, while a reply is being prepared. The folder is
+    /// handed in, captured on the main actor by the caller, so switching account mid-reply can
+    /// never point this at another account's files.
+    nonisolated func payload(for attachment: MessageAttachment, files: ConversationFiles) -> AttachmentPayload? {
         guard let url = files.attachmentURL(attachment.storedFileName), let data = try? Data(contentsOf: url) else { return nil }
         switch attachment.kind {
         case .image:

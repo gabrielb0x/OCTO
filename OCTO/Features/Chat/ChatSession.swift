@@ -299,6 +299,9 @@ final class ChatSession: Identifiable {
         app.sessionStartedStreaming(self)
 
         let store = app.store
+        // Captured on the main actor: the detached work below reads the attachments of the account
+        // that started this reply, even if you switch to another one meanwhile.
+        let files = app.store.files
         let backend = app.backend
         let effort = model.resolvedEffort(preferred: app.allowsModelChoice ? conversation.reasoningEffort : nil)
         let instructions = SystemPrompt.make(personal: app.account.personalContext, spokenReplies: isVoiceConversation)
@@ -310,7 +313,7 @@ final class ChatSession: Identifiable {
 
         streamTask = Task { [weak self] in
             let input = await Task.detached(priority: .userInitiated) {
-                ResponsesInputBuilder.input(for: history) { store.payload(for: $0) }
+                ResponsesInputBuilder.input(for: history) { store.payload(for: $0, files: files) }
             }.value
             let request = ChatStreamRequest(
                 modelID: model.id,
