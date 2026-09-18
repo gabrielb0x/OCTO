@@ -17,6 +17,9 @@ public enum ResponseStreamUpdate: Equatable, Sendable {
     /// The backend refused the image generation tool: the reply is written without it.
     /// Reported by the client, never by the stream.
     case imageGenerationUnsupported
+    /// The backend refused the faster service tier: the reply comes at the usual speed.
+    /// Reported by the client, never by the stream.
+    case serviceTierUnsupported
     case citations([Citation])
     case completed(TokenUsage?)
     case incomplete(reason: String?)

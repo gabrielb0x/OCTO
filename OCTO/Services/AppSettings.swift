@@ -167,6 +167,34 @@ enum VoicePause: String, CaseIterable, Identifiable {
     }
 }
 
+/// How OCTO lays out its screens: the sidebar of the ChatGPT app, or tabs in a bar at the bottom.
+enum AppLayout: String, CaseIterable, Identifiable {
+    case sidebar
+    case tabBar
+
+    var id: String { rawValue }
+}
+
+/// A tab of the tab bar layout.
+enum AppTab: String, CaseIterable, Identifiable {
+    /// The chat you're writing in: a new one, or the one opened from your chats.
+    case home
+    case chats
+    case projects
+    case accounts
+    case settings
+    /// The round glass button at the end of the bar, which searches every chat.
+    case search
+
+    var id: String { rawValue }
+
+    /// The tabs that sit in the bar itself; search has its own button next to it.
+    static let barTabs: [AppTab] = [.home, .chats, .projects, .accounts, .settings]
+    static let defaultBar: [AppTab] = [.chats, .home, .settings]
+    /// iOS shows five tabs on an iPhone before hiding the rest behind "More".
+    static let maximumInBar = 5
+}
+
 /// Preferences of this device, persisted in UserDefaults (nothing here is sensitive).
 /// Custom instructions and personality come from the ChatGPT account instead.
 @MainActor
@@ -301,6 +329,64 @@ final class AppSettings {
         didSet { defaults.set(hidesContentInAppSwitcher, forKey: Keys.hidesContentInAppSwitcher) }
     }
 
+    /// A faster tier to ask replies for, such as `priority` (Codex's "Fast"); nil is the usual speed.
+    var serviceTier: String? {
+        didSet { defaults.set(serviceTier, forKey: Keys.serviceTier) }
+    }
+
+    // MARK: Layout
+
+    var layout: AppLayout {
+        didSet { defaults.set(layout.rawValue, forKey: Keys.layout) }
+    }
+
+    /// The tabs of the bar, in order. Home is always one of them: it's where you write.
+    /// Changed through `setTabBarTabs(_:)`, which keeps the list valid.
+    private(set) var tabBarTabs: [AppTab] {
+        didSet { defaults.set(tabBarTabs.map(\.rawValue), forKey: Keys.tabBarTabs) }
+    }
+
+    func setTabBarTabs(_ tabs: [AppTab]) {
+        tabBarTabs = Self.sanitizedTabs(tabs)
+    }
+
+    /// The round search button at the end of the tab bar.
+    var showsSearchTab: Bool {
+        didSet { defaults.set(showsSearchTab, forKey: Keys.showsSearchTab) }
+    }
+
+    /// The tab OCTO opens on.
+    var startTab: AppTab {
+        didSet { defaults.set(startTab.rawValue, forKey: Keys.startTab) }
+    }
+
+    /// The bar shrinks to a small button while you scroll down, like in Apple's apps.
+    var tabBarMinimizesOnScroll: Bool {
+        didSet { defaults.set(tabBarMinimizesOnScroll, forKey: Keys.tabBarMinimizesOnScroll) }
+    }
+
+    /// Every tab shown, in order, the search button last.
+    var visibleTabs: [AppTab] {
+        showsSearchTab ? tabBarTabs + [.search] : tabBarTabs
+    }
+
+    /// The tab OCTO opens on, when it's still in the bar.
+    var initialTab: AppTab {
+        visibleTabs.contains(startTab) ? startTab : .home
+    }
+
+    // MARK: Chat list
+
+    /// Which chats the chat list shows: all of them, those of the ChatGPT account, or those written with Codex.
+    var chatOriginFilter: ChatOriginFilter {
+        didSet { defaults.set(chatOriginFilter.rawValue, forKey: Keys.chatOriginFilter) }
+    }
+
+    /// A small ChatGPT or Codex mark next to each chat of the list.
+    var showsChatOrigin: Bool {
+        didSet { defaults.set(showsChatOrigin, forKey: Keys.showsChatOrigin) }
+    }
+
     // MARK: Privacy
 
     var temporaryChatsByDefault: Bool {
@@ -378,6 +464,29 @@ final class AppSettings {
         blocksThirdPartyKeyboards = Self.blocksThirdPartyKeyboards(defaults: defaults)
         removesLinkTrackers = defaults.object(forKey: Keys.removesLinkTrackers) as? Bool ?? true
         checksForUpdates = defaults.object(forKey: Keys.checksForUpdates) as? Bool ?? true
+        serviceTier = defaults.string(forKey: Keys.serviceTier)
+        layout = defaults.string(forKey: Keys.layout).flatMap(AppLayout.init(rawValue:)) ?? .sidebar
+        tabBarTabs = Self.sanitizedTabs((defaults.stringArray(forKey: Keys.tabBarTabs) ?? []).compactMap(AppTab.init(rawValue:)), fallback: AppTab.defaultBar)
+        showsSearchTab = defaults.object(forKey: Keys.showsSearchTab) as? Bool ?? true
+        startTab = defaults.string(forKey: Keys.startTab).flatMap(AppTab.init(rawValue:)) ?? .home
+        tabBarMinimizesOnScroll = defaults.object(forKey: Keys.tabBarMinimizesOnScroll) as? Bool ?? true
+        chatOriginFilter = defaults.string(forKey: Keys.chatOriginFilter).flatMap(ChatOriginFilter.init(rawValue:)) ?? .all
+        showsChatOrigin = defaults.object(forKey: Keys.showsChatOrigin) as? Bool ?? true
+    }
+
+    /// Tabs of the bar without duplicates, search or overflow, Home always among them.
+    static func sanitizedTabs(_ tabs: [AppTab], fallback: [AppTab] = [.home]) -> [AppTab] {
+        var result: [AppTab] = []
+        for tab in tabs where AppTab.barTabs.contains(tab) && !result.contains(tab) {
+            result.append(tab)
+        }
+        if result.isEmpty {
+            result = fallback
+        }
+        if !result.contains(.home) {
+            result.insert(.home, at: min(1, result.count))
+        }
+        return Array(result.prefix(AppTab.maximumInBar))
     }
 
     /// Read before the settings exist, when iOS asks whether third-party keyboards may be used.
@@ -427,5 +536,13 @@ final class AppSettings {
         static let blocksThirdPartyKeyboards = "settings.blocksThirdPartyKeyboards"
         static let removesLinkTrackers = "settings.removesLinkTrackers"
         static let checksForUpdates = "settings.checksForUpdates"
+        static let serviceTier = "settings.serviceTier"
+        static let layout = "settings.layout"
+        static let tabBarTabs = "settings.tabBarTabs"
+        static let showsSearchTab = "settings.showsSearchTab"
+        static let startTab = "settings.startTab"
+        static let tabBarMinimizesOnScroll = "settings.tabBarMinimizesOnScroll"
+        static let chatOriginFilter = "settings.chatOriginFilter"
+        static let showsChatOrigin = "settings.showsChatOrigin"
     }
 }

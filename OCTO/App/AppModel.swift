@@ -18,13 +18,19 @@ final class AppModel {
     let notifications: ReplyNotifications
     let overlays: OverlayWindows
     let updates: UpdateChecker
+    /// The profile pictures of the other accounts signed in on this device.
+    let accountPictures: AccountPictures
     /// Set when a screenshot build is launched with a demo scene: no network, no keychain.
     let isDemo: Bool
     #if OCTO_DEMO
     let demoScene: DemoScene?
     #endif
 
+    /// Codex's catalog for the account, as `codex/models` lists it.
     private(set) var models: [ModelDescriptor]
+    /// Models Codex turned down for this account when a message was sent, although its catalog
+    /// listed them. They leave the picker until OCTO restarts or the account changes.
+    private(set) var refusedModelIDs: Set<String> = []
     private(set) var isRefreshingModels = false
     private(set) var modelsError: String?
     private(set) var modelsUpdatedAt: Date?
@@ -82,6 +88,7 @@ final class AppModel {
         protection = AppProtection(settings: settings, isDemo: isDemo)
         notifications = ReplyNotifications(isDemo: isDemo)
         updates = UpdateChecker(isDemo: isDemo)
+        accountPictures = AccountPictures(isDemo: isDemo)
         // Each account keeps its chats and its cached data in its own folder, so switching from one
         // to another never mixes two histories.
         #if OCTO_DEMO
@@ -158,9 +165,22 @@ final class AppModel {
         return account.subscription?.planType ?? auth.account?.planType
     }
 
-    /// Like in ChatGPT, only subscribers choose their model.
+    /// The models Codex offers this account: those its catalog gives the plan — free included —
+    /// minus those it turned down when a message was sent.
+    var availableModels: [ModelDescriptor] {
+        ModelAvailability.available(models, plan: planType, refused: refusedModelIDs)
+    }
+
+    /// Models of the catalog this account can't use, shown greyed out.
+    var unavailableModels: [ModelDescriptor] {
+        let available = Set(availableModels.map(\.id))
+        return models.filter { !available.contains($0.id) }
+    }
+
+    /// The picker shows as soon as Codex offers the account more than one model. Unlike ChatGPT,
+    /// Codex lets free plans choose too.
     var allowsModelChoice: Bool {
-        (developer.isEnabled && developer.forcesModelPicker) || ChatGPTPlan.allowsModelChoice(planType)
+        (developer.isEnabled && developer.forcesModelPicker) || availableModels.count > 1
     }
 
     /// Like ChatGPT, an account without a subscription is offered one, unless Appearance says no.
@@ -206,6 +226,10 @@ final class AppModel {
             ),
             name: account.profile?.name
         )
+        // Where its picture lives, so the list can show it once another account is in use.
+        if let profile = account.profile {
+            auth.rememberPicture(profile.pictureURL)
+        }
     }
 
     /// Like "Restore purchases" in ChatGPT: new tokens, then the subscription and models of the plan.
@@ -248,17 +272,24 @@ final class AppModel {
 
     // MARK: Models
 
+    /// The model to answer with: the one asked for when the account can use it, else the default
+    /// model, else the first Codex offers.
     func model(for id: String?) -> ModelDescriptor {
-        guard allowsModelChoice else {
-            return models.first ?? ModelCatalog.chatGPTFallback[0]
-        }
-        if let id, let match = models.first(where: { $0.id == id }) {
+        let available = availableModels
+        if let id, let match = available.first(where: { $0.id == id }) {
             return match
         }
-        if let preferred = settings.defaultModelID, let match = models.first(where: { $0.id == preferred }) {
+        if let preferred = settings.defaultModelID, let match = available.first(where: { $0.id == preferred }) {
             return match
         }
-        return models.first ?? ModelCatalog.chatGPTFallback[0]
+        return available.first ?? ModelCatalog.chatGPTFallback[0]
+    }
+
+    /// Codex refused a model it listed: it leaves the picker, and the next replies use another.
+    func modelWasRefused(_ id: String) {
+        guard !refusedModelIDs.contains(id) else { return }
+        refusedModelIDs.insert(id)
+        DevLog.log("models", "Codex refused \(id) for this account: it leaves the picker", level: .warning)
     }
 
     var defaultModel: ModelDescriptor {
@@ -312,6 +343,7 @@ final class AppModel {
     func didSignIn() async {
         useStorageOfCurrentAccount()
         models = Self.cachedModels()
+        refusedModelIDs = []
         DevLog.log("auth", "Signed in (\(auth.signInMethod?.rawValue ?? "unknown"))")
         await refreshAccount(force: true)
     }
@@ -324,6 +356,7 @@ final class AppModel {
         guard await auth.switchAccount(to: key) else { return }
         useStorageOfCurrentAccount()
         models = Self.cachedModels()
+        refusedModelIDs = []
         usage = nil
         // Cookies and connections of the previous account go too.
         await session.reset()
@@ -336,6 +369,7 @@ final class AppModel {
     func signOut() async {
         leaveCurrentAccount()
         usage = nil
+        refusedModelIDs = []
         account.clear()
         store.removeAccountChats()
         await auth.signOut()
@@ -355,6 +389,7 @@ final class AppModel {
         }
         await auth.signOut(accountKey: accountKey)
         AccountStorage.removeAccountCache(for: accountKey)
+        accountPictures.forget(accountKey)
     }
 
     /// Lets go of everything held for the account being left: replies still being written, what is

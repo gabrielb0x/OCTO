@@ -20,3 +20,6 @@ Package.resolved
 
 # Browser network captures contain session cookies and tokens
 *.har
+
+# Python bytecode of the screenshot scripts
+__pycache__/

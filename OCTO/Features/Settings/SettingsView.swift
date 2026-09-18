@@ -11,7 +11,9 @@ enum SettingsRoute: Hashable {
     case subscription
     case ageVerification
     case appearance
+    case layout
     case general
+    case models
     case notifications
     case voice
     case privacy
@@ -47,10 +49,13 @@ struct SettingsView: View {
     @State private var showsWhatsNew = false
     @State private var updateToShow: AppRelease?
     private let initialSection: SettingsSection?
+    /// A sheet closes with a button; the Settings tab of the tab bar layout has nothing to close.
+    private let showsCloseButton: Bool
 
-    init(initialPath: [SettingsRoute] = [], initialSection: SettingsSection? = nil) {
+    init(initialPath: [SettingsRoute] = [], initialSection: SettingsSection? = nil, showsCloseButton: Bool = true) {
         _path = State(initialValue: initialPath)
         self.initialSection = initialSection
+        self.showsCloseButton = showsCloseButton
     }
 
     var body: some View {
@@ -110,6 +115,13 @@ struct SettingsView: View {
                         .id(SettingsSection.theme)
                         // The accent color lives in Appearance, next to the palette that changes it.
                         row(.appearance, "Appearance", systemImage: "paintbrush")
+                        NavigationLink(value: SettingsRoute.layout) {
+                            LabeledContent {
+                                Text(verbatim: settings.layout.title)
+                            } label: {
+                                Label("Layout", systemImage: "rectangle.3.group")
+                            }
+                        }
                     }
 
                     Section("App settings") {
@@ -172,9 +184,11 @@ struct SettingsView: View {
                 destination(for: route)
             }
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(role: .close) {
-                        dismiss()
+                if showsCloseButton {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(role: .close) {
+                            dismiss()
+                        }
                     }
                 }
             }
@@ -301,7 +315,9 @@ struct SettingsView: View {
         case .subscription: SubscriptionView()
         case .ageVerification: AgeVerificationView()
         case .appearance: AppearanceView()
+        case .layout: LayoutSettingsView()
         case .general: GeneralSettingsView()
+        case .models: ModelsSettingsView()
         case .notifications: NotificationSettingsView()
         case .voice: VoiceSettingsView()
         case .privacy: PrivacyView()
@@ -459,7 +475,10 @@ struct SubscriptionView: View {
 
     private var planSummary: LocalizedStringKey {
         switch ChatGPTPlan.isPaid(app.planType) {
-        case false?: return "You're on the free plan: ChatGPT picks the model for you."
+        case false?:
+            return app.allowsModelChoice
+                ? "You're on the free plan. Codex still offers it several models: pick one at the top of a chat."
+                : "You're on the free plan: Codex answers with the model it offers your account."
         case true?: return "Your subscription lets you choose the model of each chat."
         case nil: return "OCTO couldn't tell which plan your account has."
         }

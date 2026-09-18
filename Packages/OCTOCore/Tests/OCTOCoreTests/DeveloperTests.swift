@@ -3,7 +3,7 @@ import Testing
 @testable import OCTOCore
 
 @Suite struct PlanTests {
-    @Test func onlySubscribersPickAModel() {
+    @Test func tellsFreePlansFromSubscriptions() {
         #expect(ChatGPTPlan.isPaid("free") == false)
         #expect(ChatGPTPlan.isPaid(" FREE ") == false)
         #expect(ChatGPTPlan.isPaid("free_workspace") == false)
@@ -11,10 +11,6 @@ import Testing
         #expect(ChatGPTPlan.isPaid("plus") == true)
         #expect(ChatGPTPlan.isPaid(nil) == nil)
         #expect(ChatGPTPlan.isPaid("") == nil)
-
-        #expect(ChatGPTPlan.allowsModelChoice("free") == false)
-        #expect(ChatGPTPlan.allowsModelChoice("pro"))
-        #expect(ChatGPTPlan.allowsModelChoice(nil))
     }
 
     @Test func parsesTheSubscription() throws {

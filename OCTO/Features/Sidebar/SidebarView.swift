@@ -1,42 +1,34 @@
 import OCTOCore
 import SwiftUI
 
+/// What can be done to the chats of a list: the sidebar's, and the tabs of the tab bar layout.
+struct ChatListActions {
+    var select: (UUID) -> Void
+    var newChat: () -> Void
+    var newTemporaryChat: () -> Void
+    var rename: (UUID, String) -> Void
+    var setPinned: (UUID, Bool) -> Void
+    var delete: (UUID) -> Void
+}
+
 /// History drawer modeled on the ChatGPT app: glass search field, shortcuts, projects, chats and account.
 struct SidebarView: View {
     @Environment(AppModel.self) private var app
     let selectedID: UUID?
-    let onSelect: (UUID) -> Void
-    let onNewChat: () -> Void
-    let onNewTemporaryChat: () -> Void
-    let onRename: (UUID, String) -> Void
-    let onSetPinned: (UUID, Bool) -> Void
-    let onDelete: (UUID) -> Void
+    let actions: ChatListActions
     let onOpenSettings: () -> Void
     let onOpenAccounts: () -> Void
 
     @State private var query = ""
-    @State private var renameTarget: ConversationSummary?
-    @State private var renameText = ""
-    @State private var deleteTarget: ConversationSummary?
-    @State private var expandedProjects: Set<String> = []
 
     var body: some View {
         VStack(spacing: 0) {
             header
 
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 2) {
-                    if isSearching {
-                        searchResults
-                    } else {
-                        shortcuts
-                        syncStatus
-                        projectsSection
-                        chatsSection
-                    }
-                }
-                .padding(.horizontal, 10)
-                .padding(.bottom, 16)
+                ChatHistoryList(query: query, selectedID: selectedID, actions: actions)
+                    .padding(.horizontal, 10)
+                    .padding(.bottom, 16)
             }
             .scrollDismissesKeyboard(.immediately)
             .detachedRefreshable {
@@ -46,29 +38,6 @@ struct SidebarView: View {
             footer
         }
         .background(Theme.sidebarBackground.ignoresSafeArea())
-        .onChange(of: query) { _, newValue in
-            app.store.searchAccount(newValue)
-        }
-        .alert("Rename chat", isPresented: renameIsPresented) {
-            TextField("Title", text: $renameText)
-            Button("Cancel", role: .cancel) {}
-            Button("Save") {
-                if let target = renameTarget {
-                    onRename(target.id, renameText)
-                }
-            }
-        }
-        .confirmationDialog("Delete this chat?", isPresented: deleteIsPresented, titleVisibility: .visible, presenting: deleteTarget) { target in
-            Button("Delete", role: .destructive) {
-                onDelete(target.id)
-            }
-        } message: { _ in
-            Text("This can't be undone.")
-        }
-    }
-
-    private var isSearching: Bool {
-        !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     // MARK: Header & footer
@@ -91,38 +60,22 @@ struct SidebarView: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel(Text("Clear search"))
+                    } else {
+                        // Which chats the list shows sits at the end of the search field.
+                        ChatFilterMenu()
+                            .font(.body)
                     }
                 }
                 .padding(.horizontal, 14)
                 .frame(height: 44)
                 .glassEffect(.regular.interactive(), in: .capsule)
 
-                GlassIconButton(systemImage: "square.and.pencil", label: "New chat", size: 44, action: onNewChat)
+                GlassIconButton(systemImage: "square.and.pencil", label: "New chat", size: 44, action: actions.newChat)
             }
         }
         .padding(.horizontal, 14)
         .padding(.top, 8)
         .padding(.bottom, 6)
-    }
-
-    private var shortcuts: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            shortcutRow(action: onNewChat) {
-                Image("Logo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 22, height: 22)
-            } title: {
-                Text(verbatim: "ChatGPT")
-            }
-            shortcutRow(action: onNewTemporaryChat) {
-                Image("TemporaryChat")
-            } title: {
-                Text("Temporary chat")
-            }
-        }
-        .padding(.top, 4)
-        .padding(.bottom, 4)
     }
 
     private var footer: some View {
@@ -164,39 +117,142 @@ struct SidebarView: View {
         .padding(.bottom, 8)
         // Holding the account switches between the accounts signed in, without going through Settings.
         .contextMenu {
-            ForEach(app.accounts) { account in
-                Button {
-                    guard account.key != app.currentAccountKey else { return }
-                    Task { await app.switchAccount(to: account.key) }
-                } label: {
-                    if account.key == app.currentAccountKey {
-                        Label(accountTitle(account), systemImage: "checkmark")
-                    } else {
-                        Text(verbatim: accountTitle(account))
-                    }
-                }
-            }
-            Divider()
-            Button(action: onOpenAccounts) {
-                Label("Accounts", systemImage: "person.2")
-            }
-            Button(action: onOpenSettings) {
-                Label("Settings", systemImage: "gearshape")
-            }
+            AccountSwitchMenuItems(onOpenAccounts: onOpenAccounts, onOpenSettings: onOpenSettings)
         }
         .accessibilityLabel(Text("Settings"))
         .accessibilityHint(Text("Hold to switch account"))
     }
+}
+
+/// The accounts signed in on this device, to switch from one to another, then Accounts and Settings.
+struct AccountSwitchMenuItems: View {
+    @Environment(AppModel.self) private var app
+    let onOpenAccounts: () -> Void
+    let onOpenSettings: () -> Void
+
+    var body: some View {
+        ForEach(app.accounts) { account in
+            Button {
+                guard account.key != app.currentAccountKey else { return }
+                Task { await app.switchAccount(to: account.key) }
+            } label: {
+                if account.key == app.currentAccountKey {
+                    Label(title(account), systemImage: "checkmark")
+                } else {
+                    Text(verbatim: title(account))
+                }
+            }
+        }
+        Divider()
+        Button(action: onOpenAccounts) {
+            Label("Accounts", systemImage: "person.2")
+        }
+        Button(action: onOpenSettings) {
+            Label("Settings", systemImage: "gearshape")
+        }
+    }
 
     /// The name of an account in the switcher, behind dots when it is only an address and Privacy
     /// asks for it.
-    private func accountTitle(_ account: StoredAccount) -> String {
+    private func title(_ account: StoredAccount) -> String {
         let name = account.displayName
         guard app.contactShield.isMasked, let email = account.email, name == email else { return name }
         return ContactMasking.email(email)
     }
+}
+
+/// The chats as the sidebar and the Chats tab list them: shortcuts, projects, then the chats by
+/// date — or what's typed in the search field. Each chat can show where it comes from, and the
+/// list only keeps the chats of the origin chosen in the filter.
+struct ChatHistoryList: View {
+    /// What the list holds: every chat, or the chats of one ChatGPT project.
+    enum Scope: Equatable {
+        case all
+        case project(String)
+    }
+
+    @Environment(AppModel.self) private var app
+    let query: String
+    let selectedID: UUID?
+    var scope: Scope = .all
+    var showsShortcuts = true
+    let actions: ChatListActions
+
+    @State private var renameTarget: ConversationSummary?
+    @State private var renameText = ""
+    @State private var deleteTarget: ConversationSummary?
+    @State private var expandedProjects: Set<String> = []
+
+    var body: some View {
+        LazyVStack(alignment: .leading, spacing: 2) {
+            switch scope {
+            case .all:
+                if isSearching {
+                    searchResults
+                } else {
+                    if showsShortcuts {
+                        shortcuts
+                    }
+                    syncStatus
+                    filterStatus
+                    projectsSection
+                    chatsSection
+                }
+            case .project(let projectID):
+                projectChats(projectID)
+            }
+        }
+        // Also on appearing: the search tab builds the list once something is typed.
+        .onChange(of: query, initial: true) { _, newValue in
+            app.store.searchAccount(newValue)
+        }
+        .alert("Rename chat", isPresented: renameIsPresented) {
+            TextField("Title", text: $renameText)
+            Button("Cancel", role: .cancel) {}
+            Button("Save") {
+                if let target = renameTarget {
+                    actions.rename(target.id, renameText)
+                }
+            }
+        }
+        .confirmationDialog("Delete this chat?", isPresented: deleteIsPresented, titleVisibility: .visible, presenting: deleteTarget) { target in
+            Button("Delete", role: .destructive) {
+                actions.delete(target.id)
+            }
+        } message: { _ in
+            Text("This can't be undone.")
+        }
+    }
+
+    private var isSearching: Bool {
+        !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var filter: ChatOriginFilter {
+        app.settings.chatOriginFilter
+    }
 
     // MARK: Sections
+
+    private var shortcuts: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            shortcutRow(action: actions.newChat) {
+                Image("Logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 22, height: 22)
+            } title: {
+                Text(verbatim: "ChatGPT")
+            }
+            shortcutRow(action: actions.newTemporaryChat) {
+                Image("TemporaryChat")
+            } title: {
+                Text("Temporary chat")
+            }
+        }
+        .padding(.top, 4)
+        .padding(.bottom, 4)
+    }
 
     @ViewBuilder
     private var syncStatus: some View {
@@ -225,14 +281,53 @@ struct SidebarView: View {
         }
     }
 
+    /// Says which chats are left out, with a way to show them all again.
+    @ViewBuilder
+    private var filterStatus: some View {
+        if filter != .all {
+            HStack(spacing: 8) {
+                filterIcon
+                Text(filter == .chatGPT ? LocalizedStringKey("Only the chats of your ChatGPT account") : LocalizedStringKey("Only the chats written with Codex"))
+                    .font(.footnote)
+                    .foregroundStyle(Theme.secondaryText)
+                    .lineLimit(2)
+                Spacer(minLength: 0)
+                Button("Show all") {
+                    withAnimation(.smooth(duration: 0.25)) {
+                        app.settings.chatOriginFilter = .all
+                    }
+                }
+                .font(.footnote.weight(.semibold))
+                .buttonStyle(.plain)
+                .foregroundStyle(app.settings.accentStyle.link)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Theme.surface, in: .rect(cornerRadius: 14))
+            .padding(.top, 6)
+        }
+    }
+
+    @ViewBuilder
+    private var filterIcon: some View {
+        switch filter {
+        case .codex:
+            ChatOriginBadge(origin: .codex)
+        default:
+            ChatOriginBadge(origin: .chatGPT)
+        }
+    }
+
     /// What's typed in the search field: first the chats already on this device, then those
     /// ChatGPT found in the account, which this iPhone has never downloaded.
     @ViewBuilder
     private var searchResults: some View {
-        let local = app.store.search(query)
+        let local = filter.apply(to: app.store.search(query))
+        // Codex chats have no copy in the account, so filtering them out leaves this set as it is.
         let known = Set(local.compactMap(\.remoteID))
-        let hits = app.store.searchHits.filter { !known.contains($0.id) }
-        if local.isEmpty, hits.isEmpty, !app.store.isSearchingAccount {
+        // Chats found in the account come from ChatGPT: the Codex filter leaves them out.
+        let hits = filter == .codex ? [] : app.store.searchHits.filter { !known.contains($0.id) }
+        if local.isEmpty, hits.isEmpty, !app.store.isSearchingAccount || filter == .codex {
             placeholder(title: "No results", systemImage: "magnifyingglass")
         } else {
             if !local.isEmpty {
@@ -243,7 +338,7 @@ struct SidebarView: View {
                 sectionHeader(String(localized: "In your ChatGPT account"))
                 ForEach(hits) { hitRow($0) }
             }
-            if app.store.isSearchingAccount {
+            if app.store.isSearchingAccount, filter != .codex {
                 HStack(spacing: 8) {
                     ProgressView()
                         .controlSize(.small)
@@ -257,9 +352,10 @@ struct SidebarView: View {
         }
     }
 
+    /// Projects only hold chats of the ChatGPT account: the Codex filter hides them.
     @ViewBuilder
     private var projectsSection: some View {
-        if !app.store.projects.isEmpty {
+        if !app.store.projects.isEmpty, filter != .codex {
             sectionHeader(String(localized: "Projects"))
             ForEach(app.store.projects) { project in
                 projectRow(project)
@@ -281,12 +377,16 @@ struct SidebarView: View {
 
     @ViewBuilder
     private var chatsSection: some View {
-        let sections = ConversationGrouping.sections(for: app.store.looseSummaries)
+        let sections = ConversationGrouping.sections(for: filter.apply(to: app.store.looseSummaries))
         if sections.isEmpty {
-            if app.store.syncState == .syncing {
+            if app.store.syncState == .syncing, filter != .codex {
                 ProgressView()
                     .frame(maxWidth: .infinity)
                     .padding(.top, 60)
+            } else if filter == .codex {
+                placeholder(title: "No chats written with Codex yet", systemImage: "terminal", detail: "The chats you start in OCTO are written with Codex and stay on this device.")
+            } else if filter == .chatGPT {
+                placeholder(title: "No chats from your ChatGPT account", systemImage: "bubble.left.and.bubble.right")
             } else if app.store.projects.isEmpty {
                 placeholder(title: "Your chats will appear here", systemImage: "bubble.left.and.bubble.right")
             }
@@ -295,13 +395,24 @@ struct SidebarView: View {
             sectionHeader(title(for: section.bucket))
             ForEach(section.conversations) { row($0) }
         }
-        if app.store.canLoadMore {
+        // Older chats of the account load as the list reaches its end; Codex chats are all here.
+        if app.store.canLoadMore, filter != .codex {
             ProgressView()
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .task(id: app.store.summaries.count) {
                     await app.store.loadMoreFromAccount()
                 }
+        }
+    }
+
+    @ViewBuilder
+    private func projectChats(_ projectID: String) -> some View {
+        let chats = app.store.summaries(inProject: projectID)
+        if chats.isEmpty {
+            placeholder(title: "No chats in this project", systemImage: "folder")
+        } else {
+            ForEach(chats) { row($0) }
         }
     }
 
@@ -340,10 +451,7 @@ struct SidebarView: View {
             }
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: ProjectIcon.systemImage(for: project.iconName))
-                    .font(.body)
-                    .foregroundStyle(project.colorHex.flatMap { Color(hex: $0) } ?? Theme.primaryText)
-                    .frame(width: 26, height: 26)
+                ProjectIconView(project: project)
                 Text(verbatim: project.name.isEmpty ? String(localized: "Project") : project.name)
                     .font(.body.weight(.medium))
                     .lineLimit(1)
@@ -364,7 +472,7 @@ struct SidebarView: View {
     private func row(_ summary: ConversationSummary, indented: Bool = false) -> some View {
         let isSelected = summary.id == selectedID
         return Button {
-            onSelect(summary.id)
+            actions.select(summary.id)
         } label: {
             HStack(spacing: 8) {
                 Text(verbatim: summary.title.isEmpty ? String(localized: "New chat") : summary.title)
@@ -377,6 +485,9 @@ struct SidebarView: View {
                         .font(.caption2)
                         .foregroundStyle(Theme.tertiaryText)
                 }
+                if app.settings.showsChatOrigin {
+                    ChatOriginBadge(origin: summary.origin)
+                }
             }
             .padding(.leading, indented ? 50 : 12)
             .padding(.trailing, 12)
@@ -387,16 +498,18 @@ struct SidebarView: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button {
-                onSetPinned(summary.id, !summary.isPinned)
-            } label: {
-                Label(summary.isPinned ? LocalizedStringKey("Unpin") : LocalizedStringKey("Pin"), systemImage: summary.isPinned ? "pin.slash" : "pin")
-            }
-            Button {
-                renameText = summary.title
-                renameTarget = summary
-            } label: {
-                Label("Rename", systemImage: "pencil")
+            Section(summary.origin == .chatGPT ? LocalizedStringKey("From your ChatGPT account") : LocalizedStringKey("Written with Codex, on this device")) {
+                Button {
+                    actions.setPinned(summary.id, !summary.isPinned)
+                } label: {
+                    Label(summary.isPinned ? LocalizedStringKey("Unpin") : LocalizedStringKey("Pin"), systemImage: summary.isPinned ? "pin.slash" : "pin")
+                }
+                Button {
+                    renameText = summary.title
+                    renameTarget = summary
+                } label: {
+                    Label("Rename", systemImage: "pencil")
+                }
             }
             Divider()
             Button(role: .destructive) {
@@ -411,7 +524,7 @@ struct SidebarView: View {
     /// in the history and downloads its messages.
     private func hitRow(_ hit: RemoteSearchHit) -> some View {
         Button {
-            onSelect(app.store.adopt(hit.summary))
+            actions.select(app.store.adopt(hit.summary))
         } label: {
             HStack(alignment: .top, spacing: 10) {
                 Image(systemName: "bubble.left.and.text.bubble.right")
@@ -449,14 +562,21 @@ struct SidebarView: View {
             .padding(.bottom, 6)
     }
 
-    private func placeholder(title: LocalizedStringKey, systemImage: String) -> some View {
+    private func placeholder(title: LocalizedStringKey, systemImage: String, detail: LocalizedStringKey? = nil) -> some View {
         VStack(spacing: 10) {
             Image(systemName: systemImage)
                 .font(.title2)
             Text(title)
                 .font(.subheadline)
+                .multilineTextAlignment(.center)
+            if let detail {
+                Text(detail)
+                    .font(.footnote)
+                    .multilineTextAlignment(.center)
+            }
         }
         .foregroundStyle(Theme.tertiaryText)
+        .padding(.horizontal, 24)
         .frame(maxWidth: .infinity)
         .padding(.top, 60)
     }
@@ -489,6 +609,18 @@ struct SidebarView: View {
 
     private var deleteIsPresented: Binding<Bool> {
         Binding(get: { deleteTarget != nil }, set: { if !$0 { deleteTarget = nil } })
+    }
+}
+
+/// The icon of a ChatGPT project, in its color.
+struct ProjectIconView: View {
+    let project: ChatProject
+
+    var body: some View {
+        Image(systemName: ProjectIcon.systemImage(for: project.iconName))
+            .font(.body)
+            .foregroundStyle(project.colorHex.flatMap { Color(hex: $0) } ?? Theme.primaryText)
+            .frame(width: 26, height: 26)
     }
 }
 

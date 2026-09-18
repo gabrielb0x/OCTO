@@ -302,6 +302,14 @@ final class AuthManager {
         saveRoster()
     }
 
+    /// Remembers where the picture of the account in use lives, so the account list can show it
+    /// once another account is in use. Nil means the profile has no picture.
+    func rememberPicture(_ url: URL?) {
+        guard let key = roster.currentKey, roster.current?.pictureURL != url else { return }
+        roster.setPicture(url, for: key)
+        saveRoster()
+    }
+
     #if OCTO_DEMO
     /// Screenshot builds show a fake account without touching the keychain.
     func useDemoAccount(_ account: Account?) {

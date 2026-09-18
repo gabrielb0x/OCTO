@@ -14,7 +14,7 @@ struct VoiceModeView: View {
             Theme.background.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Text(verbatim: app.allowsModelChoice ? session.model.displayName : "ChatGPT")
+                Text(verbatim: session.model.displayName)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Theme.tertiaryText)
                     .padding(.top, 12)

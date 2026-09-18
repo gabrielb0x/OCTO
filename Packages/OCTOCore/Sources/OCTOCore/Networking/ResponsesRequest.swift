@@ -10,6 +10,8 @@ public struct ResponsesRequest: Encodable, Equatable, Sendable {
     public var toolChoice: String
     public var parallelToolCalls: Bool
     public var reasoning: ResponsesReasoning?
+    /// A faster tier such as `priority` (Codex's "Fast"); nil answers at the usual speed.
+    public var serviceTier: String?
     public var store: Bool
     public var stream: Bool
     public var include: [String]
@@ -22,6 +24,7 @@ public struct ResponsesRequest: Encodable, Equatable, Sendable {
         input: [ResponsesInputMessage],
         tools: [ResponsesTool] = [],
         reasoning: ResponsesReasoning? = nil,
+        serviceTier: String? = nil,
         promptCacheKey: String? = nil,
         text: ResponsesTextOptions? = nil
     ) {
@@ -32,6 +35,7 @@ public struct ResponsesRequest: Encodable, Equatable, Sendable {
         self.toolChoice = "auto"
         self.parallelToolCalls = false
         self.reasoning = reasoning
+        self.serviceTier = serviceTier
         // Nothing is stored server-side: history lives on the device and is resent.
         self.store = false
         self.stream = true
@@ -45,6 +49,7 @@ public struct ResponsesRequest: Encodable, Equatable, Sendable {
         case toolChoice = "tool_choice"
         case parallelToolCalls = "parallel_tool_calls"
         case reasoning, store, stream, include
+        case serviceTier = "service_tier"
         case promptCacheKey = "prompt_cache_key"
         case text
     }
@@ -53,6 +58,14 @@ public struct ResponsesRequest: Encodable, Equatable, Sendable {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.withoutEscapingSlashes]
         return try encoder.encode(self)
+    }
+
+    /// True when a rejected request blames its service tier: the plan doesn't offer that speed.
+    /// Such a request is worth sending again at the usual speed, rather than failing the reply.
+    public static func isServiceTierRefusal(_ serviceTier: String, message: String?) -> Bool {
+        guard let message = message?.lowercased() else { return false }
+        let mentions = ["service_tier", "service tier", "fast mode", "speed tier", serviceTier.lowercased()]
+        return mentions.contains { message.contains($0) }
     }
 }
 

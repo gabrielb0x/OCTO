@@ -1,6 +1,7 @@
 #if OCTO_DEMO
 import Foundation
 import OCTOCore
+import UIKit
 
 /// Screens captured by `Scripts/take-screenshots.sh`, chosen with `-OCTODemoScene <name>`.
 enum DemoScene: String, CaseIterable {
@@ -31,6 +32,10 @@ enum DemoScene: String, CaseIterable {
     case update
     case accounts
     case ads
+    case tabs
+    case tabsChats
+    case layout
+    case models
 
     static var current: DemoScene? {
         UserDefaults.standard.string(forKey: "OCTODemoScene").flatMap(DemoScene.init(rawValue:))
@@ -60,6 +65,19 @@ enum DemoContent {
         app.settings.showsUpgradeButton = true
         app.settings.showsGreeting = false
         app.settings.contactVisibility = .tapToReveal
+        app.settings.serviceTier = nil
+        app.settings.chatOriginFilter = .all
+        app.settings.showsChatOrigin = true
+        // The tab bar scenes use the tab bar layout; every other one ChatGPT's sidebar.
+        app.settings.layout = [.tabs, .tabsChats, .layout].contains(scene) ? .tabBar : .sidebar
+        app.settings.setTabBarTabs(AppTab.defaultBar)
+        app.settings.showsSearchTab = true
+        app.settings.tabBarMinimizesOnScroll = true
+        switch scene {
+        case .tabsChats: app.settings.startTab = .chats
+        case .layout: app.settings.startTab = .settings
+        default: app.settings.startTab = .home
+        }
         app.developer.isEnabled = [.developer, .network, .messageDetails].contains(scene)
         app.developer.showsMessageDetails = scene == .messageDetails
         app.developer.showsPerformanceOverlay = scene == .messageDetails
@@ -187,6 +205,11 @@ enum DemoContent {
                     addedAt: Date(timeIntervalSince1970: 1_740_000_000)
                 ),
             ])
+            // The other accounts show their own pictures, as read from their folders.
+            app.accountPictures.useDemo([
+                "user-demo-work": avatar(symbol: "briefcase.fill", colors: [UIColor(red: 0.12, green: 0.45, blue: 0.95, alpha: 1), UIColor(red: 0.2, green: 0.75, blue: 0.95, alpha: 1)]),
+                "user-demo-school": avatar(symbol: "graduationcap.fill", colors: [UIColor(red: 0.95, green: 0.55, blue: 0.1, alpha: 1), UIColor(red: 0.95, green: 0.3, blue: 0.35, alpha: 1)]),
+            ])
         }
         app.store.useDemoProjects([
             ChatProject(id: projectID, name: localized("School", "Cours"), iconName: "graduation-cap", colorHex: "#0285FF"),
@@ -241,6 +264,8 @@ enum DemoContent {
         case .memory?: return [.memory]
         case .accounts?: return [.accounts]
         case .ads?: return [.ads]
+        case .layout?: return [.layout]
+        case .models?: return [.general, .models]
         default: return []
         }
     }
@@ -258,7 +283,7 @@ enum DemoContent {
         case .upgrade?:
             try? await Task.sleep(for: .milliseconds(500))
             openUpgrade()
-        case .settings?, .settingsApp?, .subscription?, .about?, .developer?, .network?, .appearance?, .privacy?, .dataControls?, .ageVerification?, .devices?, .storage?, .memory?, .accounts?, .ads?:
+        case .settings?, .settingsApp?, .subscription?, .about?, .developer?, .network?, .appearance?, .privacy?, .dataControls?, .ageVerification?, .devices?, .storage?, .memory?, .accounts?, .ads?, .models?:
             try? await Task.sleep(for: .milliseconds(500))
             openSettings()
         case .deleteToast?:
@@ -273,6 +298,21 @@ enum DemoContent {
     static func markReady() {
         let marker = FileManager.default.temporaryDirectory.appendingPathComponent("OCTODemoReady")
         FileManager.default.createFile(atPath: marker.path, contents: Data())
+    }
+
+    /// A profile picture drawn from a symbol on a gradient, like the ones people pick in ChatGPT.
+    private static func avatar(symbol: String, colors: [UIColor]) -> UIImage {
+        let size = CGSize(width: 120, height: 120)
+        return UIGraphicsImageRenderer(size: size).image { context in
+            let space = CGColorSpaceCreateDeviceRGB()
+            if let gradient = CGGradient(colorsSpace: space, colors: colors.map(\.cgColor) as CFArray, locations: [0, 1]) {
+                context.cgContext.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: size.width, y: size.height), options: [])
+            }
+            let configuration = UIImage.SymbolConfiguration(pointSize: 50, weight: .semibold)
+            if let image = UIImage(systemName: symbol, withConfiguration: configuration)?.withTintColor(.white, renderingMode: .alwaysOriginal) {
+                image.draw(at: CGPoint(x: (size.width - image.size.width) / 2, y: (size.height - image.size.height) / 2))
+            }
+        }
     }
 
     private static var usesFrench: Bool {
@@ -364,6 +404,13 @@ enum DemoContent {
                 hoursAgo: 2,
                 question: localized("Give me name ideas for a private AI chat app", "Donne-moi des idées de nom pour une app de chat IA privée"),
                 answer: localized("Here are a few ideas: **Octo**, **Nook**, **Hush** and **Kite**.", "Voici quelques idées : **Octo**, **Nook**, **Hush** et **Kite**.")
+            ),
+            chat(
+                title: localized("Regex to check an email address", "Regex pour valider un e-mail"),
+                hoursAgo: 3,
+                fromAccount: false,
+                question: localized("Write a regex that checks an email address", "Écris une regex qui valide une adresse e-mail"),
+                answer: "`^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$`"
             ),
             chat(
                 title: localized("Authentic carbonara", "Carbonara authentique"),

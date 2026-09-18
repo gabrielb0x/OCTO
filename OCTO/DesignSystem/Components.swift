@@ -115,8 +115,10 @@ struct AccountAvatar: View {
 
 /// "Upgrade" next to the chats button, the way the ChatGPT app offers it to accounts without a
 /// subscription. It shows the plans, and Settings → Appearance can take it away.
-/// The glass around it is the toolbar's own, like every other button up there.
+/// The glass around it is the toolbar's own, like every other button up there. Compact, it's
+/// only the sparkle, which leaves room for the model picker.
 struct UpgradePill: View {
+    var isCompact = false
     let action: () -> Void
     @Environment(AppModel.self) private var app
 
@@ -124,13 +126,109 @@ struct UpgradePill: View {
         Button(action: action) {
             HStack(spacing: 5) {
                 Image(systemName: "sparkle")
-                    .font(.system(size: 13, weight: .semibold))
-                Text("Upgrade")
-                    .font(.subheadline.weight(.semibold))
+                    .font(.system(size: isCompact ? 15 : 13, weight: .semibold))
+                if !isCompact {
+                    Text("Upgrade")
+                        .font(.subheadline.weight(.semibold))
+                }
             }
             .foregroundStyle(app.settings.accentStyle.link)
         }
+        .accessibilityLabel(Text("Upgrade"))
         .accessibilityHint(Text("Shows the plans of ChatGPT and their prices"))
+    }
+}
+
+/// A small mark telling where a chat comes from: ChatGPT's logo for the chats of the account,
+/// Codex's terminal for the chats started in OCTO, which only exist on this device.
+struct ChatOriginBadge: View {
+    let origin: ChatOrigin
+
+    var body: some View {
+        Group {
+            switch origin {
+            case .chatGPT:
+                Image("Logo")
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 13, height: 13)
+            case .codex:
+                Image(systemName: "terminal")
+                    .font(.system(size: 11, weight: .semibold))
+            }
+        }
+        .foregroundStyle(Theme.tertiaryText)
+        .frame(width: 16)
+        .accessibilityLabel(Text(origin.badgeTitle))
+    }
+}
+
+extension ChatOrigin {
+    /// What the mark next to a chat says to VoiceOver.
+    var badgeTitle: LocalizedStringKey {
+        switch self {
+        case .chatGPT: return "From your ChatGPT account"
+        case .codex: return "Written with Codex, on this device"
+        }
+    }
+}
+
+extension ChatOriginFilter {
+    var title: LocalizedStringKey {
+        switch self {
+        case .all: return "All chats"
+        case .chatGPT: return "ChatGPT"
+        case .codex: return "Codex"
+        }
+    }
+
+    var subtitle: LocalizedStringKey {
+        switch self {
+        case .all: return "From your account and from OCTO"
+        case .chatGPT: return "The chats of your ChatGPT account"
+        case .codex: return "Started in OCTO, kept on this device"
+        }
+    }
+}
+
+/// Chooses which chats the list shows: all of them, those of the ChatGPT account, or those
+/// written with Codex in OCTO. The choice is kept.
+struct ChatFilterMenu: View {
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        let current = app.settings.chatOriginFilter
+        Menu {
+            Section("Show") {
+                ForEach(ChatOriginFilter.allCases) { filter in
+                    Button {
+                        app.settings.chatOriginFilter = filter
+                    } label: {
+                        if filter == current {
+                            Label(filter.title, systemImage: "checkmark")
+                        } else {
+                            filterLabel(filter)
+                        }
+                        Text(filter.subtitle)
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: current == .all ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+                .foregroundStyle(current == .all ? Theme.secondaryText : app.settings.accentStyle.link)
+        }
+        .menuOrder(.fixed)
+        .accessibilityLabel(Text("Filter chats"))
+    }
+
+    @ViewBuilder
+    private func filterLabel(_ filter: ChatOriginFilter) -> some View {
+        switch filter {
+        case .all: Label(filter.title, systemImage: "bubble.left.and.bubble.right")
+        case .chatGPT: Label(filter.title, image: "Logo")
+        case .codex: Label(filter.title, systemImage: "terminal")
+        }
     }
 }
 
@@ -329,6 +427,22 @@ struct ChatGPTOnlyPage: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// What Codex's catalog says about its models, in the language of the app when OCTO knows the
+/// sentence: descriptions, speeds and their details come in English.
+enum ModelText {
+    static func localized(_ english: String) -> String {
+        Bundle.main.localizedString(forKey: english, value: english, table: nil)
+    }
+
+    static func speedSystemImage(_ tier: String) -> String {
+        switch tier {
+        case "ultrafast": return "bolt"
+        case "flex": return "tortoise"
+        default: return "hare"
+        }
     }
 }
 

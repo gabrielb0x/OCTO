@@ -107,11 +107,6 @@ public enum ChatGPTPlan {
         guard let raw = rawValue?.trimmingCharacters(in: .whitespaces).lowercased(), !raw.isEmpty else { return nil }
         return !(raw == "free" || raw == "guest" || raw.hasPrefix("free_"))
     }
-
-    /// ChatGPT only lets subscribers pick a model. The picker stays when the plan is unknown.
-    public static func allowsModelChoice(_ rawValue: String?) -> Bool {
-        isPaid(rawValue) ?? true
-    }
 }
 
 /// Lenient accessors for `JSONSerialization` output, whose number types differ

@@ -541,6 +541,9 @@ struct ModelsInspectorView: View {
                 KeyValueRow(key: "allowsModelChoice", value: app.allowsModelChoice ? "true" : "false")
                 KeyValueRow(key: "planType", value: app.planType ?? "nil")
                 KeyValueRow(key: "defaultModel", value: app.defaultModel.id)
+                KeyValueRow(key: "available", value: app.availableModels.map(\.id).joined(separator: ", "))
+                KeyValueRow(key: "refused", value: app.refusedModelIDs.isEmpty ? "–" : app.refusedModelIDs.sorted().joined(separator: ", "))
+                KeyValueRow(key: "serviceTier", value: app.settings.serviceTier ?? "standard")
                 if let updatedAt = app.modelsUpdatedAt {
                     KeyValueRow(key: "updatedAt", value: updatedAt.formatted(date: .omitted, time: .standard))
                 }
@@ -566,6 +569,9 @@ struct ModelsInspectorView: View {
                     KeyValueRow(key: "acceptsImages", value: model.acceptsImages ? "true" : "false")
                     KeyValueRow(key: "supportsVerbosity", value: model.supportsVerbosity ? "true" : "false")
                     KeyValueRow(key: "supportsReasoningSummaries", value: model.supportsReasoningSummaries ? "true" : "false")
+                    KeyValueRow(key: "supportsWebSearch", value: model.supportsWebSearch ? "true" : "false")
+                    KeyValueRow(key: "availablePlans", value: model.availablePlans?.joined(separator: ", ") ?? "–")
+                    KeyValueRow(key: "speedTiers", value: model.speedTiers.isEmpty ? "–" : model.speedTiers.map(\.id).joined(separator: ", "))
                     if let summary = model.summary {
                         Text(verbatim: summary)
                             .font(.footnote)

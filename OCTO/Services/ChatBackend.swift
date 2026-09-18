@@ -11,21 +11,29 @@ struct ChatStreamRequest: Sendable {
     var webSearch: Bool
     /// Asks for the hosted image generation tool, which the Codex backend may not offer.
     var imageGeneration = false
+    /// A faster tier such as `priority` (Codex's "Fast"); nil answers at the usual speed.
+    var serviceTier: String?
     var cacheKey: String
     /// Set after the backend refused top-level instructions: they are sent as a developer message instead.
     var instructionsAsDeveloperMessage = false
     /// Set after the backend refused image generation: the reply is written without it.
     var imageGenerationRefused = false
+    /// Set after the backend refused the service tier: the reply comes at the usual speed.
+    var serviceTierRefused = false
 }
 
 enum ChatBackendError: LocalizedError {
     case failure(ChatFailureKind)
     case invalidResponse
+    /// Codex listed the model, but won't let this account use it.
+    case modelUnavailable(modelID: String, message: String?)
 
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
             return String(localized: "OpenAI returned an unexpected response.")
+        case .modelUnavailable(_, let message):
+            return message ?? String(localized: "Codex doesn't offer this model to your plan.")
         case .failure(let kind):
             switch kind {
             case .unauthorized:
@@ -129,6 +137,20 @@ final class ChatBackend: Sendable {
                 fallback.instructionsAsDeveloperMessage = true
                 return try await run(fallback, continuation: continuation, attempt: attempt + 1)
             }
+            // A faster tier the plan doesn't include: the question still deserves an answer, at
+            // the usual speed.
+            if http.statusCode == 400, let tier = request.serviceTier, !request.serviceTierRefused,
+               ResponsesRequest.isServiceTierRefusal(tier, message: payload.message) {
+                DevLog.log("codex", "The \(tier) tier isn't offered to this plan: replying at the usual speed", level: .warning)
+                continuation.yield(.serviceTierUnsupported)
+                var fallback = request
+                fallback.serviceTierRefused = true
+                // Same session: nothing about the tokens changed.
+                return try await run(fallback, continuation: continuation, attempt: attempt)
+            }
+            if ModelAvailability.isRefusal(status: http.statusCode, payload: payload, modelID: request.modelID) {
+                throw ChatBackendError.modelUnavailable(modelID: request.modelID, message: payload.message)
+            }
             throw ChatBackendError.failure(ChatFailureKind.classify(status: http.statusCode, payload: payload))
         }
 
@@ -193,6 +215,7 @@ final class ChatBackend: Sendable {
             input: input,
             tools: tools,
             reasoning: request.reasoningEffort.map { ResponsesReasoning(effort: $0, summary: request.reasoningSummaries ? "auto" : nil) },
+            serviceTier: request.serviceTierRefused ? nil : request.serviceTier,
             promptCacheKey: request.cacheKey,
             text: request.verbosity.map { ResponsesTextOptions(verbosity: $0) }
         )

@@ -4,6 +4,8 @@ import SwiftUI
 struct ChatView: View {
     @Environment(AppModel.self) private var app
     @Bindable var session: ChatSession
+    /// The button that opens the chats. The tab bar layout leaves it out when the chats have a tab.
+    var showsChatsButton = true
     let onOpenSidebar: () -> Void
     let onNewChat: () -> Void
     let onToggleTemporary: () -> Void
@@ -164,40 +166,34 @@ struct ChatView: View {
 
     // MARK: Toolbar
 
-    /// Free accounts get the upgrade offer in the top bar in place of the model picker.
-    private var showsUpgrade: Bool {
-        !app.allowsModelChoice && app.showsUpgradeOffer
-    }
-
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
-            Button(action: onOpenSidebar) {
-                Image("SidebarIcon")
+        if showsChatsButton {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: onOpenSidebar) {
+                    Image("SidebarIcon")
+                }
+                .accessibilityLabel(Text("Open sidebar"))
             }
-            .accessibilityLabel(Text("Open sidebar"))
         }
 
         // The offer to upgrade sits next to the button that opens the chats, as in the ChatGPT app.
-        // The spacer keeps it out of the glass of that button.
-        if showsUpgrade {
-            ToolbarSpacer(.fixed, placement: .topBarLeading)
+        // The spacer keeps it out of the glass of that button. With the model picker in the
+        // middle, it keeps only its sparkle so both fit.
+        if app.showsUpgradeOffer {
+            if showsChatsButton {
+                ToolbarSpacer(.fixed, placement: .topBarLeading)
+            }
             ToolbarItem(placement: .topBarLeading) {
-                UpgradePill(action: onUpgrade)
+                UpgradePill(isCompact: app.allowsModelChoice, action: onUpgrade)
             }
         }
 
+        // The models Codex offers the account. With a single one there's nothing to choose, and
+        // the middle of the bar stays empty.
         if app.allowsModelChoice {
             ToolbarItem(placement: .principal) {
                 ModelMenu(session: session)
-            }
-        } else if !showsUpgrade {
-            // Without a subscription ChatGPT offers no choice of model, so there's no picker.
-            ToolbarItem(placement: .principal) {
-                Text(verbatim: "ChatGPT")
-                    .font(.headline)
-                    .foregroundStyle(Theme.primaryText)
-                    .accessibilityAddTraits(.isHeader)
             }
         }
 
@@ -261,16 +257,18 @@ private struct ScrollMetrics: Equatable {
     var viewportHeight: CGFloat
 }
 
-/// Title of the chat screen, like "ChatGPT ›" in the official app: model and thinking level.
+/// Title of the chat screen, like "ChatGPT ›" in the official app: the models Codex offers the
+/// account, with what its catalog says about them, the thinking level and the speed.
 struct ModelMenu: View {
     @Environment(AppModel.self) private var app
     let session: ChatSession
 
     var body: some View {
         let current = session.model
+        let speed = current.speedTier(app.settings.serviceTier)
         Menu {
             Section("Model") {
-                ForEach(app.models) { model in
+                ForEach(app.availableModels) { model in
                     Button {
                         session.selectModel(model)
                     } label: {
@@ -280,7 +278,7 @@ struct ModelMenu: View {
                             Text(verbatim: model.displayName)
                         }
                         if let summary = model.summary {
-                            Text(verbatim: summary)
+                            Text(verbatim: ModelText.localized(summary))
                         }
                     }
                 }
@@ -301,6 +299,10 @@ struct ModelMenu: View {
                 }
             }
 
+            if !current.speedTiers.isEmpty {
+                speedMenu(for: current, active: speed)
+            }
+
             Section {
                 if current.supportsWebSearch {
                     Toggle(isOn: Binding(get: { session.conversation.webSearchEnabled }, set: { session.setWebSearch($0) })) {
@@ -311,10 +313,28 @@ struct ModelMenu: View {
                     Label("Create an image", systemImage: "photo")
                 }
             }
+
+            // What Codex lists but won't let this account use, so the choice isn't a mystery.
+            if !app.unavailableModels.isEmpty {
+                Section("Not included in your plan") {
+                    ForEach(app.unavailableModels) { model in
+                        Button {} label: {
+                            Text(verbatim: model.displayName)
+                        }
+                        .disabled(true)
+                    }
+                }
+            }
         } label: {
             HStack(spacing: 5) {
                 Text(verbatim: current.displayName)
                     .font(.headline)
+                if speed != nil {
+                    Image(systemName: "hare.fill")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Theme.secondaryText)
+                        .accessibilityLabel(Text("Fast"))
+                }
                 if let effort = session.reasoningEffort {
                     Text(verbatim: ReasoningEffortLabel.title(effort))
                         .font(.headline.weight(.regular))
@@ -332,6 +352,32 @@ struct ModelMenu: View {
         }
         .menuOrder(.fixed)
         .accessibilityLabel(Text("Choose model"))
+    }
+
+    /// The speeds Codex offers for the model: the usual one, and faster ones that use more of
+    /// the plan. The choice applies to every chat.
+    private func speedMenu(for model: ModelDescriptor, active: ModelSpeedTier?) -> some View {
+        Menu {
+            Button {
+                app.settings.serviceTier = nil
+            } label: {
+                Label("Standard", systemImage: active == nil ? "checkmark" : "gauge.with.dots.needle.33percent")
+                Text("The usual speed and usage")
+            }
+            ForEach(model.speedTiers) { tier in
+                Button {
+                    app.settings.serviceTier = tier.id
+                } label: {
+                    Label(ModelText.localized(tier.name), systemImage: active?.id == tier.id ? "checkmark" : ModelText.speedSystemImage(tier.id))
+                    if let summary = tier.summary, !summary.isEmpty {
+                        Text(verbatim: ModelText.localized(summary))
+                    }
+                }
+            }
+        } label: {
+            Label("Speed", systemImage: "hare")
+            Text(verbatim: active.map { ModelText.localized($0.name) } ?? String(localized: "Standard"))
+        }
     }
 }
 

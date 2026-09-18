@@ -10,7 +10,7 @@ public enum CodexBackend {
     /// Codex client, so OCTO presents itself as the open-source Codex CLI and
     /// appends its own name to the User-Agent.
     public static let originator = "codex_cli_rs"
-    public static let clientVersion = "0.154.0"
+    public static let clientVersion = "0.155.0"
 
     public static var modelsURL: URL {
         var components = URLComponents(string: "https://chatgpt.com/backend-api/codex/models")!

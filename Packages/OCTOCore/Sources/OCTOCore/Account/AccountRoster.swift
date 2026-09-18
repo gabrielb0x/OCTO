@@ -12,6 +12,9 @@ public struct StoredAccount: Codable, Equatable, Sendable, Identifiable {
     public var email: String?
     public var name: String?
     public var planType: String?
+    /// Where the account's profile picture lives, so the list can show it while another account
+    /// is in use.
+    public var pictureURL: URL?
     public var addedAt: Date
     public var lastUsedAt: Date
 
@@ -24,6 +27,7 @@ public struct StoredAccount: Codable, Equatable, Sendable, Identifiable {
         email: String? = nil,
         name: String? = nil,
         planType: String? = nil,
+        pictureURL: URL? = nil,
         addedAt: Date = Date(),
         lastUsedAt: Date = Date()
     ) {
@@ -33,6 +37,7 @@ public struct StoredAccount: Codable, Equatable, Sendable, Identifiable {
         self.email = email
         self.name = name
         self.planType = planType
+        self.pictureURL = pictureURL
         self.addedAt = addedAt
         self.lastUsedAt = lastUsedAt
     }
@@ -140,6 +145,12 @@ public struct AccountRoster: Codable, Equatable, Sendable {
         if let email, !email.isEmpty { accounts[index].email = email }
         if let name, !name.isEmpty { accounts[index].name = name }
         if let planType, !planType.isEmpty { accounts[index].planType = planType }
+    }
+
+    /// Remembers where an account's profile picture lives, or that it has none.
+    public mutating func setPicture(_ url: URL?, for key: String) {
+        guard let index = accounts.firstIndex(where: { $0.key == key }) else { return }
+        accounts[index].pictureURL = url
     }
 
     /// Signs one account out. The one used most recently takes its place when it was the current

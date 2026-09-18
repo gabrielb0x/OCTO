@@ -154,6 +154,25 @@ import Testing
         #expect(JSONValue.string(reasoning["summary"]) == "auto")
     }
 
+    /// Codex's "Fast" is the `priority` service tier, sent at the top of the body; the usual
+    /// speed sends nothing at all.
+    @Test func encodesTheServiceTier() throws {
+        let fast = ResponsesRequest(model: "gpt-5.5", instructions: nil, input: [], serviceTier: "priority")
+        let fastJSON = try #require(JSONValue.object(try fast.encoded()))
+        #expect(JSONValue.string(fastJSON["service_tier"]) == "priority")
+
+        let usual = ResponsesRequest(model: "gpt-5.5", instructions: nil, input: [])
+        let usualJSON = try #require(JSONValue.object(try usual.encoded()))
+        #expect(!usualJSON.keys.contains("service_tier"))
+    }
+
+    @Test func spotsARefusedServiceTier() {
+        #expect(ResponsesRequest.isServiceTierRefusal("priority", message: "Unsupported value: 'service_tier' does not support 'priority' with this model."))
+        #expect(ResponsesRequest.isServiceTierRefusal("priority", message: "Fast mode isn't available on your plan"))
+        #expect(!ResponsesRequest.isServiceTierRefusal("priority", message: "You've reached your usage limit."))
+        #expect(!ResponsesRequest.isServiceTierRefusal("priority", message: nil))
+    }
+
     @Test func encodesTheImageGenerationTool() throws {
         let request = ResponsesRequest(model: "gpt-5.5", instructions: nil, input: [], tools: [.webSearch(externalWebAccess: nil), .imageGeneration])
         let json = try #require(JSONValue.object(try request.encoded()))
@@ -217,6 +236,72 @@ import Testing
 }
 
 @Suite struct ModelCatalogTests {
+    /// The live catalog says which plans get each model and how fast it can answer: that's what
+    /// the picker offers, free plans included.
+    @Test func readsPlansAndSpeedsOfTheCodexCatalog() throws {
+        let json = #"""
+        {"models":[
+          {"slug":"gpt-6-astra","display_name":"GPT-6-Astra","description":"Our most capable model","visibility":"list","priority":1,
+           "supported_reasoning_levels":[{"effort":"low","description":"Fast responses with lighter reasoning"}],
+           "available_in_plans":["free","go","Plus","pro"],"supports_search_tool":true,
+           "service_tiers":[{"id":"priority","name":"Fast","description":"2x speed, increased usage"},{"id":"default","name":"Standard","description":""}]},
+          {"slug":"gpt-5.6-sol","display_name":"GPT-5.6-Sol","visibility":"list","priority":6,"supported_reasoning_levels":[],
+           "available_in_plans":["plus","pro"],"additional_speed_tiers":["fast"]},
+          {"slug":"gpt-5.5","display_name":"GPT-5.5","visibility":"list","priority":12,"supported_reasoning_levels":[],"supports_search_tool":false}
+        ]}
+        """#
+        let models = try #require(ModelCatalog.parseCodexModels(Data(json.utf8)))
+        #expect(models.map(\.id) == ["gpt-6-astra", "gpt-5.6-sol", "gpt-5.5"])
+        #expect(models[0].availablePlans == ["free", "go", "plus", "pro"])
+        #expect(models[0].speedTiers == [ModelSpeedTier(id: "priority", name: "Fast", summary: "2x speed, increased usage")])
+        #expect(models[0].speedTier("priority")?.name == "Fast")
+        #expect(models[0].speedTier("ultrafast") == nil)
+        #expect(models[1].speedTiers.map(\.id) == ["priority"])
+        #expect(models[2].availablePlans == nil)
+        #expect(models[2].supportsWebSearch == false)
+
+        #expect(models[0].isOffered(toPlan: "free"))
+        #expect(models[0].isOffered(toPlan: " PLUS "))
+        #expect(!models[1].isOffered(toPlan: "free"))
+        #expect(models[1].isOffered(toPlan: nil))
+        #expect(models[2].isOffered(toPlan: "free"))
+
+        let free = ModelAvailability.available(models, plan: "free")
+        #expect(free.map(\.id) == ["gpt-6-astra", "gpt-5.5"])
+        let refused = ModelAvailability.available(models, plan: "free", refused: ["gpt-6-astra"])
+        #expect(refused.map(\.id) == ["gpt-5.5"])
+        // With nothing left, the catalog stays offered rather than leaving the picker empty.
+        let none = ModelAvailability.available(models, plan: "free", refused: ["gpt-6-astra", "gpt-5.5"])
+        #expect(none.map(\.id) == models.map(\.id))
+    }
+
+    /// Models cached by an earlier version have no plans or speeds: they still load.
+    @Test func decodesModelsCachedBeforePlansAndSpeeds() throws {
+        let cached = #"[{"id":"gpt-5.5","displayName":"GPT-5.5","reasoningEfforts":[{"effort":"low"}],"supportsReasoningSummaries":true,"supportsVerbosity":true,"acceptsImages":true,"supportsWebSearch":true,"priority":12}]"#
+        let models = try JSONDecoder().decode([ModelDescriptor].self, from: Data(cached.utf8))
+        #expect(models.first?.id == "gpt-5.5")
+        #expect(models.first?.availablePlans == nil)
+        #expect(models.first?.speedTiers.isEmpty == true)
+
+        let fallback = ModelCatalog.chatGPTFallback
+        let roundTrip = try JSONDecoder().decode([ModelDescriptor].self, from: JSONEncoder().encode(fallback))
+        #expect(roundTrip == fallback)
+        #expect(fallback.allSatisfy { $0.isOffered(toPlan: "free") })
+    }
+
+    /// A model Codex won't let the account use leaves the picker; a complaint about a parameter
+    /// of the request doesn't.
+    @Test func spotsAModelTheAccountCannotUse() {
+        let model = "gpt-6-astra"
+        #expect(ModelAvailability.isRefusal(status: 400, payload: APIErrorPayload(message: "The 'gpt-6-astra' model is not supported when using Codex with a ChatGPT account."), modelID: model))
+        #expect(ModelAvailability.isRefusal(status: 404, payload: APIErrorPayload(message: "The model `gpt-6-astra` does not exist or you do not have access to it.", code: "model_not_found"), modelID: model))
+        #expect(ModelAvailability.isRefusal(status: 403, payload: APIErrorPayload(message: "This model is not available on your plan."), modelID: model))
+        #expect(!ModelAvailability.isRefusal(status: 400, payload: APIErrorPayload(message: "Unsupported value: 'ultra' is not supported with the 'gpt-6-astra' model for reasoning.effort."), modelID: model))
+        #expect(!ModelAvailability.isRefusal(status: 400, payload: APIErrorPayload(message: "Unsupported tool type: image_generation"), modelID: model))
+        #expect(!ModelAvailability.isRefusal(status: 429, payload: APIErrorPayload(message: "The model is not available right now."), modelID: model))
+        #expect(!ModelAvailability.isRefusal(status: 403, payload: APIErrorPayload(), modelID: model))
+    }
+
     @Test func parsesCodexCatalog() throws {
         let json = #"{"models":[{"slug":"hidden","display_name":"Hidden","visibility":"hide","priority":0,"supported_reasoning_levels":[]},{"slug":"gpt-5.5","display_name":"GPT-5.5","description":"Fast","visibility":"list","priority":12,"default_reasoning_level":"medium","supported_reasoning_levels":[{"effort":"low","description":"Quick"},{"effort":"medium","description":"Balanced"},{"effort":"xhigh","description":"Deep"}],"support_verbosity":true,"input_modalities":["text","image"],"context_window":272000},{"slug":"gpt-6-astra","display_name":"GPT-6-Astra","visibility":"list","priority":1,"supported_reasoning_levels":[{"effort":"low","description":"x"}],"input_modalities":["text"]}]}"#
         let models = try #require(ModelCatalog.parseCodexModels(Data(json.utf8)))
@@ -255,5 +340,24 @@ import Testing
             calendar: calendar
         )
         #expect(sections.map(\.bucket) == [.pinned, .today, .yesterday, .previous7Days, .previous30Days, .month(year: 2025, month: 6)])
+    }
+}
+
+@Suite struct ChatOriginTests {
+    /// Chats of the account come from ChatGPT; chats started in OCTO come from Codex, and only
+    /// those two filters narrow the list.
+    @Test func filtersChatsByOrigin() {
+        let now = Date()
+        let account = ConversationSummary(id: UUID(), title: "From the account", createdAt: now, updatedAt: now, isPinned: false, preview: "", remoteID: "abc")
+        let local = ConversationSummary(id: UUID(), title: "Written in OCTO", createdAt: now, updatedAt: now, isPinned: false, preview: "")
+        #expect(account.origin == .chatGPT)
+        #expect(local.origin == .codex)
+        #expect(Conversation(remoteID: "abc").origin == .chatGPT)
+        #expect(Conversation().origin == .codex)
+
+        let both = [account, local]
+        #expect(ChatOriginFilter.all.apply(to: both).map(\.id) == [account.id, local.id])
+        #expect(ChatOriginFilter.chatGPT.apply(to: both).map(\.id) == [account.id])
+        #expect(ChatOriginFilter.codex.apply(to: both).map(\.id) == [local.id])
     }
 }

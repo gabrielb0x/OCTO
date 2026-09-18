@@ -54,6 +54,11 @@ final class AccountCache: @unchecked Sendable {
         try? Data(contentsOf: avatarURL)
     }
 
+    /// When the picture was saved, so it's only downloaded again now and then.
+    var avatarSavedAt: Date? {
+        (try? FileManager.default.attributesOfItem(atPath: avatarURL.path))?[.modificationDate] as? Date
+    }
+
     func saveAvatar(_ data: Data?) {
         if let data {
             try? data.write(to: avatarURL, options: [.atomic, .completeFileProtectionUnlessOpen])

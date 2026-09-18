@@ -32,11 +32,11 @@ struct GeneralSettingsView: View {
             }
 
             Section {
-                if app.allowsModelChoice {
-                    Picker(selection: defaultModelBinding) {
-                        ForEach(app.models) { model in
-                            Text(verbatim: model.displayName).tag(model.id)
-                        }
+                // The models Codex offers the account, which one new chats start with, and
+                // what isn't included in the plan.
+                NavigationLink(value: SettingsRoute.models) {
+                    LabeledContent {
+                        Text(verbatim: app.defaultModel.displayName)
                     } label: {
                         Label("Default model", systemImage: "cpu")
                     }
@@ -58,10 +58,6 @@ struct GeneralSettingsView: View {
         }
         .navigationTitle("General")
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private var defaultModelBinding: Binding<String> {
-        Binding(get: { app.defaultModel.id }, set: { app.settings.defaultModelID = $0 })
     }
 
     private var languageName: String {

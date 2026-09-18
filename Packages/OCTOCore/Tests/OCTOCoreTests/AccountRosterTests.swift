@@ -145,6 +145,23 @@ import Testing
         #expect(AccountRoster(accounts: [], currentKey: "user-1").currentKey == nil)
     }
 
+    /// The list remembers where each account's picture lives, so it can show the pictures of the
+    /// accounts not in use. A list saved before that still loads.
+    @Test func remembersWhereEachPictureLives() throws {
+        let saved = #"{"accounts":[{"key":"user-1","email":"me@example.com","addedAt":0,"lastUsedAt":0}],"currentKey":"user-1"}"#
+        var roster = try JSONDecoder().decode(AccountRoster.self, from: Data(saved.utf8))
+        #expect(roster.current?.pictureURL == nil)
+
+        let picture = URL(string: "https://example.com/avatar.png")!
+        roster.setPicture(picture, for: "user-1")
+        roster.setPicture(picture, for: "user-unknown")
+        #expect(roster.current?.pictureURL == picture)
+        #expect(roster.accounts.count == 1)
+
+        roster.setPicture(nil, for: "user-1")
+        #expect(roster.current?.pictureURL == nil)
+    }
+
     @Test func namesAnAccountWithWhateverItKnows() {
         #expect(StoredAccount(key: "k", email: "me@example.com").displayName == "me@example.com")
         #expect(StoredAccount(key: "k", email: "me@example.com", name: " Gabriel ").displayName == "Gabriel")

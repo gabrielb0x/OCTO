@@ -1,5 +1,6 @@
 import OCTOCore
 import SwiftUI
+import UIKit
 
 /// The ChatGPT accounts signed in on this device: which one is in use, how to switch, and how to
 /// add another. Each account keeps its own chats, settings and subscription, in its own folder,
@@ -48,6 +49,10 @@ struct AccountsView: View {
         }
         .navigationTitle("Accounts")
         .navigationBarTitleDisplayMode(.inline)
+        // The other accounts show the picture their folder kept, then a fresh one.
+        .task(id: app.accounts.map(\.key)) {
+            await app.accountPictures.refresh(app.accounts, except: app.currentAccountKey)
+        }
         .sheet(isPresented: $showDeviceCode) {
             DeviceCodeSheet()
         }
@@ -78,8 +83,7 @@ struct AccountsView: View {
             switchTo(account)
         } label: {
             HStack(spacing: 12) {
-                // Only the account in use has its picture downloaded; the others show their initial.
-                AccountAvatar(name: account.name, email: account.email, image: isCurrent ? app.account.avatar : nil, size: 40)
+                AccountAvatar(name: account.name, email: account.email, image: picture(of: account, isCurrent: isCurrent), size: 40)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: title(account))
                         .font(.body.weight(.medium))
@@ -129,6 +133,11 @@ struct AccountsView: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isCurrent ? [.isButton, .isSelected] : .isButton)
+    }
+
+    /// The picture of the account in use is the one of its profile; the others come from their folders.
+    private func picture(of account: StoredAccount, isCurrent: Bool) -> UIImage? {
+        isCurrent ? app.account.avatar : app.accountPictures.image(for: account.key)
     }
 
     /// The name of an account, hidden behind dots like everywhere else when it is only an address

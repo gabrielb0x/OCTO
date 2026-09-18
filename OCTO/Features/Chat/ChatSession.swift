@@ -46,6 +46,8 @@ final class ChatSession: Identifiable {
 
     @ObservationIgnored private weak var app: AppModel?
     @ObservationIgnored private var streamTask: Task<Void, Never>?
+    /// Models Codex turned down during the turn being written, which was asked again with another.
+    @ObservationIgnored private var refusalsThisTurn = 0
 
     init(conversation: Conversation, isTemporary: Bool, app: AppModel) {
         id = conversation.id
@@ -308,8 +310,9 @@ final class ChatSession: Identifiable {
         let webSearch = conversation.webSearchEnabled && model.supportsWebSearch
         let imageGeneration = conversation.imageGenerationEnabled
         let summaries = app.settings.showReasoning && model.supportsReasoningSummaries
+        let serviceTier = model.speedTier(app.settings.serviceTier)?.id
         let cacheKey = conversation.id.uuidString
-        DevLog.log("reply", "Started with \(model.id), thinking \(effort ?? "none"), web search \(webSearch ? "on" : "off"), \(history.count) messages")
+        DevLog.log("reply", "Started with \(model.id), thinking \(effort ?? "none"), speed \(serviceTier ?? "standard"), web search \(webSearch ? "on" : "off"), \(history.count) messages")
 
         streamTask = Task { [weak self] in
             let input = await Task.detached(priority: .userInitiated) {
@@ -324,6 +327,7 @@ final class ChatSession: Identifiable {
                 verbosity: nil,
                 webSearch: webSearch,
                 imageGeneration: imageGeneration,
+                serviceTier: serviceTier,
                 cacheKey: cacheKey
             )
             await self?.consume(backend.stream(request), reply: reply)
@@ -369,6 +373,8 @@ final class ChatSession: Identifiable {
                     if activity == .drawing { activity = .thinking }
                 case .imageGenerationUnsupported:
                     imageGenerationWasRefused()
+                case .serviceTierUnsupported:
+                    serviceTierWasRefused()
                 case .citations(let citations):
                     reply.addCitations(citations)
                 case .completed(let usage):
@@ -380,6 +386,9 @@ final class ChatSession: Identifiable {
         }
 
         let cancelled = Task.isCancelled || failure is CancellationError || (failure as? URLError)?.code == .cancelled
+        if !cancelled, case .modelUnavailable(let modelID, _)? = failure as? ChatBackendError, askAgain(reply, refusing: modelID) {
+            return
+        }
         if cancelled {
             reply.revealEverything()
             finishTurn(reply, status: .cancelled, error: nil)
@@ -403,6 +412,41 @@ final class ChatSession: Identifiable {
         persist()
     }
 
+    /// Codex listed the model but won't let this account use it: the model leaves the picker and
+    /// the question goes, unchanged, to the best model left. Twice at most per turn.
+    private func askAgain(_ reply: LiveReply, refusing modelID: String) -> Bool {
+        guard let app, refusalsThisTurn < 2, reply.receivedText.isEmpty else { return false }
+        app.modelWasRefused(modelID)
+        let replacement = app.model(for: nil)
+        guard replacement.id != modelID else { return false }
+        refusalsThisTurn += 1
+        reply.stop()
+        if live === reply {
+            live = nil
+        }
+        conversation.messages.removeAll { $0.id == reply.messageID }
+        conversation.modelID = replacement.id
+        conversation.reasoningEffort = replacement.resolvedEffort(preferred: conversation.reasoningEffort)
+        activity = .idle
+        streamTask = nil
+        let refusedName = app.models.first { $0.id == modelID }?.displayName ?? modelID
+        app.toasts.show(
+            String(localized: "\(refusedName) isn't available with your plan: ChatGPT is answering with \(replacement.displayName)."),
+            style: .warning,
+            systemImage: "cpu"
+        )
+        startAssistantTurn()
+        return true
+    }
+
+    /// The plan doesn't include the faster tier: replies go back to the usual speed, and the
+    /// reply being written comes at that speed.
+    private func serviceTierWasRefused() {
+        guard let app, app.settings.serviceTier != nil else { return }
+        app.settings.serviceTier = nil
+        app.toasts.show(String(localized: "Your plan doesn't include this speed: ChatGPT is answering at the usual speed."), style: .warning, systemImage: "hare")
+    }
+
     /// The backend doesn't offer image generation: the chat stops asking for it, and the reply
     /// that's being written is a written one.
     private func imageGenerationWasRefused() {
@@ -412,6 +456,7 @@ final class ChatSession: Identifiable {
     }
 
     private func finishTurn(_ reply: LiveReply, status: ChatMessage.Status, error: Error?) {
+        refusalsThisTurn = 0
         reply.stop()
         updateMessage(reply.messageID) { message in
             message.text = reply.receivedText

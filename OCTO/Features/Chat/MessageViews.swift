@@ -345,7 +345,7 @@ private struct AssistantMessageContent: View {
             }
             if app.allowsModelChoice {
                 Menu {
-                    ForEach(app.models) { model in
+                    ForEach(app.availableModels) { model in
                         Button(model.displayName) {
                             session.regenerate(message.id, using: model)
                         }
