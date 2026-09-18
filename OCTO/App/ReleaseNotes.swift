@@ -20,26 +20,26 @@ struct ReleaseNotes: Identifiable, Equatable {
 
     /// Notes of the version being shipped. Keep in sync with CHANGELOG.md.
     static var current: ReleaseNotes {
-        ReleaseNotes(version: "1.9.0", changes: [
+        ReleaseNotes(version: "1.10.0", changes: [
+            Change(
+                systemImage: "rectangle.3.group",
+                title: String(localized: "A tab bar, if you like"),
+                detail: String(localized: "Settings → Layout puts your chats, Home and Settings in a Liquid Glass bar at the bottom of the screen, with the tabs you choose. The sidebar stays the default.")
+            ),
+            Change(
+                systemImage: "cpu",
+                title: String(localized: "The models Codex offers you"),
+                detail: String(localized: "The picker lists the models Codex gives your plan, free included, with what they're for and how fast they can answer. A model Codex turns down leaves it.")
+            ),
+            Change(
+                systemImage: "terminal",
+                title: String(localized: "ChatGPT or Codex"),
+                detail: String(localized: "A mark tells the chats of your ChatGPT account from those written with Codex in OCTO, and the filter of the list can keep only one kind.")
+            ),
             Change(
                 systemImage: "person.2",
-                title: String(localized: "Several ChatGPT accounts"),
-                detail: String(localized: "Add your other accounts and switch between them from Settings → Accounts, or by holding your name in the chat list. Each one keeps its own chats on this device.")
-            ),
-            Change(
-                systemImage: "megaphone",
-                title: String(localized: "Ads, really managed"),
-                detail: String(localized: "Ads management turns personalized ads and the ad history off in your account, deletes the advertising data ChatGPT keeps, and lets a free account trade its ads for fewer messages.")
-            ),
-            Change(
-                systemImage: "brain",
-                title: String(localized: "Memory switches that work"),
-                detail: String(localized: "“Reference saved memories” and “Reference chat history” are switches now, saved straight to your ChatGPT account instead of only being shown.")
-            ),
-            Change(
-                systemImage: "exclamationmark.triangle",
-                title: String(localized: "Red means red"),
-                detail: String(localized: "Signing out, deleting your chats and the other rows that undo something wear a stronger red, over the whole row.")
+                title: String(localized: "Every account's picture"),
+                detail: String(localized: "The account list shows the profile pictures of your other accounts too.")
             ),
         ])
     }

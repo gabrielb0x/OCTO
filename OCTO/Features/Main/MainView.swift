@@ -96,6 +96,12 @@ struct MainView: View {
                     selectedTab = .home
                 }
             }
+            // Going back to the sidebar from the Settings tab keeps Settings on screen, as a sheet.
+            .onChange(of: app.settings.layout) { old, new in
+                if old == .tabBar, new == .sidebar, selectedTab == .settings {
+                    openSettings(path: [.layout])
+                }
+            }
             .sensoryFeedback(.selection, trigger: isSidebarOpen) { _, _ in
                 app.settings.hapticsEnabled
             }

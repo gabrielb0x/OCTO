@@ -2,6 +2,25 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [1.10.0] – 2026-09-18
+
+### Ajouté
+
+- **Une nouvelle disposition, avec une barre d'onglets en bas.** **Réglages → Disposition** propose, à côté de la barre latérale de l'app ChatGPT (qui reste la disposition par défaut), une **barre d'onglets Liquid Glass** : Chats, Accueil et Réglages, plus un bouton de recherche rond au bout de la barre. Choisir la barre d'onglets fait apparaître ses options : les onglets à y mettre (Accueil, Chats, Projets, Comptes, Réglages) et leur ordre, le bouton de recherche, l'onglet sur lequel OCTO s'ouvre, et la barre qui se réduit quand tu fais défiler un chat. Accueil reste toujours : c'est là que tu écris. Sans onglet Chats, le bouton en haut à gauche ouvre tes chats dans une feuille ; sans onglet Réglages, ta photo en haut des chats y mène.
+- **Savoir d'où vient chaque chat.** Dans la liste, le logo de ChatGPT marque les chats de ton compte ChatGPT, et un terminal ceux écrits avec **Codex** dans OCTO, qui n'existent que sur cet iPhone. Garder le doigt sur un chat le rappelle aussi. Ça se désactive dans Réglages → Disposition.
+- **N'afficher que les chats ChatGPT, ou que les chats Codex.** Le bouton de filtre au bout du champ de recherche (ou en haut de l'onglet Chats) garde un seul type de chats, et un bandeau le rappelle avec « Tout afficher ». Le choix est gardé.
+- **Les photos de profil des autres comptes.** Réglages → Comptes montre la photo de chaque compte connecté, et plus seulement celle du compte utilisé : d'abord celle que son dossier a gardée, puis une photo à jour une fois par jour. Elle est téléchargée sans aucun jeton, ou avec la session de ce compte-là quand elle est hébergée sur chatgpt.com, et par une session réseau à part, sans cookies, pour que rien ne relie deux comptes.
+- **Le sélecteur de modèle suit l'API de Codex.** Il liste les modèles que le catalogue de Codex (`codex/models`) donne à ton forfait — **y compris le forfait gratuit** : GPT-6-Astra, GPT-5.6 Sol, Terra et Luna, GPT-5.5 — avec leur description. OCTO **vérifie les modèles disponibles** : ceux que le catalogue réserve à d'autres forfaits (`available_in_plans`) sont écartés, et si Codex refuse un modèle à l'envoi d'un message, il quitte le sélecteur et la question repart aussitôt avec le meilleur modèle restant, en te le disant.
+- **La vitesse des réponses.** Le menu du modèle propose les vitesses de Codex pour ce modèle (Standard, Rapide, Ultra-rapide), envoyées comme le fait Codex (`service_tier`). Les vitesses rapides consomment davantage ton forfait ; s'il ne les inclut pas, la réponse arrive quand même, à la vitesse habituelle.
+- **Réglages → Général → Modèle par défaut** liste les modèles proposés à ton forfait avec leur description, leurs niveaux de réflexion et leurs vitesses, ceux qui ne sont pas inclus, et un bouton pour vérifier à nouveau auprès de Codex.
+
+### Modifié
+
+- **Plus de « ChatGPT » au milieu de la barre du haut d'une conversation** : il y a le sélecteur de modèle, ou rien quand Codex ne propose qu'un modèle. Avec le sélecteur au milieu, « Mettre à niveau » ne garde que son étincelle, pour que tout tienne.
+- Le mode vocal affiche le modèle qui répond.
+- OCTO se présente à Codex en version 0.155.0, la dernière de la CLI.
+- Le README ne montre plus que les captures principales ; les autres restent dans `docs/screenshots`.
+
 ## [1.9.0] – 2026-09-16
 
 ### Ajouté

@@ -8134,6 +8134,766 @@
           }
         }
       }
+    },
+    "%@ isn't available with your plan: ChatGPT is answering with %@.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ n'est pas inclus dans ton forfait : ChatGPT répond avec %2$@."
+          }
+        }
+      }
+    },
+    "Adds this tab to the bar": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoute cet onglet à la barre"
+          }
+        }
+      }
+    },
+    "All chats": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous les chats"
+          }
+        }
+      }
+    },
+    "All of OCTO's settings.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous les réglages d'OCTO."
+          }
+        }
+      }
+    },
+    "Chat list": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste des chats"
+          }
+        }
+      }
+    },
+    "ChatGPT's logo marks the chats of your ChatGPT account, and a terminal the chats written with Codex, which only exist on this device. The filter at the top of the list shows only one kind.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le logo de ChatGPT marque les chats de ton compte ChatGPT, et un terminal ceux écrits avec Codex, qui n'existent que sur cet appareil. Le filtre en haut de la liste n'en garde qu'un seul type."
+          }
+        }
+      }
+    },
+    "Check again": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifier à nouveau"
+          }
+        }
+      }
+    },
+    "Codex doesn't offer it to your plan": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex ne le propose pas à ton forfait"
+          }
+        }
+      }
+    },
+    "Codex doesn't offer this model to your plan.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex ne propose pas ce modèle à ton forfait."
+          }
+        }
+      }
+    },
+    "Codex turned it down for your account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex l'a refusé pour ton compte"
+          }
+        }
+      }
+    },
+    "Every chat, by date, with the filter.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous les chats, par date, avec le filtre."
+          }
+        }
+      }
+    },
+    "Filter chats": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrer les chats"
+          }
+        }
+      }
+    },
+    "From your ChatGPT account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De ton compte ChatGPT"
+          }
+        }
+      }
+    },
+    "From your account and from OCTO": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De ton compte et d'OCTO"
+          }
+        }
+      }
+    },
+    "Home": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accueil"
+          }
+        }
+      }
+    },
+    "In the tab bar": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans la barre d'onglets"
+          }
+        }
+      }
+    },
+    "Last checked": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dernière vérification"
+          }
+        }
+      }
+    },
+    "Layout": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disposition"
+          }
+        }
+      }
+    },
+    "Like the ChatGPT app: slide the chat aside, or tap the button at the top left, to see your chats.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comme l'app ChatGPT : fais glisser le chat sur le côté, ou touche le bouton en haut à gauche, pour voir tes chats."
+          }
+        }
+      }
+    },
+    "More tabs": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autres onglets"
+          }
+        }
+      }
+    },
+    "New chats start with the model chosen here. Each chat can switch model, thinking and speed from the top of the screen.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les nouveaux chats commencent avec le modèle choisi ici. Chaque chat peut changer de modèle, de réflexion et de vitesse depuis le haut de l'écran."
+          }
+        }
+      }
+    },
+    "No chats from your ChatGPT account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun chat de ton compte ChatGPT"
+          }
+        }
+      }
+    },
+    "No chats written with Codex yet": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun chat écrit avec Codex pour l'instant"
+          }
+        }
+      }
+    },
+    "Not included in your plan": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas inclus dans ton forfait"
+          }
+        }
+      }
+    },
+    "OCTO asks Codex which models your account can use, keeps those it gives your plan, and leaves out any it turns down when a message is sent.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO demande à Codex quels modèles ton compte peut utiliser, garde ceux qu'il donne à ton forfait et écarte ceux qu'il refuse à l'envoi d'un message."
+          }
+        }
+      }
+    },
+    "OCTO looks through the chats on this iPhone, and ChatGPT inside the messages of your whole account.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO cherche dans les chats de cet iPhone, et ChatGPT dans les messages de tout ton compte."
+          }
+        }
+      }
+    },
+    "Offered to your plan": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposés à ton forfait"
+          }
+        }
+      }
+    },
+    "Only the chats of your ChatGPT account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seulement les chats de ton compte ChatGPT"
+          }
+        }
+      }
+    },
+    "Only the chats written with Codex": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seulement les chats écrits avec Codex"
+          }
+        }
+      }
+    },
+    "Open on": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir sur"
+          }
+        }
+      }
+    },
+    "Search button": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bouton de recherche"
+          }
+        }
+      }
+    },
+    "Search chats": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher dans les chats"
+          }
+        }
+      }
+    },
+    "Search every chat, even inside the messages.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cherche dans tous les chats, même dans les messages."
+          }
+        }
+      }
+    },
+    "Search your chats": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cherche dans tes chats"
+          }
+        }
+      }
+    },
+    "Show": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher"
+          }
+        }
+      }
+    },
+    "Show all": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout afficher"
+          }
+        }
+      }
+    },
+    "Shrink while scrolling": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réduire en faisant défiler"
+          }
+        }
+      }
+    },
+    "Sidebar": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barre latérale"
+          }
+        }
+      }
+    },
+    "Speed": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vitesse"
+          }
+        }
+      }
+    },
+    "Started in OCTO, kept on this device": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commencés dans OCTO, gardés sur cet appareil"
+          }
+        }
+      }
+    },
+    "Swipe a tab to take it out of the bar, or tap Edit to change their order. Home always stays: it's where you write to ChatGPT.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balaie un onglet pour le retirer de la barre, ou touche Modifier pour changer leur ordre. Accueil reste toujours : c'est là que tu écris à ChatGPT."
+          }
+        }
+      }
+    },
+    "Switch between your accounts.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passe d'un compte à l'autre."
+          }
+        }
+      }
+    },
+    "Tab bar": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barre d'onglets"
+          }
+        }
+      }
+    },
+    "The bar holds up to 5 tabs. Take one out to add another.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La barre contient jusqu'à 5 onglets. Retires-en un pour en ajouter un autre."
+          }
+        }
+      }
+    },
+    "The chat you're writing in. Always in the bar.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le chat dans lequel tu écris. Toujours dans la barre."
+          }
+        }
+      }
+    },
+    "The chats of your ChatGPT account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les chats de ton compte ChatGPT"
+          }
+        }
+      }
+    },
+    "The chats you start in OCTO are written with Codex and stay on this device.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les chats que tu commences dans OCTO sont écrits avec Codex et restent sur cet appareil."
+          }
+        }
+      }
+    },
+    "The projects of your ChatGPT account.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les projets de ton compte ChatGPT."
+          }
+        }
+      }
+    },
+    "The search button sits apart, at the end of the bar, and looks through every chat — even inside the messages. While you scroll down a chat, the bar can shrink to leave it more room.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le bouton de recherche se tient à part, au bout de la barre, et cherche dans tous les chats — même dans les messages. Quand tu fais défiler un chat vers le bas, la barre peut se réduire pour lui laisser plus de place."
+          }
+        }
+      }
+    },
+    "The usual speed and usage": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La vitesse et la consommation habituelles"
+          }
+        }
+      }
+    },
+    "Thinking: %@ to %@": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réflexion : %1$@ à %2$@"
+          }
+        }
+      }
+    },
+    "Where chats come from": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provenance des chats"
+          }
+        }
+      }
+    },
+    "Written with Codex, on this device": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écrit avec Codex, sur cet appareil"
+          }
+        }
+      }
+    },
+    "You're on the free plan. Codex still offers it several models: pick one at the top of a chat.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu es sur le forfait gratuit. Codex lui propose quand même plusieurs modèles : choisis-en un en haut d'un chat."
+          }
+        }
+      }
+    },
+    "You're on the free plan: Codex answers with the model it offers your account.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu es sur le forfait gratuit : Codex répond avec le modèle qu'il propose à ton compte."
+          }
+        }
+      }
+    },
+    "Your ChatGPT projects will appear here": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tes projets ChatGPT apparaîtront ici"
+          }
+        }
+      }
+    },
+    "Your chats, Home and Settings sit in a Liquid Glass bar at the bottom of the screen. Choose its tabs below.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tes chats, l'accueil et les réglages se rangent dans une barre Liquid Glass en bas de l'écran. Choisis ses onglets ci-dessous."
+          }
+        }
+      }
+    },
+    "Your plan doesn't include this speed: ChatGPT is answering at the usual speed.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton forfait n'inclut pas cette vitesse : ChatGPT répond à la vitesse habituelle."
+          }
+        }
+      }
+    },
+    "Ultrafast": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ultra-rapide"
+          }
+        }
+      }
+    },
+    "Our most capable model for complex, demanding work.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notre modèle le plus performant, pour le travail complexe et exigeant."
+          }
+        }
+      }
+    },
+    "Latest frontier agentic coding model.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le dernier modèle de pointe pour coder en mode agent."
+          }
+        }
+      }
+    },
+    "Balanced agentic coding model for everyday work.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un modèle équilibré pour coder en mode agent au quotidien."
+          }
+        }
+      }
+    },
+    "Fast and affordable agentic coding model.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un modèle rapide et économique pour coder en mode agent."
+          }
+        }
+      }
+    },
+    "Frontier model for complex coding, research, and real-world work.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un modèle de pointe pour le code complexe, la recherche et le travail concret."
+          }
+        }
+      }
+    },
+    "Strong model for everyday coding.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un modèle solide pour coder au quotidien."
+          }
+        }
+      }
+    },
+    "2x speed, increased usage": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2× plus rapide, consomme davantage"
+          }
+        }
+      }
+    },
+    "1.5x speed, increased usage": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1,5× plus rapide, consomme davantage"
+          }
+        }
+      }
+    },
+    "The fastest available responses for latency-sensitive work.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les réponses les plus rapides possibles, quand chaque seconde compte."
+          }
+        }
+      }
+    },
+    "A tab bar, if you like": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une barre d'onglets, si tu veux"
+          }
+        }
+      }
+    },
+    "Settings → Layout puts your chats, Home and Settings in a Liquid Glass bar at the bottom of the screen, with the tabs you choose. The sidebar stays the default.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réglages → Disposition range tes chats, l'accueil et les réglages dans une barre Liquid Glass en bas de l'écran, avec les onglets de ton choix. La barre latérale reste la disposition par défaut."
+          }
+        }
+      }
+    },
+    "The models Codex offers you": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les modèles que Codex te propose"
+          }
+        }
+      }
+    },
+    "The picker lists the models Codex gives your plan, free included, with what they're for and how fast they can answer. A model Codex turns down leaves it.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le sélecteur liste les modèles que Codex donne à ton forfait, gratuit compris, avec ce qu'ils savent faire et la vitesse à laquelle ils répondent. Un modèle que Codex refuse en disparaît."
+          }
+        }
+      }
+    },
+    "ChatGPT or Codex": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ChatGPT ou Codex"
+          }
+        }
+      }
+    },
+    "A mark tells the chats of your ChatGPT account from those written with Codex in OCTO, and the filter of the list can keep only one kind.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une marque distingue les chats de ton compte ChatGPT de ceux écrits avec Codex dans OCTO, et le filtre de la liste peut n'en garder qu'un seul type."
+          }
+        }
+      }
+    },
+    "Every account's picture": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La photo de chaque compte"
+          }
+        }
+      }
+    },
+    "The account list shows the profile pictures of your other accounts too.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La liste des comptes montre aussi les photos de profil de tes autres comptes."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

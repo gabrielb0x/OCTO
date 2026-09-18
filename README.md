@@ -13,39 +13,27 @@
 
 ## 📱 Aperçu
 
-| Connexion | Nouveau chat | Conversation |
+| Nouveau chat | Conversation | Barre latérale |
 |:---:|:---:|:---:|
-| <img src="docs/screenshots/welcome.png" width="250" alt="Écran de connexion"> | <img src="docs/screenshots/home.png" width="250" alt="Nouveau chat avec suggestions"> | <img src="docs/screenshots/chat.png" width="250" alt="Conversation avec du code"> |
-| **Barre latérale** | **Mode vocal** | **Chat supprimé** |
-| <img src="docs/screenshots/sidebar.png" width="250" alt="Barre latérale avec l'historique"> | <img src="docs/screenshots/voice.png" width="250" alt="Mode vocal"> | <img src="docs/screenshots/deleteToast.png" width="250" alt="Confirmation de suppression d'un chat"> |
-| **Réglages** | **Paramètres de l'application** | **À propos** |
-| <img src="docs/screenshots/settings.png" width="250" alt="Réglages"> | <img src="docs/screenshots/settingsApp.png" width="250" alt="Paramètres de l'application"> | <img src="docs/screenshots/about.png" width="250" alt="À propos"> |
-| **Forfait Free** | **Thème clair** | **Nouveautés** |
-| <img src="docs/screenshots/freePlan.png" width="250" alt="Nouveau chat sans sélecteur de modèle"> | <img src="docs/screenshots/lightChat.png" width="250" alt="Conversation en thème clair avec accent bleu"> | <img src="docs/screenshots/whatsNew.png" width="250" alt="Écran des nouveautés"> |
-| **Abonnement** | **Apparence** | **Confidentialité** |
-| <img src="docs/screenshots/subscription.png" width="250" alt="Abonnement avec les limites d'utilisation du compte"> | <img src="docs/screenshots/appearance.png" width="250" alt="Apparence : couleurs, texte et animation des réponses"> | <img src="docs/screenshots/privacy.png" width="250" alt="Réglages de confidentialité"> |
-| **Gestion des données** | **Vérification de l'âge** | **Mise à jour disponible** |
-| <img src="docs/screenshots/dataControls.png" width="250" alt="Réglages d'entraînement lus depuis le compte"> | <img src="docs/screenshots/ageVerification.png" width="250" alt="Statut de l'âge et raisons de ne pas le vérifier"> | <img src="docs/screenshots/update.png" width="250" alt="Nouvelle version proposée"> |
-| **Mode développeur** | **Inspecteur réseau** | **Détails des messages** |
-| <img src="docs/screenshots/developer.png" width="250" alt="Mode développeur"> | <img src="docs/screenshots/network.png" width="250" alt="Inspecteur réseau"> | <img src="docs/screenshots/messageDetails.png" width="250" alt="Détails techniques sous les messages"> |
-| **Appareils connectés** | **Stockage** | **Mémoire** |
-| <img src="docs/screenshots/devices.png" width="250" alt="Appareils connectés au compte ChatGPT"> | <img src="docs/screenshots/storage.png" width="250" alt="Stockage sur l'appareil et dans le compte"> | <img src="docs/screenshots/memory.png" width="250" alt="Mémoire du compte ChatGPT"> |
-| **Forfaits ChatGPT** | **Comptes** | **Gestion des publicités** |
-| <img src="docs/screenshots/upgrade.png" width="250" alt="Les forfaits ChatGPT avec leurs prix"> | <img src="docs/screenshots/accounts.png" width="250" alt="Les comptes ChatGPT connectés sur cet appareil"> | <img src="docs/screenshots/ads.png" width="250" alt="Gestion des publicités du compte ChatGPT"> |
+| <img src="docs/screenshots/home.png" width="250" alt="Nouveau chat avec le sélecteur de modèle et les suggestions"> | <img src="docs/screenshots/chat.png" width="250" alt="Conversation avec du code"> | <img src="docs/screenshots/sidebar.png" width="250" alt="Barre latérale avec l'historique et la provenance des chats"> |
+| **Barre d'onglets** | **Mode vocal** | **Réglages** |
+| <img src="docs/screenshots/tabsChats.png" width="250" alt="Disposition avec une barre d'onglets Liquid Glass"> | <img src="docs/screenshots/voice.png" width="250" alt="Mode vocal"> | <img src="docs/screenshots/settings.png" width="250" alt="Réglages"> |
 
-Ces captures sont prises automatiquement sur un simulateur iPhone 17 Pro par le workflow [`screenshots.yml`](.github/workflows/screenshots.yml), avec un compte et des chats de démonstration.
+Ces captures sont prises automatiquement sur un simulateur iPhone 17 Pro par le workflow [`screenshots.yml`](.github/workflows/screenshots.yml), avec un compte et des chats de démonstration. Toutes les autres (connexion, abonnement, confidentialité, mode développeur…) sont dans [`docs/screenshots`](docs/screenshots).
 
 ## ✨ Fonctionnalités
 
 - **Connexion avec ton compte ChatGPT** (Free, Plus, Pro, Business…) via OAuth, comme la CLI officielle et open source [Codex](https://github.com/openai/codex), ou avec un code d'appareil.
-- **Plusieurs comptes, et on passe de l'un à l'autre.** Réglages → Comptes liste les comptes connectés sur l'iPhone et il suffit d'une pression pour changer ; garder le doigt sur ton nom dans la liste des chats fait la même chose. **Chaque compte garde ses propres chats** dans son dossier et ses propres jetons dans le trousseau, donc rien ne se mélange. Ajouter un compte ouvre la page de connexion sans les cookies du compte déjà connecté, pour pouvoir en choisir un autre.
+- **Plusieurs comptes, et on passe de l'un à l'autre.** Réglages → Comptes liste les comptes connectés sur l'iPhone, **chacun avec sa photo de profil**, et il suffit d'une pression pour changer ; garder le doigt sur ton nom dans la liste des chats fait la même chose. **Chaque compte garde ses propres chats** dans son dossier et ses propres jetons dans le trousseau, donc rien ne se mélange. Ajouter un compte ouvre la page de connexion sans les cookies du compte déjà connecté, pour pouvoir en choisir un autre.
 - **Tes chats et tes projets viennent de ton compte** : chaque chat s'ouvre avec ses messages, sa réflexion et ses sources. Renommer ou supprimer un chat le fait aussi dans ton compte, avec une confirmation, et les chats archivés restent consultables.
 - **Recherche dans tout ton compte** : la barre de recherche interroge aussi ChatGPT (`conversations/search`), qui cherche **dans les messages**, y compris ceux des chats jamais ouverts sur cet iPhone. Le passage qui correspond s'affiche sous le titre, et ouvrir un résultat télécharge le chat.
 - **Interface calquée sur l'app ChatGPT**, construite avec les composants **Liquid Glass** natifs d'iOS 26 : barres d'outils en verre, barre de saisie en capsule de verre avec le bouton + à l'intérieur, suggestions d'accueil en liste, bouton « Mettre à niveau » en haut pour les comptes sans abonnement, menus, boutons `.glass` et feuilles système. **Glisse vers la droite n'importe où dans la conversation** pour faire venir tes chats.
+- **Deux dispositions au choix** (Réglages → Disposition) : la barre latérale de l'app ChatGPT, par défaut, ou une **barre d'onglets Liquid Glass** en bas de l'écran. Avec la barre d'onglets, tu choisis ses onglets (Accueil, Chats, Projets, Comptes, Réglages) et leur ordre, le bouton de recherche rond au bout de la barre, l'onglet d'ouverture, et si la barre se réduit quand tu fais défiler un chat.
+- **ChatGPT ou Codex, tu vois d'où vient chaque chat** : le logo de ChatGPT marque les chats de ton compte, un terminal ceux écrits avec Codex dans OCTO, qui n'existent que sur l'iPhone. Le filtre de la liste n'en garde qu'un seul type.
 - **Réglages organisés comme ChatGPT, sans doublon** — chaque réglage à un seul endroit : Personnalisation, Mémoire, Plugins, compte (**comptes connectés**, e-mail et téléphone **masquables**, abonnement, restaurer les achats, vérification de l'âge), thème et apparence, Général, Notifications, Voix, Confidentialité, Protection, Sécurité et connexion (avec les **appareils connectés**), Stockage, Gestion des données, Gestion des publicités et Aide.
 - **Réponses qui arrivent mot par mot, en fondu**, à la vitesse de ton choix (lente, normale, rapide ou instantanée), sans que le chat défile tout seul. Rendu Markdown (titres, listes, tableaux, citations) et blocs de code colorés avec bouton « Copier ».
 - **Personnalisable** : thème Système, Clair ou Sombre, couleurs d'accentuation de ChatGPT et couleur de ton choix, taille du texte et police des chats, retour à la ligne dans le code, vibrations pendant que ChatGPT écrit, envoi avec la touche Retour, et un **écran d'accueil à ta main** (bouton « Mettre à niveau », salutation, suggestions en liste ou en pastilles).
-- **Choix du modèle et du niveau de réflexion** depuis le titre du chat, avec le catalogue de modèles de ton compte. Comme dans ChatGPT, le sélecteur n'apparaît qu'avec un abonnement.
+- **Choix du modèle, du niveau de réflexion et de la vitesse** depuis le titre du chat, avec les modèles que **l'API de Codex** (`codex/models`) donne à ton forfait, gratuit compris, et leur description. OCTO **vérifie les modèles disponibles** : ceux réservés à d'autres forfaits (`available_in_plans`) sont écartés, et un modèle que Codex refuse à l'envoi quitte le sélecteur pendant que la question part avec un autre. Réglages → Général → Modèle par défaut les liste avec ce qui n'est pas inclus.
 - **Création d'images** : « Créer une image » demande l'outil d'images de l'API Responses au **backend Codex de ton forfait**, et l'image arrive dans la conversation. Ce backend ne propose que les outils des clients Codex : s'il refuse, OCTO repose la question sans l'outil, répond avec des mots et te le dit.
 - **Dictée par ChatGPT** (`backend-api/transcribe`, comme la dictée de ses apps) ou entièrement sur l'appareil, et **mode vocal** : parle à ChatGPT et écoute sa réponse, lue à voix haute phrase par phrase avec la voix de ton choix. Si la dictée est **désactivée dans les réglages de ton iPhone**, OCTO le voit, le dit et propose d'ouvrir les Réglages.
 - **Gestion des données** : « Améliorer le modèle pour tout le monde », l'inclusion de l'audio et de la vidéo et le réglage équivalent de Codex sont lus et modifiés **directement dans ton compte**.
@@ -68,7 +56,7 @@ Ces captures sont prises automatiquement sur un simulateur iPhone 17 Pro par le 
 - **Aucune télémétrie**, aucun outil d'analyse, **aucune dépendance tierce**.
 - Les requêtes partent **directement de ton iPhone vers OpenAI** (`auth.openai.com` et `chatgpt.com`), et vers `api.github.com` pour chercher les mises à jour si tu le laisses activé, sans cookie ni identifiant. Réglages → Confidentialité liste chaque serveur contacté depuis l'ouverture de l'app.
 - Ton **adresse e-mail et ton numéro de téléphone restent cachés** derrière des points dans les Réglages : une pression les montre 30 secondes, ou bien ils ne se montrent jamais, ou seulement quand l'écran n'est pas enregistré, recopié ni partagé — de quoi ouvrir les Réglages en live sans rien dévoiler.
-- Les jetons de connexion sont stockés dans le **trousseau iOS**. La session réseau est éphémère : rien n'est mis en cache sur le disque et les cookies disparaissent à la fermeture et à la déconnexion. Ta photo de profil n'est demandée avec ta session que si elle est hébergée sur `chatgpt.com`.
+- Les jetons de connexion sont stockés dans le **trousseau iOS**. La session réseau est éphémère : rien n'est mis en cache sur le disque et les cookies disparaissent à la fermeture et à la déconnexion. Ta photo de profil n'est demandée avec ta session que si elle est hébergée sur `chatgpt.com`. Les photos de tes autres comptes passent par une session à part, sans cookies, et seulement avec la session du compte concerné : deux comptes ne sont jamais reliés par ce que l'autre a reçu.
 - Les chats de ton compte sont gardés **sur l'appareil**, dans des fichiers **illisibles tant que l'iPhone est verrouillé**, et peuvent en être retirés au bout d'un jour, d'une semaine ou d'un mois. Les messages que tu écris dans OCTO sont envoyés avec `store: false`.
 - Les liens des réponses s'ouvrent, se copient et se partagent **sans traceurs** (`utm_source=chatgpt.com`, `fbclid`…). Le texte copié **reste sur l'iPhone** et peut s'effacer tout seul.
 - Les **claviers tiers sont bloqués**, et les chats sont **masqués pendant l'enregistrement ou le partage de l'écran**.
@@ -127,7 +115,7 @@ swift test
 
 ### Captures d'écran
 
-Le drapeau de compilation `OCTO_DEMO` ajoute des scènes de démonstration (`welcome`, `home`, `chat`, `sidebar`, `voice`, `settings`, `settingsApp`, `subscription`, `about`, `developer`, `network`, `deleteToast`, `freePlan`, `lightChat`, `messageDetails`, `whatsNew`, `appearance`, `privacy`, `dataControls`, `ageVerification`, `update`), sans réseau ni trousseau. Il n'est jamais présent dans l'IPA.
+Le drapeau de compilation `OCTO_DEMO` ajoute des scènes de démonstration (`welcome`, `home`, `chat`, `sidebar`, `voice`, `settings`, `settingsApp`, `subscription`, `upgrade`, `about`, `developer`, `network`, `deleteToast`, `freePlan`, `lightChat`, `messageDetails`, `whatsNew`, `appearance`, `privacy`, `dataControls`, `ageVerification`, `devices`, `storage`, `memory`, `update`, `accounts`, `ads`, `tabs`, `tabsChats`, `layout`, `models`), sans réseau ni trousseau. Il n'est jamais présent dans l'IPA.
 
 ```bash
 xcodebuild build -project OCTO.xcodeproj -scheme OCTO -configuration Debug \
