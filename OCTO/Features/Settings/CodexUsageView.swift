@@ -357,16 +357,16 @@ private struct DailyTokensChart: View {
         days.map { Bar(date: Self.localDay($0.date), tokens: $0.tokens) }
     }
 
-    private var shownBar: Bar? {
-        if let selectedDate, let bar = bars.first(where: { Calendar.current.isDate($0.date, inSameDayAs: selectedDate) }) {
-            return bar
-        }
-        return bars.last
+    /// The day touched, if any.
+    private var selectedBar: Bar? {
+        guard let selectedDate else { return nil }
+        return bars.first { Calendar.current.isDate($0.date, inSameDayAs: selectedDate) }
     }
 
     var body: some View {
         let bars = bars
-        let shown = shownBar
+        let selected = selectedBar
+        let shown = selected ?? bars.last
         VStack(alignment: .leading, spacing: 10) {
             if let shown {
                 VStack(alignment: .leading, spacing: 1) {
@@ -388,7 +388,8 @@ private struct DailyTokensChart: View {
                 )
                 .cornerRadius(4, style: .continuous)
                 .foregroundStyle(Theme.chartBar)
-                .opacity(shown == nil || shown?.id == bar.id ? 1 : 0.4)
+                // While a day is touched, the others step back.
+                .opacity(selected == nil || selected?.id == bar.id ? 1 : 0.35)
                 .accessibilityLabel(Text(bar.date.formatted(.dateTime.weekday(.wide).day().month(.wide))))
                 .accessibilityValue(Text("\(bar.tokens) tokens"))
             }
@@ -406,17 +407,20 @@ private struct DailyTokensChart: View {
             }
             .chartXAxis {
                 AxisMarks(values: axisDates(bars)) { _ in
-                    AxisValueLabel(format: .dateTime.day().month(.abbreviated), centered: true)
+                    AxisValueLabel(format: .dateTime.day().month(.abbreviated))
                 }
             }
             .frame(height: 170)
         }
     }
 
-    /// Three dates under the bars, a week apart and ending today, so the labels never collide.
+    /// Dates under the bars, a week apart and ending today, so the labels never collide. Each sits
+    /// at noon, the middle of its day, right under its bar.
     private func axisDates(_ bars: [Bar]) -> [Date] {
         guard !bars.isEmpty else { return [] }
-        return stride(from: bars.count - 1, through: 0, by: -7).map { bars[$0].date }
+        return stride(from: bars.count - 1, through: 0, by: -7)
+            .reversed()
+            .map { bars[$0].date.addingTimeInterval(12 * 3_600) }
     }
 
     /// The same day as the UTC one Codex counts, at midnight where the phone is.
