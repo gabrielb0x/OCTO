@@ -2,6 +2,16 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [2.0.1] – 2026-09-19
+
+### Corrigé
+
+- **Le sélecteur de modèle est vraiment à gauche.** Dans la 2.0.0, iOS le recentrait sur l'écran d'accueil. Il est maintenant fixé juste après le bouton qui ouvre tes chats (et l'étincelle « Mettre à niveau »), et ne prend jamais plus que la place laissée par les boutons de droite : quand le nom, le niveau de réflexion et la vitesse ne tiennent pas, seul le modèle s'affiche — les deux autres restent dans le menu — et les boutons « Nouveau chat » et « Plus » restent toujours visibles.
+
+### Modifié
+
+- **Les captures d'écran passent en dernier.** Le workflow des captures ne démarre plus au push mais une fois le workflow Build réussi (tests et IPA) : une release n'attend jamais les captures, et un tag de version n'en lance pas. Un petit job décide d'abord, et les captures ne tournent que si quelque chose à l'écran a changé depuis les dernières. Le simulateur démarre pendant la compilation : une scène prend maintenant environ 7 secondes au lieu de 16 à 24.
+
 ## [2.0.0] – 2026-09-19
 
 ### Modifié

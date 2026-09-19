@@ -22,6 +22,8 @@ struct ChatView: View {
     @State private var isRenaming = false
     @State private var renameText = ""
     @State private var confirmDelete = false
+    /// The width of the chat, which is that of the top bar.
+    @State private var barWidth: CGFloat = 0
 
     var body: some View {
         NavigationStack {
@@ -48,6 +50,11 @@ struct ChatView: View {
                 }
             }
             .animation(.smooth(duration: 0.25), value: isNearBottom)
+            .onGeometryChange(for: CGFloat.self) { proxy in
+                proxy.size.width
+            } action: { width in
+                barWidth = width
+            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
             .safeAreaBar(edge: .bottom) {
@@ -219,15 +226,14 @@ struct ChatView: View {
             }
         }
 
-        // The models Codex offers the account, on the left like a title. The middle of the bar gets
-        // all the room between the buttons and the picker sits at its start, so a long name
-        // shortens instead of pushing the buttons into an overflow menu. With a single model
-        // there's nothing to choose, and nothing shows.
+        // The models Codex offers the account, on the left like a title, without glass of its own.
+        // It never takes more than the room the buttons leave, so they never end up in an overflow
+        // menu. With a single model there's nothing to choose, and nothing shows.
         if app.allowsModelChoice {
-            ToolbarItem(placement: .principal) {
-                ModelMenu(session: session)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            ToolbarItem(placement: .topBarLeading) {
+                ModelMenu(session: session, room: roomForModelPicker)
             }
+            .sharedBackgroundVisibility(.hidden)
         }
 
         if session.isBlank {
@@ -248,6 +254,26 @@ struct ChatView: View {
                 optionsMenu
             }
         }
+    }
+
+    /// The width the top bar leaves the model picker: the bar, less its margins, the buttons on
+    /// each side and the space iOS keeps between them.
+    private var roomForModelPicker: CGFloat {
+        guard barWidth > 0 else { return .infinity }
+        let button: CGFloat = 44
+        let spacing: CGFloat = 13
+        var taken: CGFloat = 32
+        if showsChatsButton {
+            taken += button + spacing
+        }
+        if app.showsUpgradeOffer {
+            taken += button + spacing
+        }
+        // A new chat has one button on the right; an open chat, the pair of new chat and options.
+        taken += (session.isBlank ? button : 102) + spacing
+        // What iOS keeps between the two sides of the bar, and the insets of the picker itself.
+        taken += 24
+        return max(barWidth - taken, 80)
     }
 
     private var optionsMenu: some View {
@@ -295,6 +321,9 @@ private struct ScrollMetrics: Equatable {
 struct ModelMenu: View {
     @Environment(AppModel.self) private var app
     let session: ChatSession
+    /// The width the top bar leaves it. When the thinking level and the speed don't fit, only the
+    /// model shows; they stay in the menu.
+    var room: CGFloat = .infinity
 
     var body: some View {
         let current = session.model
@@ -359,32 +388,40 @@ struct ModelMenu: View {
                 }
             }
         } label: {
-            HStack(spacing: 5) {
-                Text(verbatim: current.displayName)
-                    .font(.headline)
-                if speed != nil {
-                    Image(systemName: "hare.fill")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Theme.secondaryText)
-                        .accessibilityLabel(Text("Fast"))
-                }
-                if let effort = session.reasoningEffort {
-                    Text(verbatim: ReasoningEffortLabel.title(effort))
-                        .font(.headline.weight(.regular))
-                        .foregroundStyle(Theme.secondaryText)
-                }
-                Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.bold))
-                    .foregroundStyle(Theme.tertiaryText)
+            ViewThatFits(in: .horizontal) {
+                title(current, fast: speed != nil, showsDetails: true)
+                title(current, fast: speed != nil, showsDetails: false)
             }
-            .lineLimit(1)
-            .foregroundStyle(Theme.primaryText)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .contentShape(Rectangle())
+            .frame(maxWidth: room, alignment: .leading)
         }
         .menuOrder(.fixed)
         .accessibilityLabel(Text("Choose model"))
+    }
+
+    private func title(_ model: ModelDescriptor, fast: Bool, showsDetails: Bool) -> some View {
+        HStack(spacing: 5) {
+            Text(verbatim: model.displayName)
+                .font(.headline)
+            if showsDetails, fast {
+                Image(systemName: "hare.fill")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Theme.secondaryText)
+                    .accessibilityLabel(Text("Fast"))
+            }
+            if showsDetails, let effort = session.reasoningEffort {
+                Text(verbatim: ReasoningEffortLabel.title(effort))
+                    .font(.headline.weight(.regular))
+                    .foregroundStyle(Theme.secondaryText)
+            }
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.bold))
+                .foregroundStyle(Theme.tertiaryText)
+        }
+        .lineLimit(1)
+        .foregroundStyle(Theme.primaryText)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .contentShape(Rectangle())
     }
 
     /// The speeds Codex offers for the model: the usual one, and faster ones that use more of
