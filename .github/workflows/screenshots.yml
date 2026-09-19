@@ -1,19 +1,19 @@
 name: Screenshots
 
 # Runs the app's demo scenes on an iPhone simulator and commits the framed
-# screenshots to docs/screenshots. A push only captures the six screens of the
-# README; the whole gallery is captured when the version changes. More scenes
-# can be asked for in the commit message: "[screenshots: usage, telemetry]", or
-# "[screenshots: all]".
+# screenshots to docs/screenshots. It comes last: only once the Build workflow
+# (tests and IPA) has passed on a branch, so a release never waits for it, and
+# never for a version tag.
+#
+# Only the six screens of the README are captured, and only when the app changed
+# since the last screenshots. The whole gallery is captured when the version
+# changes. More scenes can be asked for in the commit message with
+# "[screenshots: usage, telemetry]" or "[screenshots: all]", or by running the
+# workflow by hand.
 on:
-  push:
-    branches: ["**"]
-    paths:
-      - "OCTO/**"
-      - "Packages/**"
-      - "project.yml"
-      - "Scripts/**"
-      - ".github/workflows/screenshots.yml"
+  workflow_run:
+    workflows: ["Build"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       scenes:
@@ -22,21 +22,83 @@ on:
         default: "readme"
 
 concurrency:
-  group: screenshots-${{ github.ref }}
+  group: screenshots-${{ github.event.workflow_run.head_branch || github.ref_name }}
   cancel-in-progress: true
 
 permissions:
   contents: write
 
+env:
+  BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+  SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+
 jobs:
+  plan:
+    name: Choose scenes
+    # A build that passed for a push to a branch; a tag like v2.0.0 is a release, already captured.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       !(startsWith(github.event.workflow_run.head_branch, 'v') && contains(github.event.workflow_run.head_branch, '.')))
+    runs-on: ubuntu-latest
+    outputs:
+      scenes: ${{ steps.scenes.outputs.scenes }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SHA }}
+          fetch-depth: 0
+
+      - name: Choose scenes
+        id: scenes
+        env:
+          REQUESTED: ${{ github.event.inputs.scenes }}
+          COMMIT_MESSAGE: ${{ github.event.workflow_run.head_commit.message }}
+        run: |
+          # What changed since the screenshots were last taken.
+          last=$(git log --format=%H -n 1 --grep='^Update screenshots' || true)
+          changed=yes
+          version_changed=no
+          if [ -n "$last" ]; then
+            if [ -z "$(git diff --name-only "$last" HEAD -- OCTO Packages project.yml Scripts .github/workflows/screenshots.yml)" ]; then
+              changed=no
+            fi
+            if git diff "$last" HEAD -- project.yml | grep -q '^+.*MARKETING_VERSION'; then
+              version_changed=yes
+            fi
+          fi
+          asked=$(printf '%s' "$COMMIT_MESSAGE" | grep -oE '\[screenshots:[^]]*\]' | head -n 1 | sed -E 's/^\[screenshots:[[:space:]]*//; s/\]$//' || true)
+
+          scenes=""
+          if [ -n "$REQUESTED" ]; then
+            scenes="$REQUESTED"
+          elif [ "$version_changed" = yes ]; then
+            # A new version: the whole gallery is brought up to date.
+            scenes="all"
+          elif [ -n "$asked" ]; then
+            scenes="readme $asked"
+          elif [ "$changed" = yes ]; then
+            scenes="readme"
+          fi
+          echo "::notice title=Scenes::${scenes:-none, nothing on screen changed}"
+          echo "scenes=$scenes" >> "$GITHUB_OUTPUT"
+
   screenshots:
     name: Capture screenshots
+    needs: plan
+    if: needs.plan.outputs.scenes != ''
     runs-on: macos-26
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ env.SHA }}
           fetch-depth: 0
+
+      # The simulator boots while the app builds, instead of after.
+      - name: Start the simulator
+        run: Scripts/boot-simulator.sh
 
       - name: Install XcodeGen
         env:
@@ -46,34 +108,6 @@ jobs:
 
       - name: Generate Xcode project
         run: xcodegen generate
-
-      - name: Choose scenes
-        id: scenes
-        env:
-          REQUESTED: ${{ github.event.inputs.scenes }}
-          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
-          BEFORE: ${{ github.event.before }}
-        run: |
-          scenes="readme"
-          asked=$(printf '%s' "$COMMIT_MESSAGE" | grep -oE '\[screenshots:[^]]*\]' | head -n 1 | sed -E 's/^\[screenshots:[[:space:]]*//; s/\]$//' || true)
-          if [ -n "$REQUESTED" ]; then
-            scenes="$REQUESTED"
-          else
-            if [ -n "$asked" ]; then
-              scenes="readme $asked"
-            fi
-            if [ -n "$BEFORE" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null \
-              && git diff "$BEFORE" HEAD -- project.yml | grep -q '^+.*MARKETING_VERSION'; then
-              # A new version: the whole gallery is brought up to date.
-              scenes="all"
-            fi
-          fi
-          echo "::notice title=Scenes::$scenes"
-          echo "scenes=$scenes" >> "$GITHUB_OUTPUT"
-
-      # The simulator boots while the app builds, instead of after.
-      - name: Start the simulator
-        run: Scripts/boot-simulator.sh
 
       # Optimized, the demo app opens and settles faster for every scene than a debug build.
       - name: Build demo app for the simulator
@@ -100,7 +134,7 @@ jobs:
 
       - name: Capture screenshots
         env:
-          SCENES: ${{ steps.scenes.outputs.scenes }}
+          SCENES: ${{ needs.plan.outputs.scenes }}
         run: Scripts/take-screenshots.sh build/DerivedData/Build/Products/Release-iphonesimulator/OCTO.app build/screenshots
 
       - name: Add device frames
@@ -119,6 +153,8 @@ jobs:
             docs/screenshots
           if-no-files-found: ignore
 
+      # The checkout is the commit that was built: the screenshots go on top of the branch as it
+      # is now.
       - name: Commit screenshots
         run: |
           git config user.name "github-actions[bot]"
@@ -130,7 +166,7 @@ jobs:
           fi
           git commit -m "Update screenshots [skip ci]"
           for attempt in 1 2 3; do
-            if git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME"; then
+            if git pull --rebase origin "$BRANCH" && git push origin "HEAD:$BRANCH"; then
               exit 0
             fi
             sleep 10

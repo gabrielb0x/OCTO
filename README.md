@@ -135,7 +135,7 @@ python3 Scripts/frame-screenshots.py build/screenshots docs/screenshots
   - **Core tests** : `swift test` sur `OCTOCore`.
   - **Build iOS app** : génère le projet avec XcodeGen, compile en Release sans signature sur `macos-26` et publie l'artefact `OCTO-unsigned-ipa`.
   - **Publish release** : pour un tag `v*` (par exemple `git tag v1.2.0 && git push origin v1.2.0`), crée une release GitHub avec l'IPA `OCTO-1.2.0.ipa` et la section correspondante du CHANGELOG.
-- [`screenshots.yml`](.github/workflows/screenshots.yml), quand l'app change : lance les scènes de démonstration sur un simulateur iPhone 17 Pro, ajoute un cadre d'iPhone et enregistre les images dans `docs/screenshots`. Un push ne capture que les six écrans du README ; la galerie complète est refaite quand la version change, et d'autres scènes se demandent dans le message du commit avec `[screenshots: usage, telemetry]` (ou `[screenshots: all]`), ou en lançant le workflow à la main.
+- [`screenshots.yml`](.github/workflows/screenshots.yml), **en dernier** : une fois `build.yml` réussi sur une branche (jamais pour un tag de release, qui n'attend donc jamais les captures), et seulement si l'app a changé depuis les dernières captures. Il lance les scènes de démonstration sur un simulateur iPhone 17 Pro, ajoute un cadre d'iPhone et enregistre les images dans `docs/screenshots`. Seuls les six écrans du README sont capturés ; la galerie complète est refaite quand la version change, et d'autres scènes se demandent dans le message du commit avec `[screenshots: usage, telemetry]` (ou `[screenshots: all]`), ou en lançant le workflow à la main.
 
 ## 🧱 Architecture
 
