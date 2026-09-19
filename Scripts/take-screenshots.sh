@@ -42,44 +42,15 @@ if [ ${#CHOSEN[@]} -eq 0 ]; then
 fi
 echo "Capturing ${#CHOSEN[@]} scenes: ${CHOSEN[*]}"
 
-# GitHub keeps 10 annotations per step: list iOS runtimes only so readiness warnings stay visible.
-xcrun simctl list runtimes available | grep "^iOS" | sed 's/^/::notice title=Simulator runtimes::/' || true
-
-# Uses the device on the newest installed iOS runtime, creating it when the image doesn't ship one.
-UDID=$(python3 - "$DEVICE_NAME" <<'PY'
-import json, re, subprocess, sys
-
-name = sys.argv[1]
-simctl = json.loads(subprocess.run(["xcrun", "simctl", "list", "--json"], check=True, capture_output=True, text=True).stdout)
-
-def version(identifier):
-    return tuple(int(part) for part in re.findall(r"\d+", identifier.split(".iOS-")[-1]))
-
-runtimes = sorted(
-    (runtime["identifier"] for runtime in simctl["runtimes"] if runtime.get("isAvailable") and ".iOS-" in runtime["identifier"]),
-    key=version,
-)
-if not runtimes:
-    sys.exit("No iOS simulator runtime is installed")
-runtime = runtimes[-1]
-
-for device in simctl["devices"].get(runtime, []):
-    if device["name"] == name and device.get("isAvailable"):
-        print(device["udid"])
-        sys.exit()
-
-device_types = [kind for kind in simctl["devicetypes"] if kind["name"] == name]
-device_types = device_types or [kind for kind in simctl["devicetypes"] if kind["name"].startswith("iPhone") and kind["name"].endswith(" Pro")]
-if not device_types:
-    sys.exit("No iPhone simulator type is available")
-created = subprocess.run(["xcrun", "simctl", "create", "OCTO " + device_types[-1]["name"], device_types[-1]["identifier"], runtime], check=True, capture_output=True, text=True)
-print(created.stdout.strip())
-PY
-) || { echo "::error title=Screenshots::Could not find or create a $DEVICE_NAME simulator"; exit 1; }
-
-echo "::notice title=Simulator::$(xcrun simctl list devices | grep "$UDID" | sed -E 's/^ +//')"
+# The simulator booting since before the build (Scripts/boot-simulator.sh), or one picked now.
+UDID="${SIMULATOR_UDID:-}"
+if [ -z "$UDID" ]; then
+  UDID=$("$(dirname "$0")/boot-simulator.sh" | tail -n 1)
+fi
 xcrun simctl boot "$UDID" 2>/dev/null || true
-xcrun simctl bootstatus "$UDID" -b
+booting=$SECONDS
+xcrun simctl bootstatus "$UDID" -b >/dev/null
+BOOT_WAIT=$((SECONDS - booting))
 xcrun simctl ui "$UDID" appearance dark
 xcrun simctl install "$UDID" "$APP_PATH"
 mkdir -p "$OUTPUT_DIR"
@@ -104,7 +75,7 @@ launch() {
 # as long as what it opens needs (`DemoContent.settleTime`), so this only has to notice it.
 wait_until_ready() {
   local marker="$1/tmp/OCTODemoReady"
-  for _ in $(seq 1 225); do
+  for _ in $(seq 1 "${2:-225}"); do
     [ -f "$marker" ] && return 0
     sleep 0.2
   done
@@ -113,29 +84,38 @@ wait_until_ready() {
 
 # The override stays until the simulator shuts down: once is enough.
 override_status_bar
+# Installing creates the app's folder; it's asked for again after the first launch otherwise.
+DATA_DIR=$(xcrun simctl get_app_container "$UDID" "$BUNDLE_ID" data 2>/dev/null || true)
 
-# The first launch after installing is slow, so warm up before capturing.
-launch home
-DATA_DIR=$(xcrun simctl get_app_container "$UDID" "$BUNDLE_ID" data)
-wait_until_ready "$DATA_DIR" || echo "::warning title=Screenshots::Warm-up launch never reported ready"
-
+# No separate warm-up: the first launch after installing is slow, so the first scene simply gets
+# more time to report ready.
 TIMINGS=""
 CAPTURE_STARTED=$SECONDS
+patience=600
 for scene in "${CHOSEN[@]}"; do
-  rm -f "$DATA_DIR/tmp/OCTODemoReady"
+  if [ -n "$DATA_DIR" ]; then
+    rm -f "$DATA_DIR/tmp/OCTODemoReady"
+  fi
   started=$SECONDS
   launch "$scene"
-  if wait_until_ready "$DATA_DIR"; then
+  launched=$SECONDS
+  if [ -z "$DATA_DIR" ]; then
+    DATA_DIR=$(xcrun simctl get_app_container "$UDID" "$BUNDLE_ID" data)
+  fi
+  if wait_until_ready "$DATA_DIR" "$patience"; then
     sleep 0.3
   else
-    echo "::warning title=Screenshots::The $scene scene did not report ready after 45 s"
+    echo "::warning title=Screenshots::The $scene scene did not report ready after $((patience / 5)) s"
     xcrun simctl spawn "$UDID" launchctl list 2>/dev/null | grep -i octo | sed 's/^/::warning title=launchctl::/' || true
   fi
+  ready=$SECONDS
   xcrun simctl io "$UDID" screenshot --type=png "$OUTPUT_DIR/$scene.png" >/dev/null
-  TIMINGS="$TIMINGS $scene $((SECONDS - started))s"
+  # Launch, until ready, screenshot.
+  TIMINGS="$TIMINGS $scene $((SECONDS - started))s ($((launched - started))+$((ready - launched))+$((SECONDS - ready)))"
   echo "Captured $scene in $((SECONDS - started)) s"
+  patience=225
 done
 
 xcrun simctl terminate "$UDID" "$BUNDLE_ID" >/dev/null 2>&1 || true
 # One annotation for the whole run: the API keeps it, unlike the log.
-echo "::notice title=Screenshot timings::${#CHOSEN[@]} scenes in $((SECONDS - CAPTURE_STARTED)) s:$TIMINGS"
+echo "::notice title=Screenshot timings::${#CHOSEN[@]} scenes in $((SECONDS - CAPTURE_STARTED)) s, after waiting $BOOT_WAIT s for the simulator:$TIMINGS"

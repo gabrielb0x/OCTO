@@ -58,15 +58,22 @@ jobs:
           asked=$(printf '%s' "$COMMIT_MESSAGE" | grep -oE '\[screenshots:[^]]*\]' | head -n 1 | sed -E 's/^\[screenshots:[[:space:]]*//; s/\]$//' || true)
           if [ -n "$REQUESTED" ]; then
             scenes="$REQUESTED"
-          elif [ -n "$asked" ]; then
-            scenes="readme $asked"
-          elif [ -n "$BEFORE" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null \
-            && git diff "$BEFORE" HEAD -- project.yml | grep -q '^+.*MARKETING_VERSION'; then
-            # A new version: the whole gallery is brought up to date.
-            scenes="all"
+          else
+            if [ -n "$asked" ]; then
+              scenes="readme $asked"
+            fi
+            if [ -n "$BEFORE" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null \
+              && git diff "$BEFORE" HEAD -- project.yml | grep -q '^+.*MARKETING_VERSION'; then
+              # A new version: the whole gallery is brought up to date.
+              scenes="all"
+            fi
           fi
           echo "::notice title=Scenes::$scenes"
           echo "scenes=$scenes" >> "$GITHUB_OUTPUT"
+
+      # The simulator boots while the app builds, instead of after.
+      - name: Start the simulator
+        run: Scripts/boot-simulator.sh
 
       # Optimized, the demo app opens and settles faster for every scene than a debug build.
       - name: Build demo app for the simulator

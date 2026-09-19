@@ -219,16 +219,15 @@ struct ChatView: View {
             }
         }
 
-        // The models Codex offers the account, on the left like a title, without glass of its own.
-        // With a single one there's nothing to choose, and nothing shows.
+        // The models Codex offers the account, on the left like a title. The middle of the bar gets
+        // all the room between the buttons and the picker sits at its start, so a long name
+        // shortens instead of pushing the buttons into an overflow menu. With a single model
+        // there's nothing to choose, and nothing shows.
         if app.allowsModelChoice {
-            if showsChatsButton || app.showsUpgradeOffer {
-                ToolbarSpacer(.fixed, placement: .topBarLeading)
-            }
-            ToolbarItem(placement: .topBarLeading) {
+            ToolbarItem(placement: .principal) {
                 ModelMenu(session: session)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .sharedBackgroundVisibility(.hidden)
         }
 
         if session.isBlank {
