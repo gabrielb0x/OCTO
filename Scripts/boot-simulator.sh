@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Picks the iPhone simulator of the screenshots — creating it when the runner image doesn't ship
-# one — and starts booting it without waiting, so it boots while the app builds.
+# one — and starts booting it without waiting for the boot to finish.
 # Prints the device's UDID on its last line, and exports it as SIMULATOR_UDID on GitHub Actions.
 set -euo pipefail
 

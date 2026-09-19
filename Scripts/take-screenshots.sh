@@ -42,7 +42,7 @@ if [ ${#CHOSEN[@]} -eq 0 ]; then
 fi
 echo "Capturing ${#CHOSEN[@]} scenes: ${CHOSEN[*]}"
 
-# The simulator booting since before the build (Scripts/boot-simulator.sh), or one picked now.
+# The simulator already booting (SIMULATOR_UDID from Scripts/boot-simulator.sh), or one picked now.
 UDID="${SIMULATOR_UDID:-}"
 if [ -z "$UDID" ]; then
   UDID=$("$(dirname "$0")/boot-simulator.sh" | tail -n 1)

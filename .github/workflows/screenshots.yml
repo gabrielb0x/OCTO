@@ -105,11 +105,6 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      # The simulator boots while the app builds, instead of after. Started once Homebrew is done,
-      # which the boot slows down a lot.
-      - name: Start the simulator
-        run: Scripts/boot-simulator.sh
-
       # Optimized, the demo app opens and settles faster for every scene than a debug build.
       - name: Build demo app for the simulator
         run: |
@@ -133,6 +128,8 @@ jobs:
             echo "::error::${line}"
           done || true
 
+      # The simulator boots here, after the build: on the 3 cores of the runner, booting it during
+      # the build made the build three times slower, for no time saved.
       - name: Capture screenshots
         env:
           SCENES: ${{ needs.plan.outputs.scenes }}
