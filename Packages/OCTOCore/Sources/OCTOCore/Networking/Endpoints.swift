@@ -5,6 +5,8 @@ import Foundation
 public enum CodexBackend {
     public static let responsesURL = URL(string: "https://chatgpt.com/backend-api/codex/responses")!
     public static let usageURL = URL(string: "https://chatgpt.com/backend-api/wham/usage")!
+    /// The tokens of each day and of all time (`stats`), as the Codex CLI reads them.
+    public static let tokenActivityURL = URL(string: "https://chatgpt.com/backend-api/wham/profiles/me")!
 
     /// The backend rejects requests whose `originator` is not a first-party
     /// Codex client, so OCTO presents itself as the open-source Codex CLI and

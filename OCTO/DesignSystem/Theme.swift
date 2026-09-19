@@ -30,6 +30,9 @@ enum Theme {
     static let dangerSurface = dynamic(light: UIColor(red: 0.84, green: 0.05, blue: 0.05, alpha: 0.07), dark: UIColor(red: 1.0, green: 0.27, blue: 0.24, alpha: 0.12))
     static let success = dynamic(light: UIColor(red: 0.1, green: 0.6, blue: 0.32, alpha: 1), dark: UIColor(red: 0.36, green: 0.84, blue: 0.55, alpha: 1))
     static let warning = dynamic(light: UIColor(red: 0.85, green: 0.47, blue: 0.0, alpha: 1), dark: UIColor(red: 1.0, green: 0.66, blue: 0.2, alpha: 1))
+    /// The bars of charts: one blue stepped for each appearance, checked for contrast and
+    /// lightness against the rows of a list (4.4:1 on white, 4.7:1 on the dark rows).
+    static let chartBar = dynamic(light: UIColor(red: 0.165, green: 0.471, blue: 0.839, alpha: 1), dark: UIColor(red: 0.224, green: 0.529, blue: 0.898, alpha: 1))
 
     static let messageSpacing: CGFloat = 28
     static let contentMaxWidth: CGFloat = 760

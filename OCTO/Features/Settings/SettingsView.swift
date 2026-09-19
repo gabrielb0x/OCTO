@@ -9,6 +9,7 @@ enum SettingsRoute: Hashable {
     case memory
     case plugins
     case subscription
+    case codexUsage
     case ageVerification
     case appearance
     case layout
@@ -17,6 +18,7 @@ enum SettingsRoute: Hashable {
     case notifications
     case voice
     case privacy
+    case telemetry
     case protection
     case security
     case devices
@@ -47,6 +49,7 @@ struct SettingsView: View {
     @State private var confirmSignOut = false
     @State private var isRestoring = false
     @State private var showsWhatsNew = false
+    @State private var showsProfileEditor = false
     @State private var updateToShow: AppRelease?
     private let initialSection: SettingsSection?
     /// A sheet closes with a button; the Settings tab of the tab bar layout has nothing to close.
@@ -76,11 +79,14 @@ struct SettingsView: View {
 
                     Section("Account") {
                         row(.accounts, app.auth.hasSeveralAccounts ? "Switch account" : "Accounts", systemImage: "person.2")
-                        if let email = app.accountEmail {
-                            ContactRow(title: "Email address", systemImage: "envelope", value: email, kind: .email)
-                        }
-                        if let phone = app.account.profile?.phoneNumber {
-                            ContactRow(title: "Phone number", systemImage: "phone", value: phone, kind: .phone)
+                        // Privacy can take these two rows out of Settings altogether.
+                        if app.contactShield.showsRows {
+                            if let email = app.accountEmail {
+                                ContactRow(title: "Email address", systemImage: "envelope", value: email, kind: .email)
+                            }
+                            if let phone = app.account.profile?.phoneNumber {
+                                ContactRow(title: "Phone number", systemImage: "phone", value: phone, kind: .phone)
+                            }
                         }
                         NavigationLink(value: SettingsRoute.subscription) {
                             LabeledContent {
@@ -89,6 +95,7 @@ struct SettingsView: View {
                                 Label("Subscription", systemImage: "plus.app")
                             }
                         }
+                        CodexUsageRow()
                         Button(action: restorePurchases) {
                             HStack {
                                 Label("Restore purchases", systemImage: "arrow.clockwise")
@@ -198,9 +205,25 @@ struct SettingsView: View {
             .task {
                 await app.account.refresh(ifOlderThan: 120)
             }
+            .task {
+                // The Codex usage row shows what's left; replies keep it current afterwards.
+                if app.usage == nil {
+                    await app.refreshUsage()
+                }
+            }
             .sheet(isPresented: $showsWhatsNew) {
                 WhatsNewView(notes: ReleaseNotes.current)
             }
+            .sheet(isPresented: $showsProfileEditor) {
+                EditProfileView()
+            }
+            #if OCTO_DEMO
+            .task {
+                guard app.demoScene == .editProfile else { return }
+                try? await Task.sleep(for: .milliseconds(700))
+                showsProfileEditor = true
+            }
+            #endif
             .sheet(item: $updateToShow) { release in
                 UpdateView(release: release)
             }
@@ -217,22 +240,46 @@ struct SettingsView: View {
         }
     }
 
+    /// The picture, name and username of the account. The pencil on the picture edits them, as
+    /// "Edit profile" does in ChatGPT.
     private var profileHeader: some View {
         Section {
             VStack(spacing: 10) {
-                AccountAvatar(name: app.account.profile?.name, email: app.accountEmail, image: app.account.avatar, size: 76)
+                Button {
+                    showsProfileEditor = true
+                } label: {
+                    AccountAvatar(name: app.accountName, email: app.accountEmail, image: app.account.avatar, size: 76)
+                        .overlay(alignment: .bottomTrailing) {
+                            Image(systemName: "pencil")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundStyle(Theme.primaryText)
+                                .frame(width: 30, height: 30)
+                                .glassEffect(.regular.interactive(), in: .circle)
+                                .offset(x: 5, y: 5)
+                        }
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Edit profile"))
                 VStack(spacing: 3) {
                     Text(verbatim: app.shieldedAccountName)
                         .font(.title3.weight(.semibold))
                         .lineLimit(1)
-                    Text(verbatim: app.planName)
+                    Text(verbatim: subtitle)
                         .font(.subheadline)
                         .foregroundStyle(Theme.secondaryText)
+                        .lineLimit(1)
                 }
             }
             .frame(maxWidth: .infinity)
             .listRowBackground(Color.clear)
         }
+    }
+
+    /// The username people know the account by, then its plan.
+    private var subtitle: String {
+        guard let username = app.account.socialProfile?.username else { return app.planName }
+        return "@\(username) · \(app.planName)"
     }
 
     @ViewBuilder
@@ -313,6 +360,7 @@ struct SettingsView: View {
         case .memory: MemoryView()
         case .plugins: PluginsView()
         case .subscription: SubscriptionView()
+        case .codexUsage: CodexUsageView()
         case .ageVerification: AgeVerificationView()
         case .appearance: AppearanceView()
         case .layout: LayoutSettingsView()
@@ -321,6 +369,7 @@ struct SettingsView: View {
         case .notifications: NotificationSettingsView()
         case .voice: VoiceSettingsView()
         case .privacy: PrivacyView()
+        case .telemetry: TelemetryView()
         case .protection: ProtectionSettingsView()
         case .security: SecuritySettingsView()
         case .devices: DevicesView()
@@ -418,28 +467,9 @@ struct SubscriptionView: View {
                 }
             }
 
+            // The limits of Codex, with their charts, are on a page of their own.
             Section {
-                if let usage = app.usage {
-                    if let primary = usage.primary {
-                        UsageWindowRow(title: windowTitle(primary), window: primary)
-                    }
-                    if let secondary = usage.secondary {
-                        UsageWindowRow(title: windowTitle(secondary), window: secondary)
-                    }
-                    if usage.primary == nil, usage.secondary == nil {
-                        Text("No limits were reported for your plan.")
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                } else if let error = app.usageError {
-                    Label(error, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(Theme.danger)
-                } else {
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                        Spacer()
-                    }
-                }
+                CodexUsageRow()
             } header: {
                 Text("Usage limits")
             } footer: {
@@ -500,19 +530,6 @@ struct SubscriptionView: View {
         }
     }
 
-    private func windowTitle(_ window: UsageSnapshot.Window) -> String {
-        guard let seconds = window.windowSeconds, seconds > 0 else {
-            return String(localized: "Usage")
-        }
-        let hours = seconds / 3_600
-        if hours >= 24 * 6 {
-            return String(localized: "Weekly limit")
-        }
-        if hours >= 24 {
-            return String(localized: "\(hours / 24)-day limit")
-        }
-        return String(localized: "\(max(hours, 1))-hour limit")
-    }
 }
 
 /// One feature of the ChatGPT account with how many uses are left, like ChatGPT shows.
@@ -569,40 +586,6 @@ enum FeatureLimitLabel {
         case "paste_text_to_file": return "doc.on.clipboard"
         case "reason": return "brain"
         default: return "gauge.with.dots.needle.50percent"
-        }
-    }
-}
-
-struct UsageWindowRow: View {
-    let title: String
-    let window: UsageSnapshot.Window
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text(verbatim: title)
-                    .font(.headline)
-                Spacer()
-                Text(verbatim: "\(Int(window.usedPercent.rounded())) %")
-                    .font(.headline.monospacedDigit())
-                    .foregroundStyle(tint)
-            }
-            ProgressView(value: window.usedPercent, total: 100)
-                .tint(tint)
-            if let resetsAt = window.resetsAt {
-                Text("Resets \(resetsAt, style: .relative)")
-                    .font(.caption)
-                    .foregroundStyle(Theme.secondaryText)
-            }
-        }
-        .padding(.vertical, 6)
-    }
-
-    private var tint: Color {
-        switch window.usedPercent {
-        case ..<60: return Theme.success
-        case ..<85: return Theme.warning
-        default: return Theme.danger
         }
     }
 }

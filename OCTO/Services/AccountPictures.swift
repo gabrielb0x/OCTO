@@ -27,6 +27,7 @@ final class AccountPictures {
         configuration.httpCookieAcceptPolicy = .never
         configuration.httpShouldSetCookies = false
         configuration.timeoutIntervalForRequest = 30
+        TelemetryBlocker.protect(configuration)
         session = URLSession(configuration: configuration)
     }
 

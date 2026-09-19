@@ -27,7 +27,7 @@ struct MainView: View {
     init(app: AppModel) {
         var initialSession: ChatSession?
         #if OCTO_DEMO
-        if let scene = app.demoScene, [DemoScene.chat, .sidebar, .voice, .lightChat, .messageDetails, .tabs, .tabsChats].contains(scene) {
+        if let scene = app.demoScene, [DemoScene.chat, .sidebar, .voice, .lightChat, .messageDetails, .tabs, .tabsChats, .scrollButton].contains(scene) {
             initialSession = app.makeSession(conversationID: DemoContent.featuredConversationID)
         }
         #endif

@@ -11,6 +11,8 @@ enum AccountAPIError: LocalizedError, Equatable {
     case invalidResponse
     /// The account accepted a change, but reading it back shows it wasn't kept.
     case settingNotSaved
+    /// The profile can't be changed before OCTO knows whose it is.
+    case profileUnknown
 
     var errorDescription: String? {
         switch self {
@@ -28,6 +30,8 @@ enum AccountAPIError: LocalizedError, Equatable {
             return String(localized: "ChatGPT returned an unexpected response.")
         case .settingNotSaved:
             return String(localized: "ChatGPT didn't keep this change. Try again, or change it in ChatGPT.")
+        case .profileUnknown:
+            return String(localized: "OCTO hasn't loaded your ChatGPT profile yet. Pull down in Settings to load it, then try again.")
         }
     }
 }
@@ -140,6 +144,42 @@ final class AccountService: Sendable {
             _ = try await send(ChatGPTAccountAPI.adsProfileURL, method: "DELETE")
         } catch AccountAPIError.notFound {
             // Nothing was kept for this account, which is what deleting it aims for.
+        }
+    }
+
+    // MARK: Profile
+
+    /// The profile people see of the account in ChatGPT: display name, username and photo.
+    func socialProfile(userID: String) async throws -> SocialProfile {
+        try await fetch(SocialProfileAPI.profileURL(userID: userID), parse: SocialProfile.parse)
+    }
+
+    func setDisplayName(_ name: String, userID: String) async throws -> SocialProfile? {
+        let data = try await send(SocialProfileAPI.profileURL(userID: userID), method: "POST", body: SocialProfileAPI.displayNameBody(name))
+        return SocialProfile.parse(data)
+    }
+
+    /// ChatGPT answers with an error message of its own when the username is taken or not allowed.
+    func setUsername(_ username: String, userID: String) async throws -> SocialProfile? {
+        let data = try await send(SocialProfileAPI.usernameURL(userID: userID), method: "POST", body: SocialProfileAPI.usernameBody(username))
+        return SocialProfile.parse(data)
+    }
+
+    /// Uploads the photo, then makes it the profile picture, as ChatGPT's "Edit profile" does.
+    /// When the addresses it uses are gone, the ones the website moves to behind a flag are tried.
+    func setProfilePhoto(jpeg: Data, userID: String) async throws -> SocialProfile? {
+        let form = SocialProfileAPI.photoForm(jpeg: jpeg)
+        do {
+            let uploaded = try await send(SocialProfileAPI.photoUploadURL, method: "POST", body: form.encoded(), contentType: form.contentType, timeout: 90)
+            guard let pointer = SocialProfileAPI.assetPointer(in: uploaded) else { throw AccountAPIError.invalidResponse }
+            let data = try await send(SocialProfileAPI.profileURL(userID: userID), method: "POST", body: SocialProfileAPI.photoBody(assetPointer: pointer))
+            return SocialProfile.parse(data)
+        } catch AccountAPIError.notFound {
+            DevLog.log("account", "The profile photo addresses of group chats are gone: trying wham/profiles/me", level: .warning)
+            let uploaded = try await send(SocialProfileAPI.codexPhotoUploadURL, method: "POST", body: form.encoded(), contentType: form.contentType, timeout: 90)
+            guard let pointer = SocialProfileAPI.assetPointer(in: uploaded) else { throw AccountAPIError.invalidResponse }
+            let data = try await send(SocialProfileAPI.codexProfileURL, method: "PATCH", body: SocialProfileAPI.photoBody(assetPointer: pointer))
+            return SocialProfileAPI.profile(inCodexResponse: data, userID: userID)
         }
     }
 
@@ -294,11 +334,11 @@ final class AccountService: Sendable {
         return value
     }
 
-    private func makeRequest(_ url: URL, method: String = "GET", body: Data? = nil, contentType: String? = nil, accept: String? = nil) async throws -> URLRequest {
+    private func makeRequest(_ url: URL, method: String = "GET", body: Data? = nil, contentType: String? = nil, accept: String? = nil, timeout: TimeInterval = 30) async throws -> URLRequest {
         let credential = try await vault.credential()
         var request = URLRequest(url: url)
         request.httpMethod = method
-        request.timeoutInterval = 30
+        request.timeoutInterval = timeout
         let headers = ChatGPTAccountAPI.headers(
             accessToken: credential.accessToken,
             accountID: credential.accountID,
@@ -318,8 +358,8 @@ final class AccountService: Sendable {
         return request
     }
 
-    private func send(_ url: URL, method: String = "GET", body: Data? = nil, accept: String? = nil) async throws -> Data {
-        let request = try await makeRequest(url, method: method, body: body, accept: accept)
+    private func send(_ url: URL, method: String = "GET", body: Data? = nil, contentType: String? = nil, accept: String? = nil, timeout: TimeInterval = 30) async throws -> Data {
+        let request = try await makeRequest(url, method: method, body: body, contentType: contentType, accept: accept, timeout: timeout)
         let (data, response) = try await session.recordedData(for: request)
         guard let http = response as? HTTPURLResponse else { throw AccountAPIError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else {

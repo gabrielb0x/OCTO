@@ -394,6 +394,7 @@ struct APIConsoleView: View {
         "checkout_pricing_config/configs/\(CheckoutPricing.countryCode(for: Locale.current.region?.identifier))",
         "codex/models?client_version=\(CodexBackend.clientVersion)",
         "wham/usage",
+        "wham/profiles/me",
     ]
 
     var body: some View {

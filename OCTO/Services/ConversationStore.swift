@@ -287,6 +287,19 @@ final class ConversationStore {
         cache.count
     }
 
+    /// The latest chats with their messages, read off the main thread, for the usage estimates.
+    /// Chats of the account never opened on this device have no messages to read.
+    func recentConversations(limit: Int) async -> [Conversation] {
+        let ids = summaries.prefix(limit).map(\.id)
+        let opened = ids.compactMap { cache[$0] }
+        let unopened = ids.filter { cache[$0] == nil }
+        let files = self.files
+        let read = await Task.detached(priority: .utility) {
+            unopened.compactMap { files.loadConversation($0) }
+        }.value
+        return opened + read
+    }
+
     func summaries(inProject projectID: String) -> [ConversationSummary] {
         summaries.filter { $0.projectID == projectID }
     }

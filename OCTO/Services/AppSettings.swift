@@ -85,6 +85,8 @@ enum ContactVisibility: String, CaseIterable, Identifiable {
     case whileNotRecording
     /// Never readable in OCTO.
     case never
+    /// Left out of Settings altogether, rows included.
+    case removed
 
     var id: String { rawValue }
 }
@@ -99,7 +101,7 @@ struct ContactShield {
     var isMasked: Bool {
         switch visibility {
         case .always: return false
-        case .tapToReveal, .never: return true
+        case .tapToReveal, .never, .removed: return true
         case .whileNotRecording: return isScreenCaptured
         }
     }
@@ -111,7 +113,12 @@ struct ContactShield {
 
     /// True when the value may leave OCTO, for the copy action.
     var allowsCopy: Bool {
-        visibility != .never
+        visibility != .never && visibility != .removed
+    }
+
+    /// False when the rows of the email address and the phone number leave Settings.
+    var showsRows: Bool {
+        visibility != .removed
     }
 }
 

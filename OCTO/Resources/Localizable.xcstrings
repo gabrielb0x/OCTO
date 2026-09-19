@@ -2553,16 +2553,6 @@
         }
       }
     },
-    "How the email address and the phone number of your account show in Settings. Behind dots, a tap shows them for 30 seconds — never while the screen is recorded, mirrored or shared.": {
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Comment l'adresse e-mail et le numéro de téléphone de ton compte s'affichent dans les Réglages. Derrière les points, une pression les montre pendant 30 secondes — jamais pendant l'enregistrement, la recopie ou le partage de l'écran."
-          }
-        }
-      }
-    },
     "How your ChatGPT account proves it's you. These are changed in ChatGPT.": {
       "localizations": {
         "fr": {
@@ -8891,6 +8881,656 @@
           "stringUnit": {
             "state": "translated",
             "value": "La liste des comptes montre aussi les photos de profil de tes autres comptes."
+          }
+        }
+      }
+    },
+    "Removed from Settings": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirés des réglages"
+          }
+        }
+      }
+    },
+    "How the email address and the phone number of your account show in Settings. Behind dots, a tap shows them for 30 seconds — never while the screen is recorded, mirrored or shared. Removed, their rows leave Settings altogether.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment l'adresse e-mail et le numéro de téléphone de ton compte s'affichent dans les Réglages. Derrière les points, une pression les montre pendant 30 secondes — jamais pendant l'enregistrement, la recopie ou le partage de l'écran. Retirés, leurs lignes disparaissent complètement des Réglages."
+          }
+        }
+      }
+    },
+    "Always on": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toujours actif"
+          }
+        }
+      }
+    },
+    "%lld blocked": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld blocked"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld blocked"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld bloquée"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld bloquées"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Telemetry blocked": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Télémétrie bloquée"
+          }
+        }
+      }
+    },
+    "OCTO refuses any request to the addresses ChatGPT and Codex send their telemetry to, should one ever be attempted.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO refuse toute requête vers les adresses où ChatGPT et Codex envoient leur télémétrie, si jamais une était tentée."
+          }
+        }
+      }
+    },
+    "Telemetry is always blocked": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La télémétrie est toujours bloquée"
+          }
+        }
+      }
+    },
+    "ChatGPT's apps and the Codex CLI report what you do to OpenAI and the services it uses: events, feature flags, errors, how fast replies come. OCTO sends none of it, and refuses any request to these addresses before it leaves your iPhone — whatever part of the app would try.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les apps ChatGPT et la CLI Codex rapportent ce que tu fais à OpenAI et aux services qu'elle utilise : événements, feature flags, erreurs, vitesse des réponses. OCTO n'envoie rien de tout ça, et refuse toute requête vers ces adresses avant qu'elle ne quitte ton iPhone — quelle que soit la partie de l'app qui essaierait."
+          }
+        }
+      }
+    },
+    "Nothing tried to send telemetry.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien n'a tenté d'envoyer de télémétrie."
+          }
+        }
+      }
+    },
+    "Blocked since OCTO opened": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bloquées depuis l'ouverture d'OCTO"
+          }
+        }
+      }
+    },
+    "Counted on the device, never sent anywhere.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compté sur l'appareil, jamais envoyé nulle part."
+          }
+        }
+      }
+    },
+    "Telemetry": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Télémétrie"
+          }
+        }
+      }
+    },
+    "ChatGPT events": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Événements de ChatGPT"
+          }
+        }
+      }
+    },
+    "ChatGPT latency reports": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rapports de latence de ChatGPT"
+          }
+        }
+      }
+    },
+    "ChatGPT impressions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impressions de ChatGPT"
+          }
+        }
+      }
+    },
+    "Codex analytics": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistiques de Codex"
+          }
+        }
+      }
+    },
+    "OCTO hasn't loaded your ChatGPT profile yet. Pull down in Settings to load it, then try again.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO n'a pas encore chargé ton profil ChatGPT. Tire vers le bas dans les Réglages pour le charger, puis réessaie."
+          }
+        }
+      }
+    },
+    "Display name": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom affiché"
+          }
+        }
+      }
+    },
+    "Username": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom d'utilisateur"
+          }
+        }
+      }
+    },
+    "Your photo, name and username are the profile people see of you in ChatGPT, such as in group chats. They're saved in your ChatGPT account.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta photo, ton nom et ton nom d'utilisateur forment le profil que les autres voient de toi dans ChatGPT, par exemple dans les chats de groupe. Ils sont enregistrés dans ton compte ChatGPT."
+          }
+        }
+      }
+    },
+    "Edit profile": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier le profil"
+          }
+        }
+      }
+    },
+    "Choose a photo": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir une photo"
+          }
+        }
+      }
+    },
+    "Take a photo": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prendre une photo"
+          }
+        }
+      }
+    },
+    "Change profile photo": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changer la photo de profil"
+          }
+        }
+      }
+    },
+    "This photo couldn't be opened.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d'ouvrir cette photo."
+          }
+        }
+      }
+    },
+    "Your profile has been updated": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton profil a été mis à jour"
+          }
+        }
+      }
+    },
+    "Codex usage": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisation de Codex"
+          }
+        }
+      }
+    },
+    "Estimated messages left": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages restants (estimation)"
+          }
+        }
+      }
+    },
+    "Left of your %@": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restant sur ta %@"
+          }
+        }
+      }
+    },
+    "Used this period": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisés sur la période"
+          }
+        }
+      }
+    },
+    "Left, estimated": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restants, estimés"
+          }
+        }
+      }
+    },
+    "Tokens": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tokens"
+          }
+        }
+      }
+    },
+    "Of your %@, which holds about %@ tokens.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sur ta %@, qui contient environ %@ tokens."
+          }
+        }
+      }
+    },
+    "Tokens per day": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tokens par jour"
+          }
+        }
+      }
+    },
+    "No tokens counted yet. Send a message and come back.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun token compté pour l'instant. Envoie un message et reviens."
+          }
+        }
+      }
+    },
+    "Your account's count couldn't be read: these are the replies written on this iPhone.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le décompte de ton compte n'a pas pu être lu : ce sont les réponses écrites sur cet iPhone."
+          }
+        }
+      }
+    },
+    "Every Codex app of your account counts, not only OCTO.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toutes les apps Codex de ton compte comptent, pas seulement OCTO."
+          }
+        }
+      }
+    },
+    "All time: %@ tokens": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Depuis le début : %@ tokens"
+          }
+        }
+      }
+    },
+    "Busiest day: %@ tokens": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jour le plus chargé : %@ tokens"
+          }
+        }
+      }
+    },
+    "Limits": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limites"
+          }
+        }
+      }
+    },
+    "≈ %@ tokens": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≈ %@ tokens"
+          }
+        }
+      }
+    },
+    "Average message": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message moyen"
+          }
+        }
+      }
+    },
+    "Replies it's drawn from": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réponses prises en compte"
+          }
+        }
+      }
+    },
+    "Counted by Codex": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comptées par Codex"
+          }
+        }
+      }
+    },
+    "Estimate": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estimation"
+          }
+        }
+      }
+    },
+    "A message costs its question, the whole chat before it and the reply. Replies written in OCTO come with the count of Codex; the others are estimated from their length. Codex only tells what share of each limit is used: what's left is estimated from what your account used in the same period.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un message coûte sa question, tout le chat qui la précède et la réponse. Les réponses écrites dans OCTO arrivent avec le décompte de Codex ; les autres sont estimées d'après leur longueur. Codex ne dit que la part de chaque limite déjà utilisée : ce qui reste est estimé d'après ce que ton compte a utilisé sur la même période."
+          }
+        }
+      }
+    },
+    "%@ left": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ restants"
+          }
+        }
+      }
+    },
+    "%lld tokens": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld token"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tokens"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld token"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tokens"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Monthly limit": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limite mensuelle"
+          }
+        }
+      }
+    },
+    "Day": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jour"
+          }
+        }
+      }
+    },
+    "Your Codex usage, in charts": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton utilisation de Codex, en graphiques"
+          }
+        }
+      }
+    },
+    "Settings → Codex usage shows the tokens used each day and what's left of your limit, with the tokens and messages left, estimated from your chats.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réglages → Utilisation de Codex montre les tokens utilisés chaque jour et ce qu'il reste de ta limite, avec les tokens et les messages restants, estimés d'après tes chats."
+          }
+        }
+      }
+    },
+    "Edit your profile": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifie ton profil"
+          }
+        }
+      }
+    },
+    "The pencil on your picture in Settings changes your photo, display name and username in ChatGPT.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le crayon sur ta photo dans les Réglages change ta photo, ton nom affiché et ton nom d'utilisateur dans ChatGPT."
+          }
+        }
+      }
+    },
+    "OCTO refuses any request to the telemetry addresses of ChatGPT and Codex, such as Statsig, whatever would try.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCTO refuse toute requête vers les adresses de télémétrie de ChatGPT et de Codex, comme Statsig, quoi qui essaie."
+          }
+        }
+      }
+    },
+    "Email and phone out of sight": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-mail et téléphone hors de vue"
+          }
+        }
+      }
+    },
+    "Privacy can take their rows out of Settings altogether.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confidentialité peut retirer complètement leurs lignes des Réglages."
+          }
+        }
+      }
+    },
+    "Smoother chats": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Des chats plus fluides"
+          }
+        }
+      }
+    },
+    "The button that goes back down sits above the message bar, and a slide down on a new chat puts the keyboard away, tab bar included.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le bouton pour redescendre se place au-dessus de la barre de message, et glisser vers le bas sur un nouveau chat range le clavier, barre d'onglets comprise."
           }
         }
       }

@@ -1,5 +1,6 @@
 import OCTOCore
 import SwiftUI
+import UIKit
 
 struct ChatView: View {
     @Environment(AppModel.self) private var app
@@ -29,21 +30,12 @@ struct ChatView: View {
                 if !session.messages.isEmpty {
                     messageList
                         .id(session.id)
-                } else if session.conversation.isAccountChat {
-                    AccountChatPlaceholder(load: session.accountLoad) {
-                        Task { await session.loadFromAccount(force: true) }
-                    }
                 } else {
-                    EmptyChatView(isTemporary: session.isTemporary, showsGreeting: app.settings.showsGreeting)
+                    emptyChat
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { toolbarContent }
-            .safeAreaBar(edge: .bottom) {
-                ComposerView(session: session) {
-                    showVoiceMode = true
-                }
-            }
+            // Laid over the chat before the message bar is added below it: the bar is out of the
+            // chat's safe area, so the button floats just above the bar instead of on top of it.
             .overlay(alignment: .bottom) {
                 if !isNearBottom, !session.messages.isEmpty {
                     GlassIconButton(systemImage: "arrow.down", label: "Scroll to bottom", size: 38) {
@@ -56,6 +48,13 @@ struct ChatView: View {
                 }
             }
             .animation(.smooth(duration: 0.25), value: isNearBottom)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { toolbarContent }
+            .safeAreaBar(edge: .bottom) {
+                ComposerView(session: session) {
+                    showVoiceMode = true
+                }
+            }
             .sheet(item: $editingMessage) { message in
                 EditMessageSheet(message: message) { text in
                     session.edit(message.id, text: text)
@@ -90,9 +89,38 @@ struct ChatView: View {
                 showVoiceMode = true
                 return
             }
+            if app.demoScene == .scrollButton {
+                try? await Task.sleep(for: .milliseconds(800))
+                scrollPosition.scrollTo(edge: .top)
+                return
+            }
             #endif
             await session.loadFromAccount()
         }
+    }
+
+    /// A chat without messages yet. It scrolls like one, so sliding down puts the keyboard away —
+    /// in the tab bar layout the keyboard hides the tabs, and nothing else would — and a tap on the
+    /// empty space does too.
+    private var emptyChat: some View {
+        ScrollView {
+            Group {
+                if session.conversation.isAccountChat {
+                    AccountChatPlaceholder(load: session.accountLoad) {
+                        Task { await session.loadFromAccount(force: true) }
+                    }
+                } else {
+                    EmptyChatView(isTemporary: session.isTemporary, showsGreeting: app.settings.showsGreeting)
+                }
+            }
+            .containerRelativeFrame([.horizontal, .vertical])
+            .contentShape(Rectangle())
+            .onTapGesture {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
+        }
+        .scrollBounceBehavior(.always, axes: .vertical)
+        .scrollDismissesKeyboard(.interactively)
     }
 
     private var messageList: some View {
@@ -125,6 +153,8 @@ struct ChatView: View {
         }
         .scrollPosition($scrollPosition)
         .defaultScrollAnchor(.bottom, for: .initialOffset)
+        // A short chat still slides, so the keyboard can always be put away.
+        .scrollBounceBehavior(.always, axes: .vertical)
         .scrollDismissesKeyboard(.interactively)
         .onScrollGeometryChange(for: ScrollMetrics.self) { geometry in
             ScrollMetrics(

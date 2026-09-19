@@ -9,7 +9,7 @@ DEVICE_NAME="${DEVICE_NAME:-iPhone 17 Pro}"
 LANGUAGE="${SCREENSHOT_LANGUAGE:-fr}"
 LOCALE_ID="${SCREENSHOT_LOCALE:-fr_FR}"
 BUNDLE_ID="com.gabrielb0x.octo"
-SCENES=(welcome home chat sidebar voice settings settingsApp subscription upgrade about developer network deleteToast freePlan lightChat messageDetails whatsNew appearance privacy dataControls ageVerification devices storage memory update accounts ads tabs tabsChats layout models)
+SCENES=(welcome home chat sidebar voice settings settingsApp subscription upgrade about developer network deleteToast freePlan lightChat messageDetails whatsNew appearance privacy dataControls ageVerification devices storage memory update accounts ads tabs tabsChats layout models usage editProfile scrollButton telemetry)
 
 # GitHub keeps 10 annotations per step: list iOS runtimes only so readiness warnings stay visible.
 xcrun simctl list runtimes available | grep "^iOS" | sed 's/^/::notice title=Simulator runtimes::/' || true

@@ -377,6 +377,8 @@ final class ChatSession: Identifiable {
                     serviceTierWasRefused()
                 case .citations(let citations):
                     reply.addCitations(citations)
+                case .rateLimits(let limits):
+                    app?.applyRateLimits(limits)
                 case .completed(let usage):
                     reply.usage = usage
                 }

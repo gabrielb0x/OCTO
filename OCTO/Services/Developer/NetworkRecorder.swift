@@ -218,6 +218,7 @@ extension URLSession {
     func recordedData(for request: URLRequest) async throws -> (Data, URLResponse) {
         let recorder = NetworkRecorder.shared
         let recording = recorder.begin(request)
+        try Self.refuseTelemetry(request, recording: recording)
         switch recorder.simulation(for: request, streaming: false) {
         case .error(let error)?:
             recording?.fail(error, simulated: true)
@@ -243,6 +244,7 @@ extension URLSession {
     func recordedBytes(for request: URLRequest) async throws -> (URLSession.AsyncBytes, URLResponse, NetworkRecording?) {
         let recorder = NetworkRecorder.shared
         let recording = recorder.begin(request)
+        try Self.refuseTelemetry(request, recording: recording)
         if case .error(let error)? = recorder.simulation(for: request, streaming: true) {
             recording?.fail(error, simulated: true)
             throw error
@@ -255,5 +257,15 @@ extension URLSession {
             recording?.fail(error)
             throw error
         }
+    }
+
+    /// A request to a telemetry address stops here, before the session even sees it. The
+    /// sessions refuse it too (`TelemetryBlocker`): this also leaves a trace in the network log.
+    private static func refuseTelemetry(_ request: URLRequest, recording: NetworkRecording?) throws {
+        guard let url = request.url, TelemetryBlocklist.blocks(url) else { return }
+        NetworkActivity.shared.recordBlocked(url)
+        DevLog.log("privacy", "Blocked a telemetry request to \(url.host ?? "?")\(url.path)", level: .warning)
+        recording?.fail(TelemetryBlocker.error)
+        throw TelemetryBlocker.error
     }
 }

@@ -24,6 +24,29 @@ enum ImageProcessing {
         return rendered.jpegData(compressionQuality: quality)
     }
 
+    /// A square profile photo: the middle of the picture, scaled down, small enough for ChatGPT.
+    static func profilePhoto(from image: UIImage, side: CGFloat = 1024, maximumBytes: Int = SocialProfileAPI.maximumPhotoBytes) -> Data? {
+        let size = image.size
+        guard size.width > 0, size.height > 0 else { return nil }
+        let target = CGSize(width: min(side, min(size.width, size.height)), height: min(side, min(size.width, size.height)))
+        let scale = max(target.width / size.width, target.height / size.height)
+        let drawn = CGSize(width: size.width * scale, height: size.height * scale)
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        format.opaque = true
+        let rendered = UIGraphicsImageRenderer(size: target, format: format).image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(origin: .zero, size: target))
+            image.draw(in: CGRect(x: (target.width - drawn.width) / 2, y: (target.height - drawn.height) / 2, width: drawn.width, height: drawn.height))
+        }
+        for quality in [0.85, 0.7, 0.5] {
+            if let data = rendered.jpegData(compressionQuality: quality), data.count <= maximumBytes {
+                return data
+            }
+        }
+        return nil
+    }
+
     static func thumbnail(from data: Data, maxPixelSize: Int = 360) -> UIImage? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
         let options: [CFString: Any] = [

@@ -35,7 +35,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     }
 }
 
-/// The servers OCTO contacted since it opened, for the privacy report. Counted in memory only.
+/// The servers OCTO contacted since it opened, and the telemetry it refused to send, for the
+/// privacy report. Counted in memory only.
 final class NetworkActivity: @unchecked Sendable {
     struct Host: Identifiable, Equatable {
         let name: String
@@ -48,17 +49,34 @@ final class NetworkActivity: @unchecked Sendable {
 
     private let lock = NSLock()
     private var counts: [String: Int] = [:]
+    private var blockedCounts: [String: Int] = [:]
 
     func record(_ url: URL?) {
-        guard let host = url?.host?.lowercased(), !host.isEmpty else { return }
+        // A telemetry request never leaves: it's counted as blocked, not as contacted.
+        guard let url, !TelemetryBlocklist.blocks(url), let host = url.host?.lowercased(), !host.isEmpty else { return }
         lock.withLock {
             counts[host, default: 0] += 1
         }
     }
 
+    func recordBlocked(_ url: URL) {
+        let address = (url.host?.lowercased() ?? "") + url.path
+        lock.withLock {
+            blockedCounts[address, default: 0] += 1
+        }
+    }
+
     func hosts() -> [Host] {
-        let snapshot = lock.withLock { counts }
-        return snapshot
+        Self.sorted(lock.withLock { counts })
+    }
+
+    /// The telemetry addresses something tried to reach, with how many times.
+    func blocked() -> [Host] {
+        Self.sorted(lock.withLock { blockedCounts })
+    }
+
+    private static func sorted(_ counts: [String: Int]) -> [Host] {
+        counts
             .map { Host(name: $0.key, requests: $0.value) }
             .sorted { $0.requests == $1.requests ? $0.name < $1.name : $0.requests > $1.requests }
     }

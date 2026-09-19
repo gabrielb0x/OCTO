@@ -36,6 +36,9 @@ final class AppModel {
     private(set) var modelsUpdatedAt: Date?
     private(set) var usage: UsageSnapshot?
     private(set) var usageError: String?
+    /// The tokens the account's Codex usage went through, day by day.
+    private(set) var tokenActivity: CodexTokenActivity?
+    private(set) var tokenActivityError: String?
     /// Release notes presented once after an update.
     var whatsNew: ReleaseNotes?
     /// A newer version found on GitHub, offered once.
@@ -73,11 +76,15 @@ final class AppModel {
             UserDefaults.standard.set(true, forKey: ReleaseNotes.launchedBeforeKey)
         }
 
+        // No request of any session may reach a telemetry address.
+        TelemetryBlocker.install()
+
         // Ephemeral: cookies live in memory for this launch only and nothing is cached on disk.
         let configuration = URLSessionConfiguration.ephemeral
         configuration.urlCache = nil
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         configuration.timeoutIntervalForRequest = 300
+        TelemetryBlocker.protect(configuration)
         let session = URLSession(configuration: configuration)
         self.session = session
 
@@ -127,12 +134,10 @@ final class AppModel {
 
     // MARK: Account
 
-    /// Name shown for the account: the ChatGPT profile name, else the email address.
+    /// Name shown for the account: the display name of its ChatGPT profile, else the name of the
+    /// account, else the email address.
     var accountName: String {
-        if let name = account.profile?.name?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
-            return name
-        }
-        return accountEmail ?? "ChatGPT"
+        account.displayName ?? accountEmail ?? "ChatGPT"
     }
 
     var accountEmail: String? {
@@ -224,7 +229,7 @@ final class AppModel {
                 planType: account.subscription?.planType ?? auth.account?.planType,
                 userID: auth.account?.userID
             ),
-            name: account.profile?.name
+            name: account.displayName
         )
         // Where its picture lives, so the list can show it once another account is in use.
         if let profile = account.profile {
@@ -326,10 +331,29 @@ final class AppModel {
         }
     }
 
+    /// The tokens of each day, as the Codex CLI reads them for the account.
+    func refreshTokenActivity() async {
+        guard !isDemo else { return }
+        do {
+            tokenActivity = try await backend.fetchTokenActivity()
+            tokenActivityError = nil
+        } catch {
+            tokenActivityError = ChatSession.describe(error)
+            DevLog.log("usage", "Token activity failed: \(DevLog.describe(error))", level: error.isCancellation ? .debug : .warning)
+        }
+    }
+
+    /// Codex tells where the limits stand with every reply: the usage shown follows along,
+    /// without asking again.
+    func applyRateLimits(_ limits: CodexRateLimits) {
+        usage = usage.map { $0.applying(limits) } ?? UsageSnapshot(limits: limits)
+    }
+
     #if OCTO_DEMO
     /// Screenshot builds show usage without touching the network.
-    func useDemoUsage(_ snapshot: UsageSnapshot?) {
+    func useDemoUsage(_ snapshot: UsageSnapshot?, activity: CodexTokenActivity? = nil) {
         usage = snapshot
+        tokenActivity = activity
     }
     #endif
 
@@ -358,6 +382,7 @@ final class AppModel {
         models = Self.cachedModels()
         refusedModelIDs = []
         usage = nil
+        tokenActivity = nil
         // Cookies and connections of the previous account go too.
         await session.reset()
         await refreshAccount(force: true)
@@ -369,6 +394,7 @@ final class AppModel {
     func signOut() async {
         leaveCurrentAccount()
         usage = nil
+        tokenActivity = nil
         refusedModelIDs = []
         account.clear()
         store.removeAccountChats()

@@ -2,6 +2,23 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [1.11.0] – 2026-09-19
+
+### Ajouté
+
+- **Ton utilisation de Codex, en graphiques.** **Réglages → Utilisation de Codex** (aussi depuis Abonnement) montre d'abord ce qui compte : une **estimation des messages qu'il te reste**, puis une jauge de ce qu'il reste de ta limite (verte, orange quand elle baisse, rouge vers la fin) avec sa date de réinitialisation. En dessous : les **tokens utilisés sur la période** et une **estimation des tokens restants**, un graphique des **tokens de chaque jour** sur deux semaines (touche une barre pour voir le jour), le total depuis le début et ton jour le plus chargé, et chaque limite de ton forfait quand il en a plusieurs.
+- **Comment c'est calculé.** Les tokens de chaque jour viennent de Codex lui-même (`wham/profiles/me`, l'adresse que lit la CLI Codex) et comptent toutes les apps Codex de ton compte. Codex ne dit que la part de chaque limite déjà utilisée : OCTO en déduit la taille de la limite d'après les tokens utilisés sur la même période, puis le nombre de messages restants d'après **la taille moyenne des messages de tes chats** — la question, tout le chat qui la précède et la réponse. Les réponses écrites dans OCTO arrivent avec le décompte exact de Codex ; les autres sont estimées d'après leur longueur. La page dit sur combien de réponses l'estimation repose.
+- **La jauge suit chaque réponse.** Codex renvoie où en sont tes limites avec chaque réponse (`x-codex-primary-used-percent`…, et l'événement `codex.rate_limits`) : OCTO les lit au passage, sans requête de plus, et la ligne « Utilisation de Codex » des réglages affiche ce qu'il reste.
+- **Modifier ton profil.** Un **crayon sur ta photo**, en haut des Réglages, ouvre « Modifier le profil », comme dans ChatGPT : ta **photo** (bibliothèque ou appareil photo, recadrée en carré), ton **nom affiché** et ton **nom d'utilisateur**, enregistrés dans ton compte avec les requêtes de l'écran de ChatGPT (`calpico/chatgpt/profile/{id}`, `…/username`, `calpico/chatgpt/profile_files`). Les réglages affichent ton nom affiché et ton `@nom d'utilisateur`. Si ChatGPT refuse un nom d'utilisateur (déjà pris, caractères non autorisés), son message s'affiche et ce qui a déjà été enregistré le reste.
+- **La télémétrie est bloquée.** OCTO n'en a jamais envoyé, et refuse maintenant **toute requête vers les adresses de télémétrie** de ChatGPT et de Codex avant qu'elle ne quitte l'iPhone, dans toutes ses sessions réseau et dans celle du système : le service d'événements de ChatGPT (`chatgpt.com/ces/…` : `ces/v1/rgstr`, `ces/statsc/flush`, `ces/v1/telemetry/intake`), Statsig (`api.oaistatsig.com/v1/sdk_exception`, `ab.chatgpt.com`…), les rapports de latence (`backend-api/lat/r`), les statistiques de la CLI Codex (`codex/analytics-events`), Datadog, Sentry, Segment et Google Analytics. **Réglages → Confidentialité → Télémétrie bloquée** liste toutes ces adresses et ce qui aurait tenté de les joindre depuis l'ouverture d'OCTO.
+- **Retirer l'e-mail et le téléphone des réglages.** **Confidentialité → E-mail et numéro de téléphone** propose « Retirés des réglages » : leurs lignes disparaissent complètement des Réglages, et ils restent masqués partout ailleurs.
+
+### Corrigé
+
+- **Le bouton pour redescendre en bas d'un chat** ne se pose plus sur la barre de message : il flotte juste au-dessus.
+- **Plus de clavier coincé sur l'accueil.** Sur un nouveau chat, le clavier ne se rangeait qu'en envoyant un message — et avec la barre d'onglets, cachée derrière lui, on ne pouvait plus changer d'onglet. Glisser vers le bas ou toucher l'espace vide le range maintenant, et un chat court glisse toujours pour le ranger aussi.
+- Une limite de 30 jours (celle du forfait gratuit) s'appelle maintenant « Limite mensuelle », et non plus « Limite hebdomadaire ».
+
 ## [1.10.0] – 2026-09-18
 
 ### Ajouté

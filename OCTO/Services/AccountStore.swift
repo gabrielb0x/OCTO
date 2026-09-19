@@ -21,6 +21,8 @@ struct AccountSnapshot: Codable {
     var devices: AccountDevices?
     var security: AccountSecurity?
     var fileStorage: AccountFileStorage?
+    /// The profile people see: display name, username and photo.
+    var socialProfile: SocialProfile?
 }
 
 /// The account snapshot and profile picture, in Application Support.
@@ -86,6 +88,9 @@ final class AccountStore {
     }
 
     private(set) var profile: AccountProfile?
+    /// The profile people see of the account in ChatGPT — display name, username, photo — which
+    /// "Edit profile" changes.
+    private(set) var socialProfile: SocialProfile?
     private(set) var avatar: UIImage?
     private(set) var settings: AccountSettings?
     private(set) var subscription: AccountSubscription?
@@ -129,6 +134,16 @@ final class AccountStore {
             state = .loaded
         }
         avatar = cache.loadAvatar().flatMap { UIImage(data: $0) }
+    }
+
+    /// The name the account goes by: the display name of its profile, else the name of the account.
+    var displayName: String? {
+        for name in [socialProfile?.displayName, profile?.name] {
+            if let name = name?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+                return name
+            }
+        }
+        return nil
     }
 
     /// Custom instructions, personality and saved memories, added to every request.
@@ -216,8 +231,83 @@ final class AccountStore {
         } else {
             state = .loaded
         }
+        // Whose profile it is comes with the account, so it's read once the account is.
+        await loadSocialProfile(service: service, generation: generation)
         saveSnapshot()
         await updateAvatar()
+    }
+
+    /// Reads the profile people see again, for "Edit profile".
+    func refreshSocialProfile() async {
+        guard let service else { return }
+        await loadSocialProfile(service: service, generation: generation)
+        saveSnapshot()
+    }
+
+    private func loadSocialProfile(service: AccountService, generation: Int) async {
+        guard let userID = profile?.userID else { return }
+        do {
+            let value = try await service.socialProfile(userID: userID)
+            guard generation == self.generation else { return }
+            socialProfile = value
+        } catch {
+            // An account that never set up its profile has none to read.
+            DevLog.log("account", "socialProfile failed: \(DevLog.describe(error))", level: error.isCancellation ? .debug : .warning)
+        }
+    }
+
+    // MARK: Edit profile
+
+    func setDisplayName(_ name: String) async throws {
+        try await changeSocialProfile { service, userID in
+            try await service.setDisplayName(name, userID: userID)
+        } offline: { profile in
+            profile.displayName = name
+        }
+    }
+
+    func setUsername(_ username: String) async throws {
+        try await changeSocialProfile { service, userID in
+            try await service.setUsername(username, userID: userID)
+        } offline: { profile in
+            profile.username = username
+        }
+    }
+
+    /// Uploads a new profile photo. It shows right away, without waiting to download it back.
+    func setProfilePhoto(_ jpeg: Data) async throws {
+        try await changeSocialProfile { service, userID in
+            try await service.setProfilePhoto(jpeg: jpeg, userID: userID)
+        } offline: { _ in }
+        guard let image = UIImage(data: jpeg) else { return }
+        avatar = image
+        avatarURL = socialProfile?.pictureURL ?? avatarURL
+        cache.saveAvatar(jpeg)
+        saveSnapshot()
+    }
+
+    /// Sends one change of the profile, then keeps the profile ChatGPT answers with. Screenshot
+    /// builds, which have no account, only change what's shown.
+    private func changeSocialProfile(
+        _ send: (AccountService, String) async throws -> SocialProfile?,
+        offline: (inout SocialProfile) -> Void
+    ) async throws {
+        guard let userID = socialProfile?.userID ?? profile?.userID else { throw AccountAPIError.profileUnknown }
+        guard let service else {
+            var local = socialProfile ?? SocialProfile(userID: userID)
+            offline(&local)
+            socialProfile = local
+            return
+        }
+        let generation = self.generation
+        let updated = try await send(service, userID)
+        guard generation == self.generation else { return }
+        if let updated {
+            socialProfile = updated
+        } else {
+            await loadSocialProfile(service: service, generation: generation)
+        }
+        saveSnapshot()
     }
 
     /// The devices signed into the account and how it's protected. Asked for by the Devices page
@@ -389,6 +479,7 @@ final class AccountStore {
     private func resetState() {
         generation += 1
         profile = nil
+        socialProfile = nil
         avatar = nil
         settings = nil
         subscription = nil
@@ -424,7 +515,8 @@ final class AccountStore {
 
     private func updateAvatar() async {
         guard let service, let profile else { return }
-        guard let url = profile.pictureURL else {
+        // The photo of the profile people see, which "Edit profile" changes, is the account's picture.
+        guard let url = socialProfile?.pictureURL ?? profile.pictureURL else {
             if avatarURL != nil || avatar != nil {
                 avatar = nil
                 avatarURL = nil
@@ -447,6 +539,7 @@ final class AccountStore {
 
     private func apply(_ snapshot: AccountSnapshot) {
         profile = snapshot.profile
+        socialProfile = snapshot.socialProfile
         settings = snapshot.settings
         subscription = snapshot.subscription
         pricing = snapshot.pricing
@@ -479,7 +572,8 @@ final class AccountStore {
             ageStatus: ageStatus,
             devices: devices,
             security: security,
-            fileStorage: fileStorage
+            fileStorage: fileStorage,
+            socialProfile: socialProfile
         ))
     }
 }

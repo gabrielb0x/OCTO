@@ -44,6 +44,7 @@ final class UpdateChecker {
         configuration.httpShouldSetCookies = false
         configuration.urlCache = nil
         configuration.timeoutIntervalForRequest = 20
+        TelemetryBlocker.protect(configuration)
         session = URLSession(configuration: configuration)
         guard !isDemo else { return }
         lastCheck = defaults.object(forKey: Keys.lastCheck) as? Date

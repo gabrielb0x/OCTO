@@ -21,6 +21,9 @@ public enum ResponseStreamUpdate: Equatable, Sendable {
     /// Reported by the client, never by the stream.
     case serviceTierUnsupported
     case citations([Citation])
+    /// Where the plan's Codex limits stand, from the headers of the response or a
+    /// `codex.rate_limits` event.
+    case rateLimits(CodexRateLimits)
     case completed(TokenUsage?)
     case incomplete(reason: String?)
     case failed(ResponseStreamFailure)
@@ -101,6 +104,9 @@ public enum ResponseStreamDecoder {
         case "response.completed", "response.done":
             let response = object["response"] as? [String: Any]
             return [.completed(usage(from: response?["usage"] as? [String: Any]))]
+
+        case "codex.rate_limits":
+            return CodexRateLimits.parse(event: object).map { [.rateLimits($0)] } ?? []
 
         case "response.incomplete":
             let response = object["response"] as? [String: Any]
@@ -253,6 +259,12 @@ public struct UsageSnapshot: Equatable, Sendable {
         public var usedPercent: Double
         public var windowSeconds: Int?
         public var resetsAt: Date?
+
+        public init(usedPercent: Double, windowSeconds: Int? = nil, resetsAt: Date? = nil) {
+            self.usedPercent = usedPercent
+            self.windowSeconds = windowSeconds
+            self.resetsAt = resetsAt
+        }
     }
 
     public var planType: String?

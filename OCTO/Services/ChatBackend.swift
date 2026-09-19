@@ -154,6 +154,11 @@ final class ChatBackend: Sendable {
             throw ChatBackendError.failure(ChatFailureKind.classify(status: http.statusCode, payload: payload))
         }
 
+        // Where the plan's limits stand comes with the headers of the reply.
+        if let limits = CodexRateLimits.parse(headers: Self.headers(of: http)) {
+            continuation.yield(.rateLimits(limits))
+        }
+
         var parser = ServerSentEventParser()
         var stats = StreamStats(isRecording: recording != nil)
         do {
@@ -256,6 +261,31 @@ final class ChatBackend: Sendable {
             throw ChatBackendError.failure(ChatFailureKind.classify(status: status, payload: APIErrorPayload.parse(data)))
         }
         return UsageSnapshot.parse(data)
+    }
+
+    /// The tokens the account's Codex usage went through, day by day and in all.
+    func fetchTokenActivity() async throws -> CodexTokenActivity {
+        let credential = try await vault.credential()
+        var request = URLRequest(url: CodexBackend.tokenActivityURL)
+        request.timeoutInterval = 30
+        for (name, value) in CodexBackend.headers(accessToken: credential.accessToken, accountID: credential.accountID, userAgent: AppInfo.userAgent) {
+            request.setValue(value, forHTTPHeaderField: name)
+        }
+        let (data, response) = try await session.recordedData(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else {
+            throw ChatBackendError.failure(ChatFailureKind.classify(status: status, payload: APIErrorPayload.parse(data)))
+        }
+        guard let activity = CodexTokenActivity.parse(data) else { throw ChatBackendError.invalidResponse }
+        return activity
+    }
+
+    private static func headers(of response: HTTPURLResponse) -> [String: String] {
+        var headers: [String: String] = [:]
+        for (name, value) in response.allHeaderFields {
+            headers[String(describing: name)] = String(describing: value)
+        }
+        return headers
     }
 
     func generateTitle(model: ModelDescriptor, userText: String, assistantText: String) async throws -> String? {

@@ -36,6 +36,10 @@ enum DemoScene: String, CaseIterable {
     case tabsChats
     case layout
     case models
+    case usage
+    case editProfile
+    case scrollButton
+    case telemetry
 
     static var current: DemoScene? {
         UserDefaults.standard.string(forKey: "OCTODemoScene").flatMap(DemoScene.init(rawValue:))
@@ -173,10 +177,14 @@ enum DemoContent {
                     AccountFileStorage.Bucket(key: "other", bytes: 1_156_575, count: 3),
                     AccountFileStorage.Bucket(key: "text", bytes: 14_675, count: 1),
                 ]
-            )
+            ),
+            socialProfile: SocialProfile(userID: "user-demo", username: "gabriel", displayName: "Gabriel")
         ))
-        if scene == .subscription {
+        if scene == .subscription || scene == .settings {
             app.useDemoUsage(UsageSnapshot.parse(Data(demoUsageJSON.utf8)))
+        }
+        if scene == .usage {
+            app.useDemoUsage(UsageSnapshot.parse(Data(demoUsageJSON.utf8)), activity: demoTokenActivity(now: Date()))
         }
         if scene == .accounts {
             app.auth.useDemoAccounts([
@@ -216,6 +224,10 @@ enum DemoContent {
         ])
         for conversation in conversations(now: Date()) {
             app.store.save(conversation)
+        }
+        // A longer chat, scrolled back up, to show the button that goes back down.
+        if scene == .scrollButton {
+            app.store.save(longConversation(now: Date()))
         }
         if scene == .network {
             for entry in networkEntries(now: Date()) {
@@ -266,6 +278,8 @@ enum DemoContent {
         case .ads?: return [.ads]
         case .layout?: return [.layout]
         case .models?: return [.general, .models]
+        case .usage?: return [.codexUsage]
+        case .telemetry?: return [.privacy, .telemetry]
         default: return []
         }
     }
@@ -283,7 +297,7 @@ enum DemoContent {
         case .upgrade?:
             try? await Task.sleep(for: .milliseconds(500))
             openUpgrade()
-        case .settings?, .settingsApp?, .subscription?, .about?, .developer?, .network?, .appearance?, .privacy?, .dataControls?, .ageVerification?, .devices?, .storage?, .memory?, .accounts?, .ads?, .models?:
+        case .settings?, .settingsApp?, .subscription?, .about?, .developer?, .network?, .appearance?, .privacy?, .dataControls?, .ageVerification?, .devices?, .storage?, .memory?, .accounts?, .ads?, .models?, .usage?, .editProfile?, .telemetry?:
             try? await Task.sleep(for: .milliseconds(500))
             openSettings()
         case .deleteToast?:
@@ -460,6 +474,41 @@ enum DemoContent {
         ]
     }
 
+    /// Two weeks of Codex tokens, like `wham/profiles/me` counts them, with quiet days too.
+    private static func demoTokenActivity(now: Date) -> CodexTokenActivity {
+        let tokens = [0, 42_000, 18_500, 0, 65_300, 31_200, 12_800, 0, 0, 54_600, 23_900, 71_400, 38_200, 26_700]
+        let today = CodexTokenActivity.dayStart(now)
+        let days = tokens.enumerated().map { index, count in
+            CodexTokenActivity.Day(date: today.addingTimeInterval(-Double(tokens.count - 1 - index) * 86_400), tokens: count)
+        }
+        return CodexTokenActivity(days: days.filter { $0.tokens > 0 }, lifetimeTokens: 1_284_000, peakDailyTokens: 96_500, currentStreakDays: 4, longestStreakDays: 11)
+    }
+
+    /// The featured chat with two more questions, long enough to scroll.
+    private static func longConversation(now: Date) -> Conversation {
+        let model = ModelCatalog.chatGPTFallback[0]
+        let date = now.addingTimeInterval(-180)
+        func message(_ role: ChatMessage.Role, _ text: String, _ secondsAgo: Double) -> ChatMessage {
+            ChatMessage(role: role, text: text, modelID: role == .assistant ? model.id : nil, createdAt: now.addingTimeInterval(-secondsAgo))
+        }
+        return Conversation(
+            id: featuredConversationID,
+            title: localized("Networking with async/await", "Requête réseau en Swift"),
+            createdAt: date,
+            updatedAt: now,
+            modelID: model.id,
+            reasoningEffort: model.defaultReasoningEffort,
+            messages: [
+                message(.user, localized("How do I make a network request in Swift with async/await?", "Comment faire une requête réseau en Swift avec async/await ?"), 180),
+                message(.assistant, localized(featuredAnswerEnglish, featuredAnswerFrench), 178),
+                message(.user, localized("And how do I cancel it?", "Et comment je l'annule ?"), 120),
+                message(.assistant, localized(cancelAnswerEnglish, cancelAnswerFrench), 118),
+                message(.user, localized("Can I retry it when it fails?", "Je peux la relancer si elle échoue ?"), 60),
+                message(.assistant, localized(retryAnswerEnglish, retryAnswerFrench), 58),
+            ]
+        )
+    }
+
     /// A free-plan `wham/usage` payload, so the subscription scene shows a real-looking usage bar.
     private static let demoUsageJSON = #"""
     {"plan_type":"free","rate_limit":{"allowed":true,"limit_reached":false,"primary_window":{"used_percent":18,"limit_window_seconds":2592000,"reset_after_seconds":1728000},"secondary_window":null},"credits":{"has_credits":false,"unlimited":false,"balance":null}}
@@ -501,6 +550,64 @@ enum DemoContent {
     - `await` suspend la fonction sans bloquer l'interface.
     - `try` fait remonter les erreurs réseau et de décodage.
     - Appelle-la depuis une `Task` dans ta vue SwiftUI.
+    """#
+
+    private static let cancelAnswerFrench = #"""
+    Garde la `Task` qui fait la requête, puis appelle `cancel()` dessus : `URLSession` s'arrête et lance une `CancellationError`.
+
+    ```swift
+    let task = Task {
+        try await fetchUser(id: 42)
+    }
+    task.cancel()
+    ```
+
+    Dans une vue SwiftUI, `.task { }` l'annule tout seul quand la vue disparaît.
+    """#
+
+    private static let cancelAnswerEnglish = #"""
+    Keep the `Task` that makes the request, then call `cancel()` on it: `URLSession` stops and throws a `CancellationError`.
+
+    ```swift
+    let task = Task {
+        try await fetchUser(id: 42)
+    }
+    task.cancel()
+    ```
+
+    In a SwiftUI view, `.task { }` cancels it for you when the view goes away.
+    """#
+
+    private static let retryAnswerFrench = #"""
+    Oui, avec une petite boucle qui attend un peu plus à chaque essai :
+
+    ```swift
+    for attempt in 1...3 {
+        do {
+            return try await fetchUser(id: 42)
+        } catch {
+            try await Task.sleep(for: .seconds(attempt))
+        }
+    }
+    ```
+
+    Ne relance que les erreurs réseau : une erreur de décodage échouera à chaque fois.
+    """#
+
+    private static let retryAnswerEnglish = #"""
+    Yes, with a small loop that waits a little longer after each try:
+
+    ```swift
+    for attempt in 1...3 {
+        do {
+            return try await fetchUser(id: 42)
+        } catch {
+            try await Task.sleep(for: .seconds(attempt))
+        }
+    }
+    ```
+
+    Only retry network errors: a decoding error will fail every time.
     """#
 
     private static let featuredAnswerEnglish = #"""

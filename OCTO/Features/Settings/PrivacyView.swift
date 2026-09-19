@@ -5,6 +5,7 @@ import SwiftUI
 struct PrivacyView: View {
     @Environment(AppModel.self) private var app
     @State private var hosts: [NetworkActivity.Host] = []
+    @State private var blockedCount = 0
 
     var body: some View {
         @Bindable var settings = app.settings
@@ -20,6 +21,15 @@ struct PrivacyView: View {
                         .foregroundStyle(Theme.secondaryText)
                 }
                 .padding(.vertical, 4)
+                NavigationLink(value: SettingsRoute.telemetry) {
+                    LabeledContent {
+                        Text(blockedCount == 0 ? LocalizedStringKey("Always on") : LocalizedStringKey("\(blockedCount) blocked"))
+                    } label: {
+                        Label("Telemetry blocked", systemImage: "hand.raised.slash")
+                    }
+                }
+            } footer: {
+                Text("OCTO refuses any request to the addresses ChatGPT and Codex send their telemetry to, should one ever be attempted.")
             }
 
             Section {
@@ -33,7 +43,7 @@ struct PrivacyView: View {
             } header: {
                 Text("Your details")
             } footer: {
-                Text("How the email address and the phone number of your account show in Settings. Behind dots, a tap shows them for 30 seconds — never while the screen is recorded, mirrored or shared.")
+                Text("How the email address and the phone number of your account show in Settings. Behind dots, a tap shows them for 30 seconds — never while the screen is recorded, mirrored or shared. Removed, their rows leave Settings altogether.")
             }
 
             Section {
@@ -130,11 +140,16 @@ struct PrivacyView: View {
         .navigationTitle("Privacy")
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            hosts = NetworkActivity.shared.hosts()
+            readActivity()
         }
         .detachedRefreshable {
-            hosts = NetworkActivity.shared.hosts()
+            readActivity()
         }
+    }
+
+    private func readActivity() {
+        hosts = NetworkActivity.shared.hosts()
+        blockedCount = NetworkActivity.shared.blocked().reduce(0) { $0 + $1.requests }
     }
 
     private static func symbol(for host: String) -> String {
@@ -145,6 +160,89 @@ struct PrivacyView: View {
     }
 }
 
+/// The telemetry OCTO refuses to send: every address ChatGPT and Codex report to, and what tried
+/// to reach one since OCTO opened.
+struct TelemetryView: View {
+    @State private var blocked: [NetworkActivity.Host] = []
+
+    /// Who receives what's sent to some of the addresses.
+    private struct Service: Identifiable {
+        let name: String
+        let rules: [TelemetryBlocklist.Rule]
+
+        var id: String { name }
+    }
+
+    /// The addresses, grouped by who receives what's sent there.
+    private var services: [Service] {
+        var order: [String] = []
+        var rules: [String: [TelemetryBlocklist.Rule]] = [:]
+        for rule in TelemetryBlocklist.rules {
+            if rules[rule.service] == nil {
+                order.append(rule.service)
+            }
+            rules[rule.service, default: []].append(rule)
+        }
+        return order.map { Service(name: $0, rules: rules[$0] ?? []) }
+    }
+
+    var body: some View {
+        List {
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Telemetry is always blocked", systemImage: "hand.raised.slash.fill")
+                        .font(.headline)
+                        .foregroundStyle(Theme.success)
+                    Text("ChatGPT's apps and the Codex CLI report what you do to OpenAI and the services it uses: events, feature flags, errors, how fast replies come. OCTO sends none of it, and refuses any request to these addresses before it leaves your iPhone — whatever part of the app would try.")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                .padding(.vertical, 4)
+            }
+
+            Section {
+                if blocked.isEmpty {
+                    Label("Nothing tried to send telemetry.", systemImage: "checkmark.circle")
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                ForEach(blocked) { address in
+                    LabeledContent {
+                        Text("\(address.requests) requests")
+                            .monospacedDigit()
+                    } label: {
+                        Text(verbatim: address.name)
+                            .font(.footnote.monospaced())
+                            .lineLimit(2)
+                    }
+                }
+            } header: {
+                Text("Blocked since OCTO opened")
+            } footer: {
+                Text("Counted on the device, never sent anywhere.")
+            }
+
+            ForEach(services) { service in
+                // Names of services stay as they are; those describing ChatGPT's own are translated.
+                Section(ModelText.localized(service.name)) {
+                    ForEach(service.rules) { rule in
+                        Text(verbatim: rule.pattern)
+                            .font(.footnote.monospaced())
+                            .foregroundStyle(Theme.primaryText)
+                    }
+                }
+            }
+        }
+        .navigationTitle("Telemetry")
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            blocked = NetworkActivity.shared.blocked()
+        }
+        .detachedRefreshable {
+            blocked = NetworkActivity.shared.blocked()
+        }
+    }
+}
+
 extension ContactVisibility {
     var title: String {
         switch self {
@@ -152,6 +250,7 @@ extension ContactVisibility {
         case .tapToReveal: return String(localized: "Tap to show")
         case .whileNotRecording: return String(localized: "Hidden while recording")
         case .never: return String(localized: "Never shown")
+        case .removed: return String(localized: "Removed from Settings")
         }
     }
 }

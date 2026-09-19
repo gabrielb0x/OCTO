@@ -20,26 +20,31 @@ struct ReleaseNotes: Identifiable, Equatable {
 
     /// Notes of the version being shipped. Keep in sync with CHANGELOG.md.
     static var current: ReleaseNotes {
-        ReleaseNotes(version: "1.10.0", changes: [
+        ReleaseNotes(version: "1.11.0", changes: [
             Change(
-                systemImage: "rectangle.3.group",
-                title: String(localized: "A tab bar, if you like"),
-                detail: String(localized: "Settings → Layout puts your chats, Home and Settings in a Liquid Glass bar at the bottom of the screen, with the tabs you choose. The sidebar stays the default.")
+                systemImage: "chart.bar.xaxis",
+                title: String(localized: "Your Codex usage, in charts"),
+                detail: String(localized: "Settings → Codex usage shows the tokens used each day and what's left of your limit, with the tokens and messages left, estimated from your chats.")
             ),
             Change(
-                systemImage: "cpu",
-                title: String(localized: "The models Codex offers you"),
-                detail: String(localized: "The picker lists the models Codex gives your plan, free included, with what they're for and how fast they can answer. A model Codex turns down leaves it.")
+                systemImage: "pencil.circle",
+                title: String(localized: "Edit your profile"),
+                detail: String(localized: "The pencil on your picture in Settings changes your photo, display name and username in ChatGPT.")
             ),
             Change(
-                systemImage: "terminal",
-                title: String(localized: "ChatGPT or Codex"),
-                detail: String(localized: "A mark tells the chats of your ChatGPT account from those written with Codex in OCTO, and the filter of the list can keep only one kind.")
+                systemImage: "hand.raised.slash",
+                title: String(localized: "Telemetry blocked"),
+                detail: String(localized: "OCTO refuses any request to the telemetry addresses of ChatGPT and Codex, such as Statsig, whatever would try.")
             ),
             Change(
-                systemImage: "person.2",
-                title: String(localized: "Every account's picture"),
-                detail: String(localized: "The account list shows the profile pictures of your other accounts too.")
+                systemImage: "eye.slash",
+                title: String(localized: "Email and phone out of sight"),
+                detail: String(localized: "Privacy can take their rows out of Settings altogether.")
+            ),
+            Change(
+                systemImage: "keyboard.chevron.compact.down",
+                title: String(localized: "Smoother chats"),
+                detail: String(localized: "The button that goes back down sits above the message bar, and a slide down on a new chat puts the keyboard away, tab bar included.")
             ),
         ])
     }
