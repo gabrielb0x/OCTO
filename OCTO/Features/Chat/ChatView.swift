@@ -208,8 +208,8 @@ struct ChatView: View {
         }
 
         // The offer to upgrade sits next to the button that opens the chats, as in the ChatGPT app.
-        // The spacer keeps it out of the glass of that button. With the model picker in the
-        // middle, it keeps only its sparkle so both fit.
+        // The spacer keeps it out of the glass of that button. With the model picker next to it,
+        // it keeps only its sparkle so everything fits.
         if app.showsUpgradeOffer {
             if showsChatsButton {
                 ToolbarSpacer(.fixed, placement: .topBarLeading)
@@ -219,12 +219,16 @@ struct ChatView: View {
             }
         }
 
-        // The models Codex offers the account. With a single one there's nothing to choose, and
-        // the middle of the bar stays empty.
+        // The models Codex offers the account, on the left like a title, without glass of its own.
+        // With a single one there's nothing to choose, and nothing shows.
         if app.allowsModelChoice {
-            ToolbarItem(placement: .principal) {
+            if showsChatsButton || app.showsUpgradeOffer {
+                ToolbarSpacer(.fixed, placement: .topBarLeading)
+            }
+            ToolbarItem(placement: .topBarLeading) {
                 ModelMenu(session: session)
             }
+            .sharedBackgroundVisibility(.hidden)
         }
 
         if session.isBlank {

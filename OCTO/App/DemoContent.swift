@@ -57,7 +57,8 @@ enum DemoContent {
         app.settings.theme = scene == .lightChat ? .light : .system
         switch scene {
         case .lightChat: app.settings.accent = .blue
-        case .appearance: app.settings.accent = .purple
+        // The tab bar takes the accent color too.
+        case .appearance, .tabs: app.settings.accent = .purple
         default: app.settings.accent = .default
         }
         app.settings.chatTextSize = .standard
@@ -305,6 +306,21 @@ enum DemoContent {
             app.toasts.show(String(localized: "The chat has been deleted"), duration: 20)
         default:
             break
+        }
+    }
+
+    /// How long a scene needs before it's captured: what it opens half a second in, and the
+    /// animation. Short for a plain screen, so a run of the gallery doesn't wait for nothing.
+    static func settleTime(for scene: DemoScene?) -> Duration {
+        switch scene {
+        case .home?, .chat?, .lightChat?, .freePlan?, .tabs?, .tabsChats?, .layout?:
+            return .milliseconds(1_200)
+        case .welcome?, .editProfile?, .settingsApp?:
+            // The typing of the welcome screen, and the sheets or scrolling that come after Settings.
+            return .milliseconds(2_800)
+        default:
+            // A sheet, the sidebar, voice mode, a toast or a scroll, half a second in.
+            return .milliseconds(2_000)
         }
     }
 

@@ -20,31 +20,16 @@ struct ReleaseNotes: Identifiable, Equatable {
 
     /// Notes of the version being shipped. Keep in sync with CHANGELOG.md.
     static var current: ReleaseNotes {
-        ReleaseNotes(version: "1.11.0", changes: [
+        ReleaseNotes(version: "2.0.0", changes: [
             Change(
-                systemImage: "chart.bar.xaxis",
-                title: String(localized: "Your Codex usage, in charts"),
-                detail: String(localized: "Settings → Codex usage shows the tokens used each day and what's left of your limit, with the tokens and messages left, estimated from your chats.")
+                systemImage: "paintpalette",
+                title: String(localized: "The tab bar in your color"),
+                detail: String(localized: "With the tab bar layout, the tab on screen takes the accent color you chose in Appearance.")
             ),
             Change(
-                systemImage: "pencil.circle",
-                title: String(localized: "Edit your profile"),
-                detail: String(localized: "The pencil on your picture in Settings changes your photo, display name and username in ChatGPT.")
-            ),
-            Change(
-                systemImage: "hand.raised.slash",
-                title: String(localized: "Telemetry blocked"),
-                detail: String(localized: "OCTO refuses any request to the telemetry addresses of ChatGPT and Codex, such as Statsig, whatever would try.")
-            ),
-            Change(
-                systemImage: "eye.slash",
-                title: String(localized: "Email and phone out of sight"),
-                detail: String(localized: "Privacy can take their rows out of Settings altogether.")
-            ),
-            Change(
-                systemImage: "keyboard.chevron.compact.down",
-                title: String(localized: "Smoother chats"),
-                detail: String(localized: "The button that goes back down sits above the message bar, and a slide down on a new chat puts the keyboard away, tab bar included.")
+                systemImage: "text.alignleft",
+                title: String(localized: "The model picker on the left"),
+                detail: String(localized: "The model, its thinking level and its speed are chosen from the left of the top bar, like a title, right after the button that opens your chats.")
             ),
         ])
     }

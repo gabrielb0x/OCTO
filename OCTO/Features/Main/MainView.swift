@@ -206,15 +206,19 @@ struct MainView: View {
     // MARK: Tab bar layout
 
     /// OCTO's screens as tabs of the system tab bar, which iOS draws in Liquid Glass. The search
-    /// tab becomes the round button at the end of the bar.
+    /// tab becomes the round button at the end of the bar. The tab on screen takes the accent
+    /// color chosen in Appearance.
     private var tabBarLayout: some View {
         TabView(selection: $selectedTab) {
             ForEach(app.settings.visibleTabs) { tab in
                 Tab(tab.title, systemImage: tab.systemImage, value: tab, role: tab == .search ? TabRole.search : nil) {
                     tabContent(tab)
+                        // The color is the bar's: the screens keep the tint they have without it.
+                        .tint(Color?.none)
                 }
             }
         }
+        .tint(app.settings.accentStyle.color)
         .tabBarMinimizeBehavior(app.settings.tabBarMinimizesOnScroll ? .onScrollDown : .never)
         .sensoryFeedback(.selection, trigger: selectedTab) { _, _ in
             app.settings.hapticsEnabled

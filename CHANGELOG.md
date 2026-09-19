@@ -2,6 +2,14 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [2.0.0] – 2026-09-19
+
+### Modifié
+
+- **La barre d'onglets prend ta couleur.** Avec la disposition en barre d'onglets, l'onglet affiché prend la couleur d'accentuation choisie dans **Réglages → Apparence** (bleu, violet, ta couleur…). Avec la couleur par défaut, rien ne change. Seule la barre se colore : les écrans gardent leurs couleurs habituelles.
+- **Le sélecteur de modèle passe à gauche.** Le modèle, son niveau de réflexion et sa vitesse se choisissent à gauche de la barre du haut, comme un titre sans bulle de verre, juste après le bouton qui ouvre tes chats (et l'étincelle « Mettre à niveau » quand elle est là), au lieu du centre.
+- **Des captures d'écran bien plus rapides** (pour qui travaille sur OCTO). Un push ne capture plus que les six écrans du README au lieu des 35 scènes ; la galerie complète est refaite à chaque changement de version, et d'autres scènes se demandent dans le message du commit (`[screenshots: usage, telemetry]`, ou `[screenshots: all]`) ou en lançant le workflow à la main. L'app de démonstration est compilée optimisée, chaque scène n'attend que le temps dont elle a besoin (1,2 s pour un écran simple au lieu de 3,5 s), l'app est relancée en un seul appel, et la durée de chaque scène est notée dans une annotation.
+
 ## [1.11.0] – 2026-09-19
 
 ### Ajouté

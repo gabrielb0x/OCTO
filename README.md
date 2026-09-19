@@ -34,8 +34,8 @@ Ces captures sont prises automatiquement sur un simulateur iPhone 17 Pro par le 
 - **Ton profil se modifie depuis l'app** : le crayon sur ta photo, en haut des Réglages, ouvre « Modifier le profil » comme dans ChatGPT — photo, nom affiché et nom d'utilisateur, enregistrés dans ton compte avec les mêmes requêtes que le site (`calpico/chatgpt/profile`).
 - **Ton utilisation de Codex en graphiques** (Réglages → Utilisation de Codex) : les tokens utilisés chaque jour (`wham/profiles/me`), ce qu'il reste de chaque limite (`wham/usage`, mis à jour après chaque réponse), et une **estimation des tokens et des messages restants**, calculée d'après la taille des messages de tes chats.
 - **Réponses qui arrivent mot par mot, en fondu**, à la vitesse de ton choix (lente, normale, rapide ou instantanée), sans que le chat défile tout seul. Rendu Markdown (titres, listes, tableaux, citations) et blocs de code colorés avec bouton « Copier ».
-- **Personnalisable** : thème Système, Clair ou Sombre, couleurs d'accentuation de ChatGPT et couleur de ton choix, taille du texte et police des chats, retour à la ligne dans le code, vibrations pendant que ChatGPT écrit, envoi avec la touche Retour, et un **écran d'accueil à ta main** (bouton « Mettre à niveau », salutation, suggestions en liste ou en pastilles).
-- **Choix du modèle, du niveau de réflexion et de la vitesse** depuis le titre du chat, avec les modèles que **l'API de Codex** (`codex/models`) donne à ton forfait, gratuit compris, et leur description. OCTO **vérifie les modèles disponibles** : ceux réservés à d'autres forfaits (`available_in_plans`) sont écartés, et un modèle que Codex refuse à l'envoi quitte le sélecteur pendant que la question part avec un autre. Réglages → Général → Modèle par défaut les liste avec ce qui n'est pas inclus.
+- **Personnalisable** : thème Système, Clair ou Sombre, couleurs d'accentuation de ChatGPT et couleur de ton choix (qui colore aussi la barre d'onglets), taille du texte et police des chats, retour à la ligne dans le code, vibrations pendant que ChatGPT écrit, envoi avec la touche Retour, et un **écran d'accueil à ta main** (bouton « Mettre à niveau », salutation, suggestions en liste ou en pastilles).
+- **Choix du modèle, du niveau de réflexion et de la vitesse** depuis le sélecteur en haut à gauche du chat, avec les modèles que **l'API de Codex** (`codex/models`) donne à ton forfait, gratuit compris, et leur description. OCTO **vérifie les modèles disponibles** : ceux réservés à d'autres forfaits (`available_in_plans`) sont écartés, et un modèle que Codex refuse à l'envoi quitte le sélecteur pendant que la question part avec un autre. Réglages → Général → Modèle par défaut les liste avec ce qui n'est pas inclus.
 - **Création d'images** : « Créer une image » demande l'outil d'images de l'API Responses au **backend Codex de ton forfait**, et l'image arrive dans la conversation. Ce backend ne propose que les outils des clients Codex : s'il refuse, OCTO repose la question sans l'outil, répond avec des mots et te le dit.
 - **Dictée par ChatGPT** (`backend-api/transcribe`, comme la dictée de ses apps) ou entièrement sur l'appareil, et **mode vocal** : parle à ChatGPT et écoute sa réponse, lue à voix haute phrase par phrase avec la voix de ton choix. Si la dictée est **désactivée dans les réglages de ton iPhone**, OCTO le voit, le dit et propose d'ouvrir les Réglages.
 - **Gestion des données** : « Améliorer le modèle pour tout le monde », l'inclusion de l'audio et de la vidéo et le réglage équivalent de Codex sont lus et modifiés **directement dans ton compte**.
@@ -120,12 +120,14 @@ swift test
 Le drapeau de compilation `OCTO_DEMO` ajoute des scènes de démonstration (`welcome`, `home`, `chat`, `sidebar`, `voice`, `settings`, `settingsApp`, `subscription`, `upgrade`, `about`, `developer`, `network`, `deleteToast`, `freePlan`, `lightChat`, `messageDetails`, `whatsNew`, `appearance`, `privacy`, `dataControls`, `ageVerification`, `devices`, `storage`, `memory`, `update`, `accounts`, `ads`, `tabs`, `tabsChats`, `layout`, `models`, `usage`, `editProfile`, `scrollButton`, `telemetry`), sans réseau ni trousseau. Il n'est jamais présent dans l'IPA.
 
 ```bash
-xcodebuild build -project OCTO.xcodeproj -scheme OCTO -configuration Debug \
+xcodebuild build -project OCTO.xcodeproj -scheme OCTO -configuration Release \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath build/DerivedData \
-  SWIFT_ACTIVE_COMPILATION_CONDITIONS='DEBUG OCTO_DEMO'
-Scripts/take-screenshots.sh build/DerivedData/Build/Products/Debug-iphonesimulator/OCTO.app build/screenshots
+  SWIFT_ACTIVE_COMPILATION_CONDITIONS='OCTO_DEMO'
+SCENES="readme usage" Scripts/take-screenshots.sh build/DerivedData/Build/Products/Release-iphonesimulator/OCTO.app build/screenshots
 python3 Scripts/frame-screenshots.py build/screenshots docs/screenshots
 ```
+
+`SCENES` choisit les scènes : `readme` (les six du README, par défaut), `all`, ou des noms séparés par des espaces.
 
 ### GitHub Actions
 
@@ -133,7 +135,7 @@ python3 Scripts/frame-screenshots.py build/screenshots docs/screenshots
   - **Core tests** : `swift test` sur `OCTOCore`.
   - **Build iOS app** : génère le projet avec XcodeGen, compile en Release sans signature sur `macos-26` et publie l'artefact `OCTO-unsigned-ipa`.
   - **Publish release** : pour un tag `v*` (par exemple `git tag v1.2.0 && git push origin v1.2.0`), crée une release GitHub avec l'IPA `OCTO-1.2.0.ipa` et la section correspondante du CHANGELOG.
-- [`screenshots.yml`](.github/workflows/screenshots.yml), quand l'app change : lance les scènes de démonstration sur un simulateur iPhone 17 Pro, ajoute un cadre d'iPhone et enregistre les images dans `docs/screenshots`.
+- [`screenshots.yml`](.github/workflows/screenshots.yml), quand l'app change : lance les scènes de démonstration sur un simulateur iPhone 17 Pro, ajoute un cadre d'iPhone et enregistre les images dans `docs/screenshots`. Un push ne capture que les six écrans du README ; la galerie complète est refaite quand la version change, et d'autres scènes se demandent dans le message du commit avec `[screenshots: usage, telemetry]` (ou `[screenshots: all]`), ou en lançant le workflow à la main.
 
 ## 🧱 Architecture
 

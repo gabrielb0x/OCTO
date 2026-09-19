@@ -9534,6 +9534,46 @@
           }
         }
       }
+    },
+    "The tab bar in your color": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La barre d'onglets à ta couleur"
+          }
+        }
+      }
+    },
+    "With the tab bar layout, the tab on screen takes the accent color you chose in Appearance.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avec la disposition en barre d'onglets, l'onglet affiché prend la couleur d'accentuation choisie dans Apparence."
+          }
+        }
+      }
+    },
+    "The model picker on the left": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le sélecteur de modèle à gauche"
+          }
+        }
+      }
+    },
+    "The model, its thinking level and its speed are chosen from the left of the top bar, like a title, right after the button that opens your chats.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le modèle, son niveau de réflexion et sa vitesse se choisissent à gauche de la barre du haut, comme un titre, juste après le bouton qui ouvre tes chats."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
