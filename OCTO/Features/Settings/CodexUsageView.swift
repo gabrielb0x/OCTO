@@ -406,8 +406,10 @@ private struct DailyTokensChart: View {
                 }
             }
             .chartXAxis {
-                AxisMarks(values: axisDates(bars)) { _ in
-                    AxisValueLabel(format: .dateTime.day().month(.abbreviated))
+                // Dates on a time axis start at their tick: centered under their bar instead, and
+                // today's ends with the chart, so it isn't cut off.
+                AxisMarks(values: axisDates(bars)) { value in
+                    AxisValueLabel(format: .dateTime.day().month(.abbreviated), anchor: value.index == value.count - 1 ? .topTrailing : .top)
                 }
             }
             .frame(height: 170)
@@ -415,12 +417,13 @@ private struct DailyTokensChart: View {
     }
 
     /// Dates under the bars, a week apart and ending today, so the labels never collide. Each sits
-    /// at noon, the middle of its day, right under its bar.
+    /// at noon, the middle of its bar — today's at the very end of its day, where the chart ends.
     private func axisDates(_ bars: [Bar]) -> [Date] {
-        guard !bars.isEmpty else { return [] }
-        return stride(from: bars.count - 1, through: 0, by: -7)
+        guard let last = bars.last else { return [] }
+        let earlier = stride(from: bars.count - 8, through: 0, by: -7)
             .reversed()
             .map { bars[$0].date.addingTimeInterval(12 * 3_600) }
+        return earlier + [last.date.addingTimeInterval(24 * 3_600 - 60)]
     }
 
     /// The same day as the UTC one Codex counts, at midnight where the phone is.
