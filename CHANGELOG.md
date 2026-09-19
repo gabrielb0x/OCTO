@@ -2,6 +2,12 @@
 
 Les évolutions notables d'OCTO. Les numéros de version suivent [SemVer](https://semver.org/lang/fr/).
 
+## [2.0.2] – 2026-09-19
+
+### Corrigé
+
+- **La barre du haut ne se range plus dans un menu « … ».** Dans la 2.0.1, le sélecteur de modèle, placé comme un bouton, prenait trop de place : dans un chat ouvert, « Nouveau chat » disparaissait dans un menu, et sur un compte gratuit (avec l'étincelle « Mettre à niveau »), toute la barre s'y retrouvait. Le sélecteur reprend la zone de titre, qui cède la place aux boutons au lieu de les pousser, et y reste aligné à gauche, juste après eux.
+
 ## [2.0.1] – 2026-09-19
 
 ### Corrigé

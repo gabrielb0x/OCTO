@@ -96,10 +96,6 @@ jobs:
           ref: ${{ env.SHA }}
           fetch-depth: 0
 
-      # The simulator boots while the app builds, instead of after.
-      - name: Start the simulator
-        run: Scripts/boot-simulator.sh
-
       - name: Install XcodeGen
         env:
           HOMEBREW_NO_AUTO_UPDATE: "1"
@@ -108,6 +104,11 @@ jobs:
 
       - name: Generate Xcode project
         run: xcodegen generate
+
+      # The simulator boots while the app builds, instead of after. Started once Homebrew is done,
+      # which the boot slows down a lot.
+      - name: Start the simulator
+        run: Scripts/boot-simulator.sh
 
       # Optimized, the demo app opens and settles faster for every scene than a debug build.
       - name: Build demo app for the simulator

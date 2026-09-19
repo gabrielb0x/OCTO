@@ -20,7 +20,7 @@ struct ReleaseNotes: Identifiable, Equatable {
 
     /// Notes of the version being shipped. Keep in sync with CHANGELOG.md.
     static var current: ReleaseNotes {
-        ReleaseNotes(version: "2.0.1", changes: [
+        ReleaseNotes(version: "2.0.2", changes: [
             Change(
                 systemImage: "paintpalette",
                 title: String(localized: "The tab bar in your color"),

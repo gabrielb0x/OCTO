@@ -226,14 +226,16 @@ struct ChatView: View {
             }
         }
 
-        // The models Codex offers the account, on the left like a title, without glass of its own.
-        // It never takes more than the room the buttons leave, so they never end up in an overflow
-        // menu. With a single model there's nothing to choose, and nothing shows.
+        // The models Codex offers the account, on the left like a title. As buttons, the picker and
+        // its neighbours don't always fit, and iOS then hides buttons in an overflow menu; the
+        // title area gives way to buttons instead. So the picker stays there, asking for more
+        // width than the bar has: iOS gives it everything between the buttons, and it sits at the
+        // start of that space. With a single model there's nothing to choose, and nothing shows.
         if app.allowsModelChoice {
-            ToolbarItem(placement: .topBarLeading) {
-                ModelMenu(session: session, room: roomForModelPicker)
+            ToolbarItem(placement: .principal) {
+                ModelMenu(session: session)
+                    .frame(minWidth: 0, idealWidth: titleWidth, maxWidth: .infinity, alignment: .leading)
             }
-            .sharedBackgroundVisibility(.hidden)
         }
 
         if session.isBlank {
@@ -256,24 +258,19 @@ struct ChatView: View {
         }
     }
 
-    /// The width the top bar leaves the model picker: the bar, less its margins, the buttons on
-    /// each side and the space iOS keeps between them.
-    private var roomForModelPicker: CGFloat {
-        guard barWidth > 0 else { return .infinity }
-        let button: CGFloat = 44
-        let spacing: CGFloat = 13
-        var taken: CGFloat = 32
+    /// The width the model picker asks for: the whole bar less the buttons, counted on the small
+    /// side. Asking a little too much is what keeps it at the start of the space: iOS narrows
+    /// the title area to what's left, where asking too little would get it centered.
+    private var titleWidth: CGFloat {
+        guard barWidth > 0 else { return 400 }
+        var buttons: CGFloat = session.isBlank ? 44 : 88
         if showsChatsButton {
-            taken += button + spacing
+            buttons += 44
         }
         if app.showsUpgradeOffer {
-            taken += button + spacing
+            buttons += 44
         }
-        // A new chat has one button on the right; an open chat, the pair of new chat and options.
-        taken += (session.isBlank ? button : 102) + spacing
-        // What iOS keeps between the two sides of the bar, and the insets of the picker itself.
-        taken += 24
-        return max(barWidth - taken, 80)
+        return max(barWidth - 32 - buttons, 120)
     }
 
     private var optionsMenu: some View {
@@ -317,13 +314,11 @@ private struct ScrollMetrics: Equatable {
 }
 
 /// Title of the chat screen, like "ChatGPT ›" in the official app: the models Codex offers the
-/// account, with what its catalog says about them, the thinking level and the speed.
+/// account, with what its catalog says about them, the thinking level and the speed. When the
+/// thinking level and the speed don't fit, only the model shows; they stay in the menu.
 struct ModelMenu: View {
     @Environment(AppModel.self) private var app
     let session: ChatSession
-    /// The width the top bar leaves it. When the thinking level and the speed don't fit, only the
-    /// model shows; they stay in the menu.
-    var room: CGFloat = .infinity
 
     var body: some View {
         let current = session.model
@@ -392,7 +387,6 @@ struct ModelMenu: View {
                 title(current, fast: speed != nil, showsDetails: true)
                 title(current, fast: speed != nil, showsDetails: false)
             }
-            .frame(maxWidth: room, alignment: .leading)
         }
         .menuOrder(.fixed)
         .accessibilityLabel(Text("Choose model"))
