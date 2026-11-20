@@ -1,3 +1,6 @@
+> [!WARNING]
+> **This project is currently deprecated**: updates may occur, but they will be rare.
+
 <p align="center">
   <img src="logo.png" width="120" alt="Logo OCTO">
 </p>
